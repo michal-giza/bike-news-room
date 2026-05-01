@@ -1,0 +1,31 @@
+# Cloudflare Pages — security headers per path glob.
+# CSP is also set as a <meta> in index.html; the header form below is more
+# authoritative because <meta> CSP can't enforce frame-ancestors.
+
+/*
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: no-referrer
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: credentialless
+
+# Long cache for hashed Flutter build assets — they include a content hash so
+# changes always produce a new URL.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/canvaskit/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Service-workerable index.html and bootstrap should always revalidate so a
+# new deploy is picked up immediately.
+/index.html
+  Cache-Control: public, max-age=0, must-revalidate
+
+/flutter_bootstrap.js
+  Cache-Control: public, max-age=0, must-revalidate
+
+/flutter_service_worker.js
+  Cache-Control: public, max-age=0, must-revalidate

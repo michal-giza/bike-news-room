@@ -61,28 +61,33 @@ discipline = "gravel"
 language = "en"
 
 ## Poland
+## Replaced KFR Polska (kfrpolska.pl) — DNS dead as of 2026-05.
+## naszosie.pl is a long-running PL cycling magazine with full-text RSS.
 
 [[feeds]]
-url = "https://kfrpolska.pl/feed/"
-title = "KFR Polska"
+url = "https://naszosie.pl/feed/"
+title = "NaSzosie"
 region = "poland"
 discipline = "road"
 language = "pl"
 
 ## Spain
+## Replaced El Pelotón (elpeloton.es) — domain dead.
+## Fixed Ciclismo Internacional URL — feed lives under /es/, not root.
+## Added todoMTB for Spanish-language MTB coverage.
 
 [[feeds]]
-url = "https://www.ciclismointernacional.com/feed/"
+url = "https://ciclismointernacional.com/es/feed/"
 title = "Ciclismo Internacional"
 region = "spain"
 discipline = "road"
 language = "es"
 
 [[feeds]]
-url = "https://www.elpeloton.es/feed/"
-title = "El Pelotón"
+url = "https://todomtb.com/feed/"
+title = "todoMTB"
 region = "spain"
-discipline = "road"
+discipline = "mtb"
 language = "es"
 
 ## NOTE: The following sources are crawled via HTML scrape (no working RSS):

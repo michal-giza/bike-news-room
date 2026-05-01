@@ -233,6 +233,10 @@ class ArticleDetailModal extends StatelessWidget {
     );
   }
 
+  /// Lead/summary block — uses the article's own description (the lead
+  /// paragraph the publisher already wrote). The label was previously
+  /// "AI SUMMARY" which was misleading: nothing in the pipeline calls an
+  /// AI. Renamed to "SUMMARY" until/unless we wire up a real generator.
   Widget _summaryBlock(BuildContext context, String summary) {
     final ext = context.bnr;
     return Container(
@@ -251,17 +255,17 @@ class ArticleDetailModal extends StatelessWidget {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Transform.rotate(
-                angle: 0.785, // 45°
-                child: Container(
-                  width: 8,
-                  height: 8,
+              Container(
+                width: 6,
+                height: 6,
+                decoration: BoxDecoration(
                   color: BnrColors.accent,
+                  borderRadius: BorderRadius.circular(1),
                 ),
               ),
               const SizedBox(width: 8),
               Text(
-                'AI SUMMARY',
+                'SUMMARY',
                 style: AppTheme.mono(
                   size: 10,
                   color: BnrColors.accent,

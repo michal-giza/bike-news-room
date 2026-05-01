@@ -92,18 +92,51 @@ class WatchlistCubit extends Cubit<WatchlistState> {
     required String name,
     required WatchedKind kind,
   }) async {
-    final id = name
-        .toLowerCase()
-        .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
-        .replaceAll(RegExp(r'^-|-$'), '');
+    final cleanName = name.trim();
+    if (cleanName.isEmpty) return;
+    final id = _slugify(cleanName);
     if (id.isEmpty) return;
     if (state.following.any((e) => e.id == id)) return;
     await follow(WatchedEntity(
       id: id,
       kind: kind,
-      name: name.trim(),
+      name: cleanName,
       aliases: const [],
       fromCatalogue: false,
     ));
+  }
+
+  /// Build a URL-safe slug from a human name.
+  ///
+  /// We map common Latin accents to their ASCII base before stripping —
+  /// so "Tadej Pogačar" → "tadej-pogacar", not the previous broken
+  /// "tadej-pog-ar" that came from running `[^a-z0-9]+` on the raw string.
+  static String _slugify(String input) {
+    final lowered = input.toLowerCase();
+    const accents = {
+      'á': 'a', 'à': 'a', 'â': 'a', 'ä': 'a', 'ã': 'a', 'å': 'a', 'ā': 'a',
+      'é': 'e', 'è': 'e', 'ê': 'e', 'ë': 'e', 'ē': 'e', 'ě': 'e',
+      'í': 'i', 'ì': 'i', 'î': 'i', 'ï': 'i', 'ī': 'i',
+      'ó': 'o', 'ò': 'o', 'ô': 'o', 'ö': 'o', 'õ': 'o', 'ō': 'o', 'ø': 'o',
+      'ú': 'u', 'ù': 'u', 'û': 'u', 'ü': 'u', 'ū': 'u', 'ů': 'u',
+      'ý': 'y', 'ÿ': 'y',
+      'ñ': 'n', 'ń': 'n',
+      'ç': 'c', 'č': 'c', 'ć': 'c',
+      'š': 's', 'ś': 's',
+      'ž': 'z', 'ź': 'z', 'ż': 'z',
+      'ł': 'l',
+      'ř': 'r',
+      'ď': 'd',
+      'ť': 't',
+    };
+    final ascii = StringBuffer();
+    for (final code in lowered.runes) {
+      final ch = String.fromCharCode(code);
+      ascii.write(accents[ch] ?? ch);
+    }
+    return ascii
+        .toString()
+        .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
+        .replaceAll(RegExp(r'^-+|-+$'), '');
   }
 }

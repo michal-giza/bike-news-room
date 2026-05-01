@@ -125,32 +125,52 @@ class _SearchPillState extends State<_SearchPill> {
             border: Border.all(color: _hover ? ext.fg3 : ext.line),
             borderRadius: BorderRadius.circular(BnrRadius.pill),
           ),
-          child: Row(
-            children: [
-              Icon(Icons.search, size: 16, color: ext.fg2),
-              const SizedBox(width: 10),
-              Text(
-                'Search articles, riders, races…',
-                style: AppTheme.sans(size: 14, color: ext.fg2),
-              ),
-              const Spacer(),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  border: Border.all(color: ext.line),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  '⌘K',
-                  style: AppTheme.mono(
-                    size: 11,
-                    color: ext.fg2,
-                    letterSpacing: 0,
+          child: LayoutBuilder(
+            builder: (ctx, c) {
+              // Responsive: pick the placeholder + show/hide the kbd hint
+              // based on the pill's actual width. Without this the long
+              // placeholder gets ellipsis-clipped on narrow topbars.
+              final wide = c.maxWidth >= 360;
+              final placeholder = wide
+                  ? 'Search articles, riders, races…'
+                  : 'Search…';
+              return Row(
+                children: [
+                  Icon(Icons.search, size: 16, color: ext.fg2),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      placeholder,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTheme.sans(size: 14, color: ext.fg2),
+                    ),
                   ),
-                ),
-              ),
-            ],
+                  // Keyboard hint only on viewports where a physical keyboard
+                  // is realistic. Touch users don't have ⌘K.
+                  if (wide) ...[
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6, vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: ext.line),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        '⌘K',
+                        style: AppTheme.mono(
+                          size: 11,
+                          color: ext.fg2,
+                          letterSpacing: 0,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              );
+            },
           ),
         ),
       ),

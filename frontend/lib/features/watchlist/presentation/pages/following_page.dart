@@ -1,78 +1,109 @@
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/theme/tokens.dart';
-import '../../../feed/domain/entities/article.dart';
-import '../../../feed/presentation/bloc/feed_bloc.dart';
+import '../../../feed/domain/usecases/get_articles.dart';
 import '../../../feed/presentation/cubit/sources_cubit.dart';
 import '../../../feed/presentation/pages/article_detail_modal.dart';
 import '../../../feed/presentation/widgets/article_card.dart';
 import '../../../preferences/presentation/cubit/preferences_cubit.dart';
 import '../../domain/entities/watched_entity.dart';
+import '../bloc/following_feed_bloc.dart';
 import '../cubit/watchlist_cubit.dart';
 
-/// "Following" page — shows the user's watched riders/teams (with unfollow
-/// chips) and a feed of articles that match them.
+/// "Following" — watched riders/teams + the articles that match them.
+///
+/// Owns its own [FollowingFeedBloc] so we fetch matching articles directly
+/// from the API instead of filtering whatever's already loaded into the
+/// home feed (which would miss anything past page 1).
 class FollowingPage extends StatelessWidget {
   const FollowingPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    return BlocProvider<FollowingFeedBloc>(
+      create: (_) {
+        final bloc = FollowingFeedBloc(getArticles: getIt<GetArticles>());
+        // Kick off the fetch with whatever the user follows right now.
+        final following = context.read<WatchlistCubit>().state.following;
+        bloc.add(FollowingFeedRequested(following));
+        return bloc;
+      },
+      child: const _FollowingView(),
+    );
+  }
+}
+
+class _FollowingView extends StatelessWidget {
+  const _FollowingView();
+
+  @override
+  Widget build(BuildContext context) {
     final ext = context.bnr;
     final watchlist = context.watch<WatchlistCubit>().state;
-    final feed = context.watch<FeedBloc>().state;
-    final prefs = context.watch<PreferencesCubit>().state;
-    final sources = context.watch<SourcesCubit>().state;
+    final following = watchlist.following;
 
-    final matchingArticles = feed.articles
-        .where((a) =>
-            watchlist.isWatched(title: a.title, description: a.description))
-        .toList();
-
-    return Scaffold(
-      backgroundColor: ext.bg0,
-      appBar: AppBar(
+    // Re-fetch whenever the user follows / unfollows someone here. The bloc
+    // de-dupes identical re-runs on its own.
+    return BlocListener<WatchlistCubit, WatchlistState>(
+      listenWhen: (a, b) => a.following != b.following,
+      listener: (context, state) {
+        context
+            .read<FollowingFeedBloc>()
+            .add(FollowingFeedRequested(state.following));
+      },
+      child: Scaffold(
         backgroundColor: ext.bg0,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: ext.fg0),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Text(
-          'Following',
-          style: AppTheme.serif(
-            size: 22,
-            weight: FontWeight.w600,
-            letterSpacing: -0.02,
-            color: ext.fg0,
+        appBar: AppBar(
+          backgroundColor: ext.bg0,
+          elevation: 0,
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back, color: ext.fg0),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          title: Text(
+            'Following',
+            style: AppTheme.serif(
+              size: 22,
+              weight: FontWeight.w600,
+              letterSpacing: -0.02,
+              color: ext.fg0,
+            ),
           ),
         ),
-      ),
-      body: Column(
-        children: [
-          if (watchlist.following.isNotEmpty)
-            _followingChips(context, watchlist.following),
-          Expanded(
-            child: watchlist.following.isEmpty
-                ? _emptyState(context)
-                : matchingArticles.isEmpty
-                    ? _noMatches(context)
-                    : _matchesList(
-                        context, matchingArticles, prefs, sources, watchlist),
-          ),
-        ],
+        body: Column(
+          children: [
+            if (following.isNotEmpty)
+              _FollowingChips(following: following),
+            Expanded(
+              child: !watchlist.ready
+                  ? const Center(child: CircularProgressIndicator())
+                  : following.isEmpty
+                      ? const _EmptyFollowState()
+                      : const _MatchesList(),
+            ),
+          ],
+        ),
       ),
     );
   }
+}
 
-  Widget _followingChips(
-      BuildContext context, List<WatchedEntity> following) {
+class _FollowingChips extends StatelessWidget {
+  final List<WatchedEntity> following;
+  const _FollowingChips({required this.following});
+
+  @override
+  Widget build(BuildContext context) {
     final ext = context.bnr;
     return Container(
       padding: const EdgeInsets.fromLTRB(
-          BnrSpacing.s4, BnrSpacing.s3, BnrSpacing.s4, BnrSpacing.s4),
+        BnrSpacing.s4, BnrSpacing.s3, BnrSpacing.s4, BnrSpacing.s4,
+      ),
       decoration: BoxDecoration(
         border: Border(bottom: BorderSide(color: ext.lineSoft)),
       ),
@@ -80,13 +111,19 @@ class FollowingPage extends StatelessWidget {
         spacing: 6,
         runSpacing: 6,
         children: [
-          for (final entity in following) _entityChip(context, entity),
+          for (final entity in following) _EntityChip(entity: entity),
         ],
       ),
     );
   }
+}
 
-  Widget _entityChip(BuildContext context, WatchedEntity entity) {
+class _EntityChip extends StatelessWidget {
+  final WatchedEntity entity;
+  const _EntityChip({required this.entity});
+
+  @override
+  Widget build(BuildContext context) {
     final ext = context.bnr;
     final accent = BnrColors.disciplineColor(entity.discipline);
     return Container(
@@ -129,48 +166,88 @@ class FollowingPage extends StatelessWidget {
       ),
     );
   }
+}
 
-  Widget _matchesList(
-    BuildContext context,
-    List<Article> articles,
-    dynamic prefs,
-    SourcesState sources,
-    WatchlistState watchlist,
-  ) {
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(
-        BnrSpacing.s4, BnrSpacing.s4, BnrSpacing.s4, BnrSpacing.s12,
-      ),
-      itemCount: articles.length,
-      itemBuilder: (context, i) {
-        final article = articles[i];
-        final names = watchlist
-            .matches(title: article.title, description: article.description)
-            .map((e) => e.name)
-            .toList();
-        return ArticleCard(
-          article: article,
-          density: prefs.density,
-          bookmarked: prefs.bookmarkedArticleIds.contains(article.id),
-          watchedNames: names,
-          sourceName: sources.displayFor(article.feedId),
-          onTap: () => ArticleDetailModal.show(
-            context,
-            article: article,
-            sourceName: sources.displayFor(article.feedId),
-            bookmarked: prefs.bookmarkedArticleIds.contains(article.id),
-            onBookmark: () =>
-                context.read<PreferencesCubit>().toggleBookmark(article.id),
+class _MatchesList extends StatelessWidget {
+  const _MatchesList();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<FollowingFeedBloc, FollowingFeedState>(
+      builder: (context, state) {
+        if (state.loading && state.articles.isEmpty) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (state.errorMessage != null && state.articles.isEmpty) {
+          return _ErrorState(message: state.errorMessage!);
+        }
+        if (state.articles.isEmpty) {
+          return const _NoMatches();
+        }
+
+        final prefs = context.watch<PreferencesCubit>().state;
+        final sources = context.watch<SourcesCubit>().state;
+        final watchlist = context.watch<WatchlistCubit>().state;
+
+        return RefreshIndicator(
+          onRefresh: () async {
+            context
+                .read<FollowingFeedBloc>()
+                .add(FollowingFeedRequested(watchlist.following));
+            await context
+                .read<FollowingFeedBloc>()
+                .stream
+                .firstWhere((s) => !s.loading);
+          },
+          child: ListView.builder(
+            padding: const EdgeInsets.fromLTRB(
+              BnrSpacing.s4, BnrSpacing.s4, BnrSpacing.s4, BnrSpacing.s12,
+            ),
+            itemCount: state.articles.length,
+            itemBuilder: (context, i) {
+              final article = state.articles[i];
+              final names = watchlist
+                  .matches(title: article.title, description: article.description)
+                  .map((e) => e.name)
+                  .toList();
+              return ArticleCard(
+                article: article,
+                density: prefs.density,
+                bookmarked: prefs.bookmarkedArticleIds.contains(article.id),
+                watchedNames: names,
+                sourceName: sources.displayFor(article.feedId),
+                onTap: () => ArticleDetailModal.show(
+                  context,
+                  article: article,
+                  sourceName: sources.displayFor(article.feedId),
+                  bookmarked:
+                      prefs.bookmarkedArticleIds.contains(article.id),
+                  onBookmark: () => context
+                      .read<PreferencesCubit>()
+                      .toggleBookmark(article.id),
+                ),
+                onBookmark: () => context
+                    .read<PreferencesCubit>()
+                    .toggleBookmark(article.id),
+              );
+            },
           ),
-          onBookmark: () =>
-              context.read<PreferencesCubit>().toggleBookmark(article.id),
         );
       },
     );
   }
+}
 
-  Widget _emptyState(BuildContext context) {
+class _EmptyFollowState extends StatelessWidget {
+  const _EmptyFollowState();
+
+  @override
+  Widget build(BuildContext context) {
     final ext = context.bnr;
+    final touchHint = _isTouchPlatform()
+        ? 'Tap the search icon and start typing a rider or team name.'
+        : 'Press ⌘K (or click search) and start typing a rider or team name.';
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(BnrSpacing.s8),
@@ -185,8 +262,7 @@ class FollowingPage extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Press ⌘K (or tap search) and start typing a rider or team name.\n'
-              'You\'ll see a "+ Follow" suggestion at the top of the results.',
+              "$touchHint\nYou'll see a “+ Follow” suggestion at the top of the results.",
               textAlign: TextAlign.center,
               style: AppTheme.sans(size: 14, color: ext.fg2),
             ),
@@ -196,7 +272,22 @@ class FollowingPage extends StatelessWidget {
     );
   }
 
-  Widget _noMatches(BuildContext context) {
+  /// Heuristic: Web on a phone-sized layout is treated as touch-only. We
+  /// can't reliably detect a physical keyboard from Dart on the web, so we
+  /// approximate via `MediaQuery` width — but we do that at call sites
+  /// where context is available. Here we bias to "touch" on iOS/Android.
+  static bool _isTouchPlatform() {
+    if (kIsWeb) return false;
+    return defaultTargetPlatform == TargetPlatform.android ||
+        defaultTargetPlatform == TargetPlatform.iOS;
+  }
+}
+
+class _NoMatches extends StatelessWidget {
+  const _NoMatches();
+
+  @override
+  Widget build(BuildContext context) {
     final ext = context.bnr;
     return Center(
       child: Padding(
@@ -223,3 +314,45 @@ class FollowingPage extends StatelessWidget {
     );
   }
 }
+
+class _ErrorState extends StatelessWidget {
+  final String message;
+  const _ErrorState({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    final ext = context.bnr;
+    final watchlist = context.read<WatchlistCubit>().state;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(BnrSpacing.s8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.wifi_off_outlined, color: ext.fg2, size: 40),
+            const SizedBox(height: BnrSpacing.s4),
+            Text(
+              "Couldn't load matches",
+              style: AppTheme.serif(size: 22, color: ext.fg0),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: AppTheme.sans(size: 14, color: ext.fg2),
+            ),
+            const SizedBox(height: BnrSpacing.s5),
+            FilledButton(
+              onPressed: () => context
+                  .read<FollowingFeedBloc>()
+                  .add(FollowingFeedRequested(watchlist.following)),
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+

@@ -224,24 +224,30 @@ async fn main() -> anyhow::Result<()> {
 /// visible.
 fn build_cors_layer() -> tower_http::cors::CorsLayer {
     use tower_http::cors::{AllowOrigin, CorsLayer};
-    match std::env::var("ALLOWED_ORIGINS").ok().filter(|s| !s.is_empty()) {
+    let raw = std::env::var("ALLOWED_ORIGINS");
+    // Loud, explicit log so we can see at deploy time whether HF actually
+    // injected the variable. `Ok("...")` confirms it; `Err(_)` means the
+    // env var never arrived and we'll fall through to permissive.
+    info!("CORS: raw ALLOWED_ORIGINS env = {raw:?}");
+    match raw.ok().filter(|s| !s.is_empty()) {
         Some(value) => {
-            let origins: Vec<axum::http::HeaderValue> = value
+            let parsed: Vec<axum::http::HeaderValue> = value
                 .split(',')
                 .map(str::trim)
                 .filter(|s| !s.is_empty())
                 .filter_map(|s| s.parse().ok())
                 .collect();
             info!(
-                "CORS: allowlist mode — origins = {}",
-                origins
+                "CORS: allowlist mode — {} origin(s) parsed: {}",
+                parsed.len(),
+                parsed
                     .iter()
                     .filter_map(|o| o.to_str().ok())
                     .collect::<Vec<_>>()
                     .join(", ")
             );
             CorsLayer::new()
-                .allow_origin(AllowOrigin::list(origins))
+                .allow_origin(AllowOrigin::list(parsed))
                 .allow_methods([axum::http::Method::GET])
                 .allow_headers([
                     axum::http::header::ACCEPT,

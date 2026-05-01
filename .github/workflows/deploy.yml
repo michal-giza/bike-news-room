@@ -1,0 +1,31 @@
+name: Deploy to Hugging Face Spaces
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # Only run after CI succeeds (HF builds the Docker image itself).
+    needs: []
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: true
+
+      - name: Push to Hugging Face Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_USER: ${{ secrets.HF_USER }}
+          HF_SPACE: ${{ secrets.HF_SPACE }}
+        run: |
+          if [ -z "$HF_TOKEN" ] || [ -z "$HF_USER" ] || [ -z "$HF_SPACE" ]; then
+            echo "Missing HF secrets — skipping deploy. Set HF_TOKEN, HF_USER, HF_SPACE."
+            exit 0
+          fi
+          git config --global user.email "ci@bike-news-room"
+          git config --global user.name "CI"
+          git push "https://${HF_USER}:${HF_TOKEN}@huggingface.co/spaces/${HF_USER}/${HF_SPACE}" main --force

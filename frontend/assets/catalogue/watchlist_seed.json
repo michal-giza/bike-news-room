@@ -1,0 +1,36 @@
+{
+  "riders": [
+    {"id": "pogacar", "name": "Tadej Pogačar", "aliases": ["Pogacar", "Pogačar", "Tadej Pogacar"], "discipline": "road"},
+    {"id": "vingegaard", "name": "Jonas Vingegaard", "aliases": ["Vingegaard"], "discipline": "road"},
+    {"id": "van-der-poel", "name": "Mathieu van der Poel", "aliases": ["Van der Poel", "MVDP"], "discipline": "road"},
+    {"id": "van-aert", "name": "Wout van Aert", "aliases": ["Van Aert", "WVA"], "discipline": "road"},
+    {"id": "evenepoel", "name": "Remco Evenepoel", "aliases": ["Evenepoel", "Remco"], "discipline": "road"},
+    {"id": "roglic", "name": "Primož Roglič", "aliases": ["Roglic", "Roglič"], "discipline": "road"},
+    {"id": "pidcock", "name": "Tom Pidcock", "aliases": ["Pidcock"], "discipline": "road"},
+    {"id": "kwiatkowski", "name": "Michał Kwiatkowski", "aliases": ["Kwiatkowski"], "discipline": "road"},
+    {"id": "ferrand-prevot", "name": "Pauline Ferrand-Prévot", "aliases": ["Ferrand-Prevot", "Ferrand-Prévot", "PFP"], "discipline": "mtb"},
+    {"id": "schurter", "name": "Nino Schurter", "aliases": ["Schurter"], "discipline": "mtb"},
+    {"id": "bruni", "name": "Loïc Bruni", "aliases": ["Bruni"], "discipline": "mtb"},
+    {"id": "hoell", "name": "Vali Höll", "aliases": ["Höll", "Hoell", "Vali Hoell"], "discipline": "mtb"},
+    {"id": "goldstone", "name": "Jackson Goldstone", "aliases": ["Goldstone"], "discipline": "mtb"},
+    {"id": "lavreysen", "name": "Harrie Lavreysen", "aliases": ["Lavreysen"], "discipline": "track"},
+    {"id": "worthington", "name": "Kye Whyte Worthington", "aliases": ["Worthington"], "discipline": "bmx"},
+    {"id": "kimmann", "name": "Niek Kimmann", "aliases": ["Kimmann"], "discipline": "bmx"},
+    {"id": "berwick", "name": "Sebastian Berwick", "aliases": ["Berwick"], "discipline": "road"},
+    {"id": "molano", "name": "Sebastián Molano", "aliases": ["Molano"], "discipline": "road"},
+    {"id": "healy", "name": "Ben Healy", "aliases": ["Healy"], "discipline": "road"},
+    {"id": "ackermann", "name": "Pascal Ackermann", "aliases": ["Ackermann"], "discipline": "road"},
+    {"id": "oconnor", "name": "Ben O'Connor", "aliases": ["O'Connor", "OConnor", "Oconnor"], "discipline": "road"}
+  ],
+  "teams": [
+    {"id": "uae", "name": "UAE Team Emirates", "aliases": ["UAE", "UAE Emirates"], "discipline": "road"},
+    {"id": "visma", "name": "Visma–Lease a Bike", "aliases": ["Visma", "Lease a Bike", "Visma-Lease"], "discipline": "road"},
+    {"id": "ineos", "name": "INEOS Grenadiers", "aliases": ["INEOS"], "discipline": "road"},
+    {"id": "soudal", "name": "Soudal Quick-Step", "aliases": ["Soudal", "Quick-Step", "QuickStep"], "discipline": "road"},
+    {"id": "jayco", "name": "Jayco AlUla", "aliases": ["Jayco", "AlUla"], "discipline": "road"},
+    {"id": "ef-education", "name": "EF Education–EasyPost", "aliases": ["EF Education", "EF EasyPost"], "discipline": "road"},
+    {"id": "movistar", "name": "Movistar Team", "aliases": ["Movistar"], "discipline": "road"},
+    {"id": "lidl-trek", "name": "Lidl-Trek", "aliases": ["Lidl-Trek", "Trek-Segafredo"], "discipline": "road"},
+    {"id": "bora", "name": "Red Bull–BORA–hansgrohe", "aliases": ["BORA", "Bora-hansgrohe"], "discipline": "road"}
+  ]
+}

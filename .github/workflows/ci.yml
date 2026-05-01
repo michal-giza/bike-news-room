@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  rust:
+    name: Rust ${{ matrix.task }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+    strategy:
+      fail-fast: false
+      matrix:
+        task: [fmt, clippy, test, build]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: backend
+
+      - name: Format check
+        if: matrix.task == 'fmt'
+        run: cargo fmt --all -- --check
+
+      - name: Clippy
+        if: matrix.task == 'clippy'
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: Tests
+        if: matrix.task == 'test'
+        run: cargo test --all
+
+      - name: Release build
+        if: matrix.task == 'build'
+        run: cargo build --release

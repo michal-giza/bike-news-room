@@ -1,0 +1,90 @@
+## World / Professional
+
+[[feeds]]
+url = "https://www.cyclingnews.com/rss"
+title = "CyclingNews"
+region = "world"
+discipline = "road"
+language = "en"
+
+[[feeds]]
+url = "https://www.velonews.com/feed/"
+title = "VeloNews"
+region = "world"
+discipline = "road"
+language = "en"
+
+[[feeds]]
+url = "https://www.cyclingweekly.com/news/feed"
+title = "Cycling Weekly"
+region = "world"
+discipline = "road"
+language = "en"
+
+[[feeds]]
+url = "https://escapecollective.com/rss/"
+title = "Escape Collective"
+region = "world"
+discipline = "road"
+language = "en"
+
+[[feeds]]
+url = "https://road.cc/rss"
+title = "road.cc"
+region = "world"
+discipline = "road"
+language = "en"
+
+## MTB / Off-road
+
+[[feeds]]
+url = "https://enduro-mtb.com/en/feed/"
+title = "ENDURO MTB Magazine"
+region = "world"
+discipline = "mtb"
+language = "en"
+
+[[feeds]]
+url = "https://www.mbr.co.uk/feed"
+title = "MBR Magazine"
+region = "world"
+discipline = "mtb"
+language = "en"
+
+## Gravel
+
+[[feeds]]
+url = "https://gravelcyclist.com/feed/"
+title = "Gravel Cyclist"
+region = "world"
+discipline = "gravel"
+language = "en"
+
+## Poland
+
+[[feeds]]
+url = "https://kfrpolska.pl/feed/"
+title = "KFR Polska"
+region = "poland"
+discipline = "road"
+language = "pl"
+
+## Spain
+
+[[feeds]]
+url = "https://www.ciclismointernacional.com/feed/"
+title = "Ciclismo Internacional"
+region = "spain"
+discipline = "road"
+language = "es"
+
+[[feeds]]
+url = "https://www.elpeloton.es/feed/"
+title = "El Pelotón"
+region = "spain"
+discipline = "road"
+language = "es"
+
+## NOTE: The following sources are crawled via HTML scrape (no working RSS):
+##   - Pinkbike (Cloudflare-blocked) — Vital MTB — Rowery.org — PZKol — RFEC — UCI
+## See backend/src/web/crawl_targets.rs for selectors.

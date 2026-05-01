@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en" data-theme="dark" data-persona="younger">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Bike News Room — Print</title>
+<link rel="stylesheet" href="tokens.css"/>
+<link rel="stylesheet" href="components.css"/>
+<style>
+  /* Print-tuned overrides — preserve the dark newsroom look on paper */
+  html, body { background: var(--bg-0) !important; }
+  body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  /* Hide interactive chrome that doesn't make sense in a static export */
+  .topbar-actions, .search-pill .kbd, .bottom-nav,
+  .card-actions, .new-pill, .chip-density,
+  .tweaks-launcher, .tweaks-panel, [data-tweaks-panel],
+  .preview-rail .rail-actions { display: none !important; }
+
+  /* Disable transitions/animations */
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .topbar { position: static !important; }
+  .sidebar, .preview-rail { position: static !important; height: auto !important; }
+  .app-shell { min-height: auto !important; }
+
+  /* State demo controls and sticky pills are interactive only */
+  .feed > div > div:last-child:has(button.chip) { display: none !important; }
+
+  @page {
+    size: A3 landscape;
+    margin: 0.6cm;
+  }
+
+  @media print {
+    html, body { background: var(--bg-0) !important; }
+    .topbar { border-bottom: 1px solid var(--line) !important; }
+    .card { break-inside: avoid; }
+    .live-banner { break-inside: avoid; }
+    .preview-rail { break-inside: avoid; }
+    .sidebar { break-inside: avoid; }
+    .feed-head { break-after: avoid; }
+
+    /* Force colors to print */
+    .card, .live-banner, .sidebar, .preview-rail, .topbar,
+    .chip, .chip-active, .card-meta .live-tag, .live-dot,
+    .rail-cta, .modal-cta, .btn-primary {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+  }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" src="data.jsx"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="components.jsx"></script>
+<script type="text/babel" src="overlays.jsx"></script>
+<script type="text/babel" src="app.jsx"></script>
+<script type="text/babel">
+  // Auto-print once everything is ready
+  (async () => {
+    try { await document.fonts.ready; } catch (e) {}
+    // Wait for React tree to mount
+    let tries = 0;
+    while (!document.querySelector(".feed-title") && tries < 60) {
+      await new Promise(r => setTimeout(r, 100));
+      tries++;
+    }
+    await new Promise(r => setTimeout(r, 600));
+    window.print();
+  })();
+</script>
+</body>
+</html>

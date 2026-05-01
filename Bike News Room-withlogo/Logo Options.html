@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Bike News Room — Logo options</title>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,500;0,6..72,600;0,6..72,700&family=Inter+Tight:wght@500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --ink: #0c0c0e;
+    --paper: #f4f1ea;
+    --mute: #6a635a;
+    --line: #d9d3c5;
+    --serif: "Newsreader", Georgia, serif;
+    --sans: "Inter Tight", -apple-system, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+    padding: 64px 48px 96px;
+  }
+  .page {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  header {
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 24px;
+    margin-bottom: 56px;
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 24px; flex-wrap: wrap;
+  }
+  h1 {
+    font-family: var(--serif);
+    font-size: 56px;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    line-height: 1.02;
+    margin: 0;
+    text-wrap: balance;
+  }
+  .meta {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--mute);
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 64px;
+  }
+  .opt {
+    border: 1px solid var(--line);
+    background: #fff;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .opt-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    padding: 18px 28px;
+    border-bottom: 1px solid var(--line);
+    gap: 16px; flex-wrap: wrap;
+  }
+  .opt-id {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--mute);
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+  }
+  .opt-name {
+    font-family: var(--serif);
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.018em;
+  }
+  .opt-rationale {
+    font-size: 13px;
+    color: var(--mute);
+    line-height: 1.55;
+    max-width: 60ch;
+    margin-left: auto;
+  }
+  .opt-body {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    min-height: 480px;
+  }
+  @media (max-width: 900px) {
+    .opt-body { grid-template-columns: 1fr; }
+  }
+  /* Hero — large mark on paper */
+  .hero {
+    background: var(--paper);
+    display: grid;
+    place-items: center;
+    padding: 64px 32px;
+    border-right: 1px solid var(--line);
+    position: relative;
+  }
+  .hero::before, .hero::after {
+    content: "";
+    position: absolute;
+    background-image: linear-gradient(var(--line), var(--line));
+    background-size: 1px 12px;
+    background-repeat: repeat-y;
+    opacity: 0.5;
+  }
+  /* Specimen column with three uses */
+  .specimen {
+    display: grid;
+    grid-template-rows: 1fr 1fr 1fr;
+  }
+  .spec-row {
+    padding: 24px 28px;
+    display: flex; align-items: center; gap: 16px;
+    border-bottom: 1px solid var(--line);
+    min-height: 110px;
+  }
+  .spec-row:last-child { border-bottom: 0; }
+  .spec-tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--mute);
+    width: 80px; flex: none;
+  }
+  .spec-content { flex: 1; display: flex; align-items: center; gap: 12px; }
+
+  /* Inverted swatch */
+  .inv { background: var(--ink); color: #fff; }
+  .inv .spec-tag { color: #6f6960; }
+
+  /* Logo lockup baseline */
+  .lockup {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--serif);
+    font-weight: 600;
+    letter-spacing: -0.022em;
+    color: currentColor;
+  }
+  .lockup .wm-mark { flex: none; }
+  .lockup .wm-text { line-height: 1; }
+  .lockup .wm-tag {
+    font-family: var(--mono);
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--mute);
+    padding: 2px 5px;
+    border: 1px solid currentColor;
+    border-radius: 2px;
+    margin-left: 4px;
+    opacity: 0.7;
+  }
+  .inv .wm-tag { color: #aaa; border-color: #555; opacity: 1; }
+
+  /* Favicon */
+  .favicon {
+    width: 32px; height: 32px;
+    background: var(--ink); color: #fff;
+    border-radius: 6px;
+    display: grid; place-items: center;
+    flex: none;
+  }
+  .favicon svg { display: block; }
+
+  footer-note {
+    display: block;
+    margin-top: 48px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--mute);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+<header>
+  <div>
+    <div class="meta" style="margin-bottom: 12px;">Bike News Room · Logo proposals · v0.1</div>
+    <h1>Three marks.<br/>Black, white, no excuses.</h1>
+  </div>
+  <div class="meta">3 directions · 1 winner</div>
+</header>
+
+<div class="grid">
+
+  <!-- ============ OPTION 1 ============ -->
+  <section class="opt">
+    <div class="opt-head">
+      <div>
+        <div class="opt-id">01 · The Wheel-O</div>
+        <div class="opt-name">Spoked O</div>
+      </div>
+      <div class="opt-rationale">A wheel hidden inside the typography — the "O" of Room becomes a hub-and-spoke. Editorial wordmark first, cycling cue second. Reads as a serious news brand at thumbnail size and unmistakably bike at full size.</div>
+    </div>
+    <div class="opt-body">
+      <div class="hero">
+        <!-- Big lockup -->
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 18px;">
+          <svg width="380" height="120" viewBox="0 0 380 120" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Bike News Room">
+            <text x="0" y="86" font-family="Newsreader, Georgia, serif" font-size="86" font-weight="600" letter-spacing="-2.4" fill="#0c0c0e">Bike News R</text>
+            <!-- Wheel "O" -->
+            <g transform="translate(308 32)">
+              <circle cx="29" cy="29" r="28" stroke="#0c0c0e" stroke-width="3" fill="none"/>
+              <circle cx="29" cy="29" r="4" fill="#0c0c0e"/>
+              <line x1="29" y1="2" x2="29" y2="56" stroke="#0c0c0e" stroke-width="1.5"/>
+              <line x1="29" y1="2" x2="29" y2="56" stroke="#0c0c0e" stroke-width="1.5" transform="rotate(45 29 29)"/>
+              <line x1="29" y1="2" x2="29" y2="56" stroke="#0c0c0e" stroke-width="1.5" transform="rotate(90 29 29)"/>
+              <line x1="29" y1="2" x2="29" y2="56" stroke="#0c0c0e" stroke-width="1.5" transform="rotate(135 29 29)"/>
+            </g>
+            <text x="366" y="86" font-family="Newsreader, Georgia, serif" font-size="86" font-weight="600" letter-spacing="-2.4" fill="#0c0c0e">om</text>
+          </svg>
+          <div class="meta">Primary lockup · 380 × 120</div>
+        </div>
+      </div>
+      <div class="specimen">
+        <!-- App header use -->
+        <div class="spec-row">
+          <div class="spec-tag">App</div>
+          <div class="spec-content">
+            <span class="lockup" style="font-size: 18px;">
+              <svg class="wm-mark" width="20" height="20" viewBox="0 0 60 60" aria-hidden="true">
+                <circle cx="30" cy="30" r="28" stroke="currentColor" stroke-width="2.5" fill="none"/>
+                <circle cx="30" cy="30" r="4" fill="currentColor"/>
+                <line x1="30" y1="2" x2="30" y2="58" stroke="currentColor" stroke-width="1.5"/>
+                <line x1="30" y1="2" x2="30" y2="58" stroke="currentColor" stroke-width="1.5" transform="rotate(45 30 30)"/>
+                <line x1="30" y1="2" x2="30" y2="58" stroke="currentColor" stroke-width="1.5" transform="rotate(90 30 30)"/>
+                <line x1="30" y1="2" x2="30" y2="58" stroke="currentColor" stroke-width="1.5" transform="rotate(135 30 30)"/>
+              </svg>
+              <span class="wm-text">Bike News Room</span>
+              <span class="wm-tag">v0.1</span>
+            </span>
+          </div>
+        </div>
+        <!-- Inverted -->
+        <div class="spec-row inv">
+          <div class="spec-tag">Dark</div>
+          <div class="spec-content">
+            <span class="lockup" style="font-size: 18px;">
+              <svg class="wm-mark" width="20" height="20" viewBox="0 0 60 60" aria-hidden="true">
+                <circle cx="30" cy="30" r="28" stroke="currentColor" stroke-width="2.5" fill="none"/>
+                <circle cx="30" cy="30" r="4" fill="currentColor"/>
+                <line x1="30" y1="2" x2="30" y2="58" stroke="currentColor" stroke-width="1.5"/>
+                <line x1="30" y1="2" x2="30" y2="58" stroke="currentColor" stroke-width="1.5" transform="rotate(45 30 30)"/>
+                <line x1="30" y1="2" x2="30" y2="58" stroke="currentColor" stroke-width="1.5" transform="rotate(90 30 30)"/>
+                <line x1="30" y1="2" x2="30" y2="58" stroke="currentColor" stroke-width="1.5" transform="rotate(135 30 30)"/>
+              </svg>
+              <span class="wm-text">Bike News Room</span>
+            </span>
+          </div>
+        </div>
+        <!-- Favicon / mark only -->
+        <div class="spec-row">
+          <div class="spec-tag">Favicon</div>
+          <div class="spec-content">
+            <span class="favicon">
+              <svg width="20" height="20" viewBox="0 0 60 60" aria-hidden="true">
+                <circle cx="30" cy="30" r="26" stroke="#fff" stroke-width="3" fill="none"/>
+                <circle cx="30" cy="30" r="4" fill="#fff"/>
+                <line x1="30" y1="4" x2="30" y2="56" stroke="#fff" stroke-width="1.8"/>
+                <line x1="30" y1="4" x2="30" y2="56" stroke="#fff" stroke-width="1.8" transform="rotate(60 30 30)"/>
+                <line x1="30" y1="4" x2="30" y2="56" stroke="#fff" stroke-width="1.8" transform="rotate(120 30 30)"/>
+              </svg>
+            </span>
+            <span class="meta">32 × 32 · 6-spoke variant for clarity at small size</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ OPTION 2 ============ -->
+  <section class="opt">
+    <div class="opt-head">
+      <div>
+        <div class="opt-id">02 · Drop Bar Slash</div>
+        <div class="opt-name">BNR / Newsline</div>
+      </div>
+      <div class="opt-rationale">Tight monogram in heavy condensed sans, with a leaning slash that doubles as a road racer's down-tube and a wire-service "/". Newsroom code-name energy. Most "press release dropping" of the three.</div>
+    </div>
+    <div class="opt-body">
+      <div class="hero">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 18px;">
+          <svg width="380" height="160" viewBox="0 0 380 160" xmlns="http://www.w3.org/2000/svg" aria-label="BNR">
+            <!-- Big BNR -->
+            <text x="0" y="118" font-family="Inter Tight, sans-serif" font-size="148" font-weight="800" letter-spacing="-6" fill="#0c0c0e">BNR</text>
+            <!-- Slash overlay -->
+            <line x1="170" y1="20" x2="120" y2="148" stroke="#0c0c0e" stroke-width="6" stroke-linecap="square"/>
+            <!-- Tag below -->
+            <text x="0" y="150" font-family="JetBrains Mono, monospace" font-size="11" font-weight="500" letter-spacing="2" fill="#6a635a">BIKE · NEWS · ROOM ── SINCE 2026</text>
+          </svg>
+          <div class="meta">Monogram · 380 × 160</div>
+        </div>
+      </div>
+      <div class="specimen">
+        <div class="spec-row">
+          <div class="spec-tag">App</div>
+          <div class="spec-content">
+            <span class="lockup" style="font-family: var(--sans); font-weight: 800; font-size: 17px; letter-spacing: -0.04em; gap: 8px;">
+              <svg width="22" height="22" viewBox="0 0 60 60" aria-hidden="true">
+                <text x="0" y="44" font-family="Inter Tight" font-size="48" font-weight="800" letter-spacing="-2.4" fill="currentColor">BNR</text>
+                <line x1="34" y1="6" x2="20" y2="54" stroke="currentColor" stroke-width="3"/>
+              </svg>
+              <span>Bike News Room</span>
+              <span class="wm-tag">v0.1</span>
+            </span>
+          </div>
+        </div>
+        <div class="spec-row inv">
+          <div class="spec-tag">Dark</div>
+          <div class="spec-content">
+            <span style="font-family: var(--sans); font-weight: 800; font-size: 32px; letter-spacing: -0.05em; display: inline-flex; align-items: center; gap: 14px; color: #fff;">
+              <span style="position: relative; padding: 0 4px;">
+                BNR
+                <span style="position: absolute; top: -4px; bottom: -4px; left: 38%; width: 3px; background: #fff; transform: skew(-20deg); transform-origin: top;"></span>
+              </span>
+              <span style="font-family: var(--mono); font-size: 10px; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: #aaa;">Bike News Room</span>
+            </span>
+          </div>
+        </div>
+        <div class="spec-row">
+          <div class="spec-tag">Favicon</div>
+          <div class="spec-content">
+            <span class="favicon">
+              <svg width="22" height="22" viewBox="0 0 60 60">
+                <text x="6" y="44" font-family="Inter Tight" font-size="44" font-weight="800" letter-spacing="-2.2" fill="#fff">BNR</text>
+                <line x1="34" y1="6" x2="20" y2="54" stroke="#fff" stroke-width="3"/>
+              </svg>
+            </span>
+            <span class="meta">Square mark uses just the slash + 'B' for &lt;16px</span>
+            <span class="favicon" style="margin-left: 8px;">
+              <svg width="20" height="20" viewBox="0 0 60 60">
+                <text x="14" y="44" font-family="Inter Tight" font-size="44" font-weight="800" fill="#fff">B</text>
+                <line x1="40" y1="6" x2="20" y2="54" stroke="#fff" stroke-width="4"/>
+              </svg>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ OPTION 3 ============ -->
+  <section class="opt">
+    <div class="opt-head">
+      <div>
+        <div class="opt-id">03 · Front Page</div>
+        <div class="opt-name">Folded Newspaper</div>
+      </div>
+      <div class="opt-rationale">A folded newspaper silhouette with two stacked headlines that rhyme with bike-frame top tubes. Most literal "news" cue, cleanest at scale. Older-fan-friendly, gravitas-forward.</div>
+    </div>
+    <div class="opt-body">
+      <div class="hero">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 18px;">
+          <svg width="380" height="180" viewBox="0 0 380 180" xmlns="http://www.w3.org/2000/svg" aria-label="Bike News Room">
+            <!-- Folded paper rectangle, slight skew -->
+            <g transform="translate(40 18) rotate(-4 70 70)">
+              <rect x="0" y="0" width="140" height="148" fill="none" stroke="#0c0c0e" stroke-width="3"/>
+              <line x1="0" y1="74" x2="140" y2="74" stroke="#0c0c0e" stroke-width="1.5"/>
+              <!-- Headline lines / handlebars -->
+              <rect x="14" y="18" width="112" height="10" fill="#0c0c0e"/>
+              <rect x="14" y="36" width="78" height="6" fill="#0c0c0e"/>
+              <rect x="14" y="48" width="92" height="6" fill="#0c0c0e"/>
+              <!-- Lower half: a tiny chainring + text -->
+              <circle cx="32" cy="108" r="14" stroke="#0c0c0e" stroke-width="2" fill="none"/>
+              <circle cx="32" cy="108" r="2" fill="#0c0c0e"/>
+              <line x1="32" y1="94" x2="32" y2="122" stroke="#0c0c0e" stroke-width="1.2"/>
+              <line x1="18" y1="108" x2="46" y2="108" stroke="#0c0c0e" stroke-width="1.2"/>
+              <line x1="22" y1="98" x2="42" y2="118" stroke="#0c0c0e" stroke-width="1.2"/>
+              <line x1="22" y1="118" x2="42" y2="98" stroke="#0c0c0e" stroke-width="1.2"/>
+              <rect x="56" y="100" width="70" height="5" fill="#0c0c0e"/>
+              <rect x="56" y="111" width="50" height="5" fill="#0c0c0e"/>
+              <rect x="56" y="122" width="60" height="5" fill="#0c0c0e"/>
+            </g>
+            <text x="200" y="86" font-family="Newsreader, Georgia, serif" font-size="34" font-weight="600" letter-spacing="-0.8" fill="#0c0c0e">Bike News</text>
+            <text x="200" y="124" font-family="Newsreader, Georgia, serif" font-size="34" font-weight="600" letter-spacing="-0.8" fill="#0c0c0e">Room</text>
+            <line x1="200" y1="138" x2="320" y2="138" stroke="#0c0c0e" stroke-width="1"/>
+            <text x="200" y="156" font-family="JetBrains Mono, monospace" font-size="10" font-weight="500" letter-spacing="2" fill="#6a635a">DAILY · WIRE · ALL DISCIPLINES</text>
+          </svg>
+          <div class="meta">Stacked masthead · 380 × 180</div>
+        </div>
+      </div>
+      <div class="specimen">
+        <div class="spec-row">
+          <div class="spec-tag">App</div>
+          <div class="spec-content">
+            <span class="lockup" style="font-size: 17px; gap: 9px;">
+              <svg class="wm-mark" width="20" height="22" viewBox="0 0 24 26" aria-hidden="true">
+                <rect x="1" y="2" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"/>
+                <line x1="1" y1="13" x2="23" y2="13" stroke="currentColor" stroke-width="1"/>
+                <rect x="4" y="5" width="16" height="2" fill="currentColor"/>
+                <rect x="4" y="9" width="11" height="1.5" fill="currentColor"/>
+                <rect x="4" y="16" width="14" height="1.5" fill="currentColor"/>
+                <rect x="4" y="19" width="9" height="1.5" fill="currentColor"/>
+              </svg>
+              <span class="wm-text">Bike News Room</span>
+              <span class="wm-tag">v0.1</span>
+            </span>
+          </div>
+        </div>
+        <div class="spec-row inv">
+          <div class="spec-tag">Dark</div>
+          <div class="spec-content">
+            <span class="lockup" style="font-size: 17px; gap: 9px;">
+              <svg class="wm-mark" width="20" height="22" viewBox="0 0 24 26" aria-hidden="true">
+                <rect x="1" y="2" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"/>
+                <line x1="1" y1="13" x2="23" y2="13" stroke="currentColor" stroke-width="1"/>
+                <rect x="4" y="5" width="16" height="2" fill="currentColor"/>
+                <rect x="4" y="9" width="11" height="1.5" fill="currentColor"/>
+                <rect x="4" y="16" width="14" height="1.5" fill="currentColor"/>
+                <rect x="4" y="19" width="9" height="1.5" fill="currentColor"/>
+              </svg>
+              <span class="wm-text">Bike News Room</span>
+            </span>
+          </div>
+        </div>
+        <div class="spec-row">
+          <div class="spec-tag">Favicon</div>
+          <div class="spec-content">
+            <span class="favicon">
+              <svg width="20" height="22" viewBox="0 0 24 26" aria-hidden="true">
+                <rect x="1" y="2" width="22" height="22" fill="none" stroke="#fff" stroke-width="2.4"/>
+                <line x1="1" y1="13" x2="23" y2="13" stroke="#fff" stroke-width="1.4"/>
+                <rect x="4" y="5" width="16" height="3" fill="#fff"/>
+                <rect x="4" y="16" width="14" height="2" fill="#fff"/>
+              </svg>
+            </span>
+            <span class="meta">Glyph keeps top-tube headline + bottom-tube line</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<div style="margin-top: 64px; padding-top: 28px; border-top: 1px solid var(--line); display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;">
+  <div>
+    <div class="meta" style="margin-bottom: 8px;">My pick</div>
+    <div style="font-family: var(--serif); font-size: 22px; font-weight: 600; letter-spacing: -0.018em;">01 · Spoked O</div>
+    <div style="font-size: 13px; color: var(--mute); line-height: 1.55; margin-top: 6px;">Strongest balance of editorial gravitas and bike cue. Survives smallest sizes (the 6-spoke favicon variant). Pairs cleanly with the existing Newsreader headlines in the app.</div>
+  </div>
+  <div>
+    <div class="meta" style="margin-bottom: 8px;">If you want louder</div>
+    <div style="font-family: var(--serif); font-size: 22px; font-weight: 600; letter-spacing: -0.018em;">02 · BNR Slash</div>
+    <div style="font-size: 13px; color: var(--mute); line-height: 1.55; margin-top: 6px;">Pick this for younger-rider energy. Reads as a code-name. Slash works as a section divider in product UI too.</div>
+  </div>
+  <div>
+    <div class="meta" style="margin-bottom: 8px;">If you want quieter</div>
+    <div style="font-family: var(--serif); font-size: 22px; font-weight: 600; letter-spacing: -0.018em;">03 · Folded Newspaper</div>
+    <div style="font-size: 13px; color: var(--mute); line-height: 1.55; margin-top: 6px;">Most "newsroom". Older-fan friendly, gravitas-forward. Less obviously cycling at thumbnail size, so not my first pick — but the most distinctive.</div>
+  </div>
+</div>
+
+</div>
+</body>
+</html>

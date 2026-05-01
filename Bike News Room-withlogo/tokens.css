@@ -1,0 +1,239 @@
+/* Bike News Room — design tokens */
+
+@import url("https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;0,6..72,800;1,6..72,400&family=Inter+Tight:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap");
+
+:root {
+  /* Surfaces — dark default */
+  --bg-0: oklch(0.14 0.006 250);     /* page */
+  --bg-1: oklch(0.18 0.006 250);     /* card */
+  --bg-2: oklch(0.22 0.006 250);     /* hover / inset */
+  --bg-3: oklch(0.28 0.008 250);     /* selected */
+  --line: oklch(0.30 0.006 250 / 0.7);
+  --line-soft: oklch(0.30 0.006 250 / 0.35);
+
+  --fg-0: oklch(0.97 0.005 80);      /* primary text */
+  --fg-1: oklch(0.78 0.008 80);      /* secondary */
+  --fg-2: oklch(0.58 0.008 80);      /* meta / quiet */
+  --fg-3: oklch(0.42 0.008 80);      /* disabled */
+
+  --accent: oklch(0.78 0.18 95);     /* hi-vis sodium yellow — younger-rider energy */
+  --accent-ink: oklch(0.18 0.04 95);
+  --live: oklch(0.68 0.22 25);       /* red pulse */
+  --live-soft: oklch(0.68 0.22 25 / 0.16);
+
+  /* Discipline hues — used QUIET (1px bars, hover ring, selected fill only) */
+  --disc-road:   oklch(0.70 0.16 245);
+  --disc-mtb:    oklch(0.72 0.16 145);
+  --disc-gravel: oklch(0.78 0.14 70);
+  --disc-track:  oklch(0.70 0.18 295);
+  --disc-cx:     oklch(0.70 0.18 25);
+  --disc-bmx:    oklch(0.74 0.18 340);
+
+  /* Type */
+  --serif: "Newsreader", "Iowan Old Style", Georgia, serif;
+  --sans: "Inter Tight", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* Scale (younger persona — default) */
+  --t-meta: 11px;
+  --t-body: 14px;
+  --t-lede: 15px;
+  --t-h-s: 17px;
+  --t-h-m: 22px;
+  --t-h-l: 32px;
+  --t-h-xl: 48px;
+  --t-display: 64px;
+
+  /* Spacing */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 24px;
+  --s-8: 32px;
+  --s-10: 40px;
+  --s-12: 48px;
+  --s-16: 64px;
+
+  /* Radii */
+  --r-1: 4px;
+  --r-2: 8px;
+  --r-3: 12px;
+  --r-4: 16px;
+  --r-pill: 999px;
+
+  /* Shadows */
+  --shadow-1: 0 1px 0 oklch(1 0 0 / 0.04) inset, 0 1px 2px oklch(0 0 0 / 0.4);
+  --shadow-2: 0 8px 24px oklch(0 0 0 / 0.45), 0 1px 0 oklch(1 0 0 / 0.04) inset;
+  --shadow-pop: 0 24px 64px oklch(0 0 0 / 0.6), 0 2px 0 oklch(1 0 0 / 0.05) inset;
+
+  /* Motion */
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-sharp: cubic-bezier(0.4, 0, 0.2, 1);
+  --motion-1: 120ms;
+  --motion-2: 220ms;
+  --motion-3: 360ms;
+}
+
+/* Light theme override */
+[data-theme="light"] {
+  --bg-0: oklch(0.985 0.003 80);
+  --bg-1: oklch(1 0 0);
+  --bg-2: oklch(0.95 0.004 80);
+  --bg-3: oklch(0.90 0.005 80);
+  --line: oklch(0.86 0.005 80);
+  --line-soft: oklch(0.86 0.005 80 / 0.6);
+
+  --fg-0: oklch(0.18 0.006 250);
+  --fg-1: oklch(0.34 0.008 250);
+  --fg-2: oklch(0.50 0.008 250);
+  --fg-3: oklch(0.68 0.008 250);
+
+  --accent: oklch(0.55 0.18 250);
+  --accent-ink: oklch(0.98 0.005 80);
+
+  --shadow-1: 0 1px 2px oklch(0 0 0 / 0.06);
+  --shadow-2: 0 6px 18px oklch(0 0 0 / 0.08);
+  --shadow-pop: 0 24px 64px oklch(0 0 0 / 0.18);
+}
+
+/* Older persona — bigger, calmer */
+[data-persona="older"] {
+  --t-meta: 12px;
+  --t-body: 16px;
+  --t-lede: 17px;
+  --t-h-s: 19px;
+  --t-h-m: 26px;
+  --t-h-l: 38px;
+  --t-h-xl: 56px;
+  --t-display: 72px;
+}
+
+[data-persona="bridge"] {
+  --t-meta: 11px;
+  --t-body: 15px;
+  --t-lede: 16px;
+  --t-h-s: 18px;
+  --t-h-m: 24px;
+  --t-h-l: 34px;
+  --t-h-xl: 52px;
+  --t-display: 68px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg-0);
+  color: var(--fg-0);
+  font-family: var(--sans);
+  font-size: var(--t-body);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+a { color: inherit; text-decoration: none; }
+
+/* ===== Utility classes used across components ===== */
+.mono { font-family: var(--mono); font-feature-settings: "ss01", "ss02"; letter-spacing: -0.01em; }
+.serif { font-family: var(--serif); }
+.uppercase { text-transform: uppercase; letter-spacing: 0.08em; }
+.muted { color: var(--fg-2); }
+.subtle { color: var(--fg-1); }
+
+.hr { height: 1px; background: var(--line-soft); border: 0; margin: 0; }
+
+/* Discipline color helpers (set --disc on parent) */
+.disc-road   { --disc: var(--disc-road); }
+.disc-mtb    { --disc: var(--disc-mtb); }
+.disc-gravel { --disc: var(--disc-gravel); }
+.disc-track  { --disc: var(--disc-track); }
+.disc-cx     { --disc: var(--disc-cx); }
+.disc-bmx    { --disc: var(--disc-bmx); }
+
+/* Live pulse */
+@keyframes live-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--live-soft); }
+  50% { box-shadow: 0 0 0 6px transparent; }
+}
+.live-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--live);
+  animation: live-pulse 2s var(--ease) infinite;
+  display: inline-block;
+}
+
+/* Card hover lift */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+.fade-up { animation: fade-up var(--motion-3) var(--ease) both; }
+
+/* Skeleton shimmer */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, var(--bg-1) 0%, var(--bg-2) 40%, var(--bg-1) 80%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s linear infinite;
+  border-radius: var(--r-2);
+}
+
+/* Reduced motion */
+[data-reduce-motion="true"] *,
+[data-reduce-motion="true"] *::before,
+[data-reduce-motion="true"] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* Focus rings */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+/* Scrollbars (webkit) */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--line); border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: var(--fg-3); }
+
+/* Image placeholder — abstract striped art for thumbnails */
+.img-ph {
+  background-color: var(--bg-2);
+  background-image:
+    repeating-linear-gradient(
+      var(--ph-angle, 135deg),
+      oklch(from var(--disc, var(--fg-3)) l c h / 0.18) 0 2px,
+      transparent 2px 8px
+    ),
+    radial-gradient(circle at 30% 30%, oklch(from var(--disc, var(--fg-3)) l c h / 0.35), transparent 60%);
+  position: relative;
+  overflow: hidden;
+}
+.img-ph::after {
+  content: attr(data-label);
+  position: absolute; inset: auto 0 0 0;
+  padding: 6px 10px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: oklch(0.98 0 0 / 0.7);
+  background: linear-gradient(transparent, oklch(0 0 0 / 0.5));
+  letter-spacing: 0.04em;
+}

@@ -1,3 +1,15 @@
+---
+title: Bike News Room API
+emoji: 🚴
+colorFrom: yellow
+colorTo: red
+sdk: docker
+app_port: 7860
+pinned: false
+license: mit
+short_description: Cycling news aggregator API. Read-only public.
+---
+
 # Bike News Room — Backend
 
 Rust news aggregator for cycling. Fetches RSS feeds, crawls sites without RSS, deduplicates, categorizes, and serves over HTTP.

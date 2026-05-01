@@ -22,27 +22,19 @@
   <meta name="theme-color" content="#0E0F11">
 
   <!--
-    Content Security Policy.
-      script-src: 'self' for our bundle; 'wasm-unsafe-eval' is required by
-        Flutter Web's Skia/CanvasKit + dart2wasm runtime.
-      connect-src: 'self' plus the API origin (HF Space) — replace at deploy
-        time, or make this header injection your CDN's job for finer control.
-      img-src: 'self' (placeholders) plus https: for any remote article image.
-      font-src: 'self' plus Google Fonts hosts (we ship Newsreader / Inter Tight / JetBrains Mono via google_fonts).
-      style-src: 'unsafe-inline' is required by Flutter (inline style attrs).
+    Content Security Policy — tuned for Flutter Web (CanvasKit renderer).
+      script-src: 'self' for our bundle; 'wasm-unsafe-eval' for the dart2wasm
+        runtime; www.gstatic.com hosts Flutter's CanvasKit engine
+        (canvaskit.js / canvaskit.wasm).
+      connect-src: same trio — CanvasKit + icudtl.dat are XHR-fetched from
+        www.gstatic.com — plus our HF Space API.
+      img-src: 'self' for striped placeholders, https: for third-party article
+        thumbnails (RSS feeds host across many CDNs), data:/blob: for inline.
+      style-src: 'unsafe-inline' required by Flutter inline style attrs.
       frame-ancestors 'none' — never embeddable in a third-party iframe.
+      Single-line because newlines in <meta> CSP can confuse parsers.
   -->
-  <meta http-equiv="Content-Security-Policy" content="
-    default-src 'self';
-    script-src 'self' 'wasm-unsafe-eval';
-    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-    font-src 'self' https://fonts.gstatic.com;
-    img-src 'self' data: https:;
-    connect-src 'self' https://*.hf.space https://fonts.googleapis.com https://fonts.gstatic.com;
-    frame-ancestors 'none';
-    base-uri 'self';
-    form-action 'self';
-  ">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://*.hf.space https://www.gstatic.com https://fonts.googleapis.com https://fonts.gstatic.com; worker-src 'self' blob:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'">
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <meta name="referrer" content="no-referrer">
 

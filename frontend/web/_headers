@@ -9,7 +9,11 @@
   Referrer-Policy: no-referrer
   Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()
   Cross-Origin-Opener-Policy: same-origin
-  Cross-Origin-Embedder-Policy: credentialless
+
+# Note: Cross-Origin-Embedder-Policy: credentialless was tried but blocks
+# Flutter's CanvasKit fetch from www.gstatic.com. Re-enable only after we
+# either bundle CanvasKit locally (via --canvaskit-deferred) or gstatic
+# adds CORP headers we can use.
 
 # Long cache for hashed Flutter build assets — they include a content hash so
 # changes always produce a new URL.

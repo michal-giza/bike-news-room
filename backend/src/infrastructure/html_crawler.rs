@@ -31,6 +31,30 @@ impl Default for ScraperHtmlCrawler {
     }
 }
 
+/// Extract items from arbitrary HTML using widely-used default selectors.
+/// Used by the user-source probe — for unknown sites we don't know the
+/// correct selectors yet, so we try the patterns most CMSes (WordPress,
+/// Ghost, custom news themes) use.
+pub fn probe_default(html: &str, base_url: &str) -> Vec<ScrapedItem> {
+    let target = CrawlTarget {
+        name: "probe".into(),
+        url: base_url.to_string(),
+        region: "world".into(),
+        discipline: "all".into(),
+        language: "en".into(),
+        selectors: crate::domain::ports::CrawlSelectors {
+            article_list: "article, .post, .post-card, .news-item, .news-tile, .card, .entry".into(),
+            title: "h2 a, h3 a, .post-title a, .entry-title a, .card-title a, a.title".into(),
+            link: "h2 a, h3 a, .post-title a, .entry-title a, .card-title a, a.title".into(),
+            description: Some(".excerpt, .post-excerpt, .summary, .entry-summary, p".into()),
+            image: Some("img".into()),
+            date: Some("time, .date, .post-date, .entry-date, [datetime]".into()),
+            relative_links: true,
+        },
+    };
+    extract_items(html, &target)
+}
+
 /// Extract items from HTML synchronously. Separated from the async fetch so
 /// `scraper`'s non-`Send` types never cross an await point.
 fn extract_items(html: &str, target: &CrawlTarget) -> Vec<ScrapedItem> {

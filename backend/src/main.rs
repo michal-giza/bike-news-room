@@ -7,7 +7,8 @@ use tracing::{error, info};
 use tracing_subscriber::EnvFilter;
 
 use bike_news_room::application::{
-    CrawlSitesUseCase, IngestFeedsUseCase, QueryUseCases, SyncCalendarUseCase,
+    AddUserSourceUseCase, CrawlSitesUseCase, IngestFeedsUseCase, QueryUseCases,
+    SyncCalendarUseCase,
 };
 use bike_news_room::domain::ports::{ArticleRepository, FeedRepository, RaceRepository};
 use bike_news_room::infrastructure::{
@@ -100,6 +101,8 @@ async fn main() -> anyhow::Result<()> {
         feed_repo.clone(),
     ));
     let calendar_uc = Arc::new(SyncCalendarUseCase::new(race_repo.clone()));
+    let add_source_uc =
+        Arc::new(AddUserSourceUseCase::new(feed_repo.clone()));
     let query_uc = QueryUseCases::new(article_repo, feed_repo, race_repo);
 
     // ── Initial fetch on startup ────────────────────────────────────────
@@ -193,7 +196,7 @@ async fn main() -> anyhow::Result<()> {
             ),
         ));
 
-    let app = create_router(query_uc)
+    let app = create_router(query_uc, add_source_uc)
         .layer(cors)
         .layer(header_layers)
         .layer(governor_layer);

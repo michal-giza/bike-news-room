@@ -1,13 +1,16 @@
 //! Axum router and handlers. All handlers delegate to use cases.
 
+use std::sync::Arc;
 use std::time::Instant;
 
 use axum::extract::{Path, Query, State};
 use axum::http::StatusCode;
-use axum::routing::get;
+use axum::routing::{get, post};
 use axum::{Json, Router};
 
-use crate::application::QueryUseCases;
+use crate::application::{
+    AddSourceError, AddSourceRequest, AddUserSourceUseCase, QueryUseCases, SourceKind,
+};
 use crate::domain::entities::{Article, ArticleQuery, FeedHealth};
 
 use super::dto::*;
@@ -16,12 +19,17 @@ use super::errors::ApiError;
 #[derive(Clone)]
 pub struct AppState {
     pub queries: QueryUseCases,
+    pub add_source: Arc<AddUserSourceUseCase>,
     pub started_at: Instant,
 }
 
-pub fn create_router(queries: QueryUseCases) -> Router {
+pub fn create_router(
+    queries: QueryUseCases,
+    add_source: Arc<AddUserSourceUseCase>,
+) -> Router {
     let state = AppState {
         queries,
+        add_source,
         started_at: Instant::now(),
     };
 
@@ -32,6 +40,7 @@ pub fn create_router(queries: QueryUseCases) -> Router {
         .route("/api/feeds", get(list_feeds))
         .route("/api/categories", get(list_categories))
         .route("/api/races", get(list_races))
+        .route("/api/sources", post(register_source))
         .route("/api/health", get(health))
         .route("/api/metrics", get(metrics))
         .with_state(state)
@@ -181,4 +190,61 @@ async fn metrics(State(state): State<AppState>) -> Result<Json<MetricsResponse>,
         categories,
         feed_health,
     }))
+}
+
+/// User-submitted source registration.
+///
+/// Public endpoint. Rate-limited at the `tower_governor` layer to prevent
+/// abuse; further hardened by the URL guard (rejects private IPs / non-http
+/// schemes), payload-size cap, and a 15s probe timeout.
+///
+/// Returns 201 Created with the new feed_id + classification on success.
+/// 400 / 422 for validation errors so the client can show a precise toast.
+async fn register_source(
+    State(state): State<AppState>,
+    Json(body): Json<AddSourceBody>,
+) -> Result<(StatusCode, Json<AddSourceResponseDto>), (StatusCode, Json<serde_json::Value>)> {
+    let req = AddSourceRequest {
+        url: body.url,
+        name: body.name,
+        region: body.region,
+        discipline: body.discipline,
+        language: body.language,
+    };
+
+    match state.add_source.execute(req).await {
+        Ok(resp) => Ok((
+            StatusCode::CREATED,
+            Json(AddSourceResponseDto {
+                feed_id: resp.feed_id,
+                kind: match resp.kind {
+                    SourceKind::Rss => "rss",
+                    SourceKind::Crawl => "crawl",
+                }
+                .to_string(),
+                title: resp.title,
+                url: resp.url,
+                sample_count: resp.sample_count,
+            }),
+        )),
+        Err(e) => {
+            // Map use-case errors to precise HTTP statuses.
+            let status = match &e {
+                AddSourceError::InvalidUrl(_) => StatusCode::BAD_REQUEST,
+                AddSourceError::PayloadTooLarge => StatusCode::PAYLOAD_TOO_LARGE,
+                AddSourceError::FetchFailed(_) => StatusCode::BAD_GATEWAY,
+                AddSourceError::NoFeedFound => StatusCode::UNPROCESSABLE_ENTITY,
+                AddSourceError::Repository(_) => {
+                    tracing::error!("add_source repository error: {e}");
+                    StatusCode::INTERNAL_SERVER_ERROR
+                }
+            };
+            Err((
+                status,
+                Json(serde_json::json!({
+                    "error": e.to_string(),
+                })),
+            ))
+        }
+    }
 }

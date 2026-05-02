@@ -76,3 +76,24 @@ pub struct ArticleQueryParams {
     pub search: Option<String>,
     pub since: Option<String>,
 }
+
+#[derive(Debug, Deserialize)]
+pub struct AddSourceBody {
+    pub url: String,
+    /// Optional human-readable name. Falls back to the feed's own title or
+    /// the URL's hostname when absent.
+    pub name: Option<String>,
+    pub region: Option<String>,
+    pub discipline: Option<String>,
+    pub language: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct AddSourceResponseDto {
+    pub feed_id: i64,
+    /// "rss" or "crawl"
+    pub kind: String,
+    pub title: String,
+    pub url: String,
+    pub sample_count: usize,
+}

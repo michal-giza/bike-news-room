@@ -5,7 +5,7 @@ use std::sync::Arc;
 
 use axum::body::Body;
 use axum::http::{Request, StatusCode};
-use bike_news_room::application::QueryUseCases;
+use bike_news_room::application::{AddUserSourceUseCase, QueryUseCases};
 use bike_news_room::domain::entities::{ArticleDraft, ArticleQuery};
 use bike_news_room::domain::ports::{ArticleRepository, FeedRepository};
 use bike_news_room::infrastructure::{init_schema, SqliteRepository};
@@ -54,7 +54,8 @@ async fn setup_app_with_seed() -> (axum::Router, Arc<SqliteRepository>) {
     }
 
     let queries = QueryUseCases::new(repo.clone(), repo.clone(), repo.clone());
-    (create_router(queries), repo)
+    let add_source = Arc::new(AddUserSourceUseCase::new(repo.clone()));
+    (create_router(queries, add_source), repo)
 }
 
 async fn json_response(app: axum::Router, uri: &str) -> (StatusCode, Value) {
@@ -211,7 +212,8 @@ async fn empty_db_returns_empty_array() {
     init_schema(&pool).await.unwrap();
     let repo = Arc::new(SqliteRepository::new(pool));
     let queries = QueryUseCases::new(repo.clone(), repo.clone(), repo.clone());
-    let app = create_router(queries);
+    let add_source = Arc::new(AddUserSourceUseCase::new(repo.clone()));
+    let app = create_router(queries, add_source);
 
     let (status, body) = json_response(app, "/api/articles").await;
     assert_eq!(status, StatusCode::OK);

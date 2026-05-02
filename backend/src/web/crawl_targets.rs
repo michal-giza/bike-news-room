@@ -85,6 +85,25 @@ pub fn default_targets() -> Vec<CrawlTarget> {
                 relative_links: true,
             },
         },
+        // NaSzosie — Polish road-cycling magazine. Their /feed/ endpoint
+        // returns an anti-bot HTML page to HF Spaces' IPs, but the homepage
+        // serves clean WordPress markup. Crawl that instead.
+        CrawlTarget {
+            name: "NaSzosie".into(),
+            url: "https://naszosie.pl/".into(),
+            region: "poland".into(),
+            discipline: "road".into(),
+            language: "pl".into(),
+            selectors: CrawlSelectors {
+                article_list: "article, .post, .post-card, .news-tile".into(),
+                title: "h2 a, h3 a, .post-title a, .entry-title a".into(),
+                link: "h2 a, h3 a, .post-title a, .entry-title a".into(),
+                description: Some(".excerpt, .post-excerpt, p".into()),
+                image: Some("img".into()),
+                date: Some("time, .date, .post-date, .entry-date".into()),
+                relative_links: true,
+            },
+        },
         // ── Red Bull bike events: Hardline, Rampage, Joyride, Pump Track Worlds ─
         // Red Bull funds events that span MTB/BMX/road and unite riders globally.
         // No RSS — scrape their event-series listing.

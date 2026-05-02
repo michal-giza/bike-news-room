@@ -13,8 +13,11 @@ import 'features/feed/presentation/pages/feed_page.dart';
 import 'features/preferences/data/preferences_repository.dart';
 import 'features/preferences/domain/entities/user_preferences.dart';
 import 'features/preferences/presentation/cubit/preferences_cubit.dart';
+import 'features/sources/domain/usecases/add_source.dart';
+import 'features/sources/presentation/cubit/sources_cubit.dart';
 import 'features/watchlist/data/watchlist_repository.dart';
 import 'features/watchlist/presentation/cubit/watchlist_cubit.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,6 +39,12 @@ class BikeNewsRoomApp extends StatelessWidget {
         ),
         BlocProvider<WatchlistCubit>(
           create: (_) => WatchlistCubit(getIt<WatchlistRepository>())..load(),
+        ),
+        BlocProvider<UserSourcesCubit>(
+          create: (_) => UserSourcesCubit(
+            addSource: getIt<AddSource>(),
+            prefs: getIt<SharedPreferences>(),
+          )..load(),
         ),
       ],
       child: BlocBuilder<PreferencesCubit, UserPreferences>(

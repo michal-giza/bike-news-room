@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/theme/tokens.dart';
+import '../../../sources/presentation/widgets/add_source_modal.dart';
 import '../../../watchlist/domain/entities/watched_entity.dart';
 import '../../../watchlist/presentation/cubit/watchlist_cubit.dart';
 
@@ -128,6 +129,7 @@ class _SearchOverlayState extends State<SearchOverlay> {
                       children: [
                         _input(context, ext),
                         _followSection(context, ext),
+                        _addSourceRow(context, ext),
                         if (widget.recentSearches.isNotEmpty)
                           _section(context, 'RECENT', widget.recentSearches),
                         _suggestedRow(context, ext),
@@ -268,6 +270,62 @@ class _SearchOverlayState extends State<SearchOverlay> {
           ],
         );
       },
+    );
+  }
+
+  /// "Don't see it? Add a source" — only shown once the user has typed
+  /// enough to suggest they're hunting for content we don't have. Opens
+  /// the [AddSourceModal] which lets them submit any RSS or website URL.
+  Widget _addSourceRow(BuildContext context, BnrThemeExt ext) {
+    if (_query.trim().length < 3) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 6, 20, 6),
+      child: InkWell(
+        onTap: () {
+          // Pop the overlay first so the modal sits on a clean surface.
+          Navigator.of(context).pop();
+          AddSourceModal.show(context, prefillName: _query.trim());
+        },
+        borderRadius: BorderRadius.circular(BnrRadius.r2),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: ext.bg2,
+            border: Border.all(color: ext.line),
+            borderRadius: BorderRadius.circular(BnrRadius.r2),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.add_link, size: 16, color: BnrColors.accent),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Don't see what you're looking for?",
+                      style: AppTheme.sans(
+                        size: 13,
+                        color: ext.fg0,
+                        weight: FontWeight.w500,
+                      ),
+                    ),
+                    Text(
+                      'Paste any RSS feed or website to add it as a source.',
+                      style: AppTheme.sans(
+                        size: 12,
+                        color: ext.fg2,
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.arrow_forward, size: 14, color: ext.fg2),
+            ],
+          ),
+        ),
+      ),
     );
   }
 

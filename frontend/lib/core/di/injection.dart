@@ -12,6 +12,10 @@ import '../../features/feed/domain/usecases/get_article_by_id.dart';
 import '../../features/feed/domain/usecases/get_articles.dart';
 import '../../features/feed/domain/usecases/get_feed_sources.dart';
 import '../../features/preferences/data/preferences_repository.dart';
+import '../../features/sources/data/datasources/sources_remote_data_source.dart';
+import '../../features/sources/data/repositories/sources_repository_impl.dart';
+import '../../features/sources/domain/repositories/sources_repository.dart';
+import '../../features/sources/domain/usecases/add_source.dart';
 import '../../features/watchlist/data/watchlist_repository.dart';
 import '../network/api_client.dart';
 
@@ -58,5 +62,16 @@ Future<void> configureDependencies() async {
   );
   getIt.registerLazySingleton<GetUpcomingRaces>(
     () => GetUpcomingRaces(getIt<CalendarRepository>()),
+  );
+
+  // User-submitted sources feature
+  getIt.registerLazySingleton<SourcesRemoteDataSource>(
+    () => SourcesRemoteDataSourceImpl(getIt<ApiClient>().dio),
+  );
+  getIt.registerLazySingleton<SourcesRepository>(
+    () => SourcesRepositoryImpl(getIt<SourcesRemoteDataSource>()),
+  );
+  getIt.registerLazySingleton<AddSource>(
+    () => AddSource(getIt<SourcesRepository>()),
   );
 }

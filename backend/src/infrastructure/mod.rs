@@ -1,5 +1,6 @@
 //! Infrastructure layer — concrete adapters that implement domain ports.
 
+pub mod archive_backfill_targets;
 pub mod config;
 pub mod html_crawler;
 pub mod race_calendar_scraper;

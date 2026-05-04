@@ -8,10 +8,16 @@ use axum::http::StatusCode;
 use axum::routing::{get, post};
 use axum::{Json, Router};
 
+use sqlx::SqlitePool;
+
 use crate::application::{
-    AddSourceError, AddSourceRequest, AddUserSourceUseCase, QueryUseCases, SourceKind,
+    AddSourceError, AddSourceRequest, AddUserSourceUseCase, BackfillArchiveUseCase, QueryUseCases,
+    SourceKind,
 };
-use crate::domain::entities::{Article, ArticleQuery, FeedHealth};
+use crate::domain::entities::{
+    Article, ArticleQuery, FeedHealth, LiveTickerEntry, SourceCandidate,
+};
+use crate::domain::ports::{SourceCandidateRepository, SubscriberRepository};
 
 use super::dto::*;
 use super::errors::ApiError;
@@ -20,16 +26,28 @@ use super::errors::ApiError;
 pub struct AppState {
     pub queries: QueryUseCases,
     pub add_source: Arc<AddUserSourceUseCase>,
+    pub candidates: Arc<dyn SourceCandidateRepository>,
+    pub subscribers: Arc<dyn SubscriberRepository>,
+    pub backfill: Arc<BackfillArchiveUseCase>,
+    pub pool: SqlitePool,
     pub started_at: Instant,
 }
 
 pub fn create_router(
     queries: QueryUseCases,
     add_source: Arc<AddUserSourceUseCase>,
+    candidates: Arc<dyn SourceCandidateRepository>,
+    subscribers: Arc<dyn SubscriberRepository>,
+    backfill: Arc<BackfillArchiveUseCase>,
+    pool: SqlitePool,
 ) -> Router {
     let state = AppState {
         queries,
         add_source,
+        candidates,
+        subscribers,
+        backfill,
+        pool,
         started_at: Instant::now(),
     };
 
@@ -41,8 +59,28 @@ pub fn create_router(
         .route("/api/categories", get(list_categories))
         .route("/api/races", get(list_races))
         .route("/api/sources", post(register_source))
+        .route("/api/sources/candidates", get(list_source_candidates))
+        .route(
+            "/api/admin/source-candidates/{id}/promote",
+            post(promote_source_candidate),
+        )
+        .route(
+            "/api/admin/source-candidates/{id}/reject",
+            post(reject_source_candidate),
+        )
+        .route("/api/live-ticker", get(list_live_ticker))
+        .route("/api/admin/live-ticker", post(post_live_ticker))
+        .route("/api/admin/backfill", post(post_backfill))
+        .route("/api/subscribers", post(subscribe))
+        .route("/api/subscribers/confirm", get(confirm_subscriber))
+        .route("/api/subscribers/unsubscribe", get(unsubscribe))
         .route("/api/health", get(health))
         .route("/api/metrics", get(metrics))
+        // Public article landing — crawlers get OpenGraph HTML, humans
+        // get a 302 to the SPA. Lives off /api so it's a clean public URL.
+        .route("/article/{id}", get(super::article_html::article_landing))
+        .route("/sitemap.xml", get(super::sitemap::sitemap_xml))
+        .route("/robots.txt", get(super::sitemap::robots_txt))
         .with_state(state)
 }
 
@@ -70,6 +108,11 @@ async fn list_articles(
         category: params.category,
         search,
         since: params.since,
+        before: params.before,
+        race_slug: params
+            .race_slug
+            .map(|s| s.chars().take(64).collect::<String>())
+            .filter(|s| !s.trim().is_empty()),
     };
 
     let (articles, total) = state.queries.list_articles(&query).await?;
@@ -112,10 +155,20 @@ async fn list_races(
     Query(params): Query<RacesQueryParams>,
 ) -> Result<Json<RacesResponse>, ApiError> {
     let limit = params.limit.unwrap_or(40).clamp(1, 200);
-    let races = state
-        .queries
-        .upcoming_races(params.discipline.as_deref(), limit)
-        .await?;
+    // Default `upcoming = true` preserves the existing calendar-page
+    // contract — the page never sent the param before this change.
+    let upcoming = params.upcoming.unwrap_or(true);
+    let races = if upcoming {
+        state
+            .queries
+            .upcoming_races(params.discipline.as_deref(), limit)
+            .await?
+    } else {
+        state
+            .queries
+            .past_races(params.discipline.as_deref(), limit)
+            .await?
+    };
     Ok(Json(RacesResponse { races }))
 }
 
@@ -247,4 +300,479 @@ async fn register_source(
             ))
         }
     }
+}
+
+// ── Source-candidate (auto-growing source list) endpoints ──────────────────
+
+#[derive(serde::Deserialize)]
+struct CandidatesQuery {
+    /// Hide noise — by default require at least 3 mentions to surface a domain.
+    min_mentions: Option<i64>,
+    limit: Option<i64>,
+}
+
+#[derive(serde::Serialize)]
+struct CandidatesResponse {
+    candidates: Vec<SourceCandidate>,
+}
+
+/// Public read of the discovered-domain queue. We expose this read-only so
+/// curious users (and our own ops dashboard, eventually) can see what the
+/// crawler is finding without needing the admin token.
+async fn list_source_candidates(
+    State(state): State<AppState>,
+    Query(params): Query<CandidatesQuery>,
+) -> Result<Json<CandidatesResponse>, ApiError> {
+    let min_mentions = params.min_mentions.unwrap_or(3).clamp(1, 1000);
+    let limit = params.limit.unwrap_or(50).clamp(1, 500);
+    let candidates = state.candidates.list_pending(min_mentions, limit).await?;
+    Ok(Json(CandidatesResponse { candidates }))
+}
+
+/// Admin auth — single shared secret in `ADMIN_TOKEN` env var. Anyone who
+/// knows the value can promote/reject. We don't do per-user accounts because
+/// the admin surface is one operator (us) for now.
+fn require_admin(headers: &axum::http::HeaderMap) -> Result<(), StatusCode> {
+    let expected = std::env::var("ADMIN_TOKEN").ok();
+    let Some(expected) = expected.filter(|s| !s.is_empty()) else {
+        // No token configured = admin endpoints are bolted shut. Safer than
+        // accidentally leaving them open in production.
+        return Err(StatusCode::FORBIDDEN);
+    };
+    let provided = headers
+        .get("x-admin-token")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("");
+    if subtle_eq(provided.as_bytes(), expected.as_bytes()) {
+        Ok(())
+    } else {
+        Err(StatusCode::FORBIDDEN)
+    }
+}
+
+/// Constant-time byte compare so timing doesn't leak the token length.
+fn subtle_eq(a: &[u8], b: &[u8]) -> bool {
+    if a.len() != b.len() {
+        return false;
+    }
+    let mut diff = 0u8;
+    for (x, y) in a.iter().zip(b.iter()) {
+        diff |= x ^ y;
+    }
+    diff == 0
+}
+
+async fn promote_source_candidate(
+    State(state): State<AppState>,
+    headers: axum::http::HeaderMap,
+    Path(id): Path<i64>,
+) -> Result<(StatusCode, Json<serde_json::Value>), (StatusCode, Json<serde_json::Value>)> {
+    require_admin(&headers).map_err(|s| (s, Json(serde_json::json!({"error": "forbidden"}))))?;
+
+    let candidate = match state.candidates.find(id).await {
+        Ok(Some(c)) => c,
+        Ok(None) => {
+            return Err((
+                StatusCode::NOT_FOUND,
+                Json(serde_json::json!({"error": "candidate not found"})),
+            ));
+        }
+        Err(_) => {
+            return Err((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(serde_json::json!({"error": "lookup failed"})),
+            ));
+        }
+    };
+
+    if candidate.status != "pending" {
+        return Err((
+            StatusCode::CONFLICT,
+            Json(serde_json::json!({
+                "error": "candidate already adjudicated",
+                "status": candidate.status,
+            })),
+        ));
+    }
+
+    let req = AddSourceRequest {
+        url: candidate.sample_url.clone(),
+        name: None,
+        region: Some("world".to_string()),
+        discipline: None,
+        language: None,
+    };
+
+    match state.add_source.execute(req).await {
+        Ok(resp) => {
+            if let Err(e) = state.candidates.mark_approved(id, resp.feed_id).await {
+                tracing::warn!("mark_approved failed: {e}");
+            }
+            Ok((
+                StatusCode::OK,
+                Json(serde_json::json!({
+                    "status": "approved",
+                    "feed_id": resp.feed_id,
+                    "title": resp.title,
+                    "url": resp.url,
+                    "kind": match resp.kind {
+                        SourceKind::Rss => "rss",
+                        SourceKind::Crawl => "crawl",
+                    },
+                })),
+            ))
+        }
+        Err(e) => Err((
+            StatusCode::UNPROCESSABLE_ENTITY,
+            Json(serde_json::json!({"error": e.to_string()})),
+        )),
+    }
+}
+
+async fn reject_source_candidate(
+    State(state): State<AppState>,
+    headers: axum::http::HeaderMap,
+    Path(id): Path<i64>,
+) -> Result<StatusCode, (StatusCode, Json<serde_json::Value>)> {
+    require_admin(&headers).map_err(|s| (s, Json(serde_json::json!({"error": "forbidden"}))))?;
+    state.candidates.mark_rejected(id).await.map_err(|_| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(serde_json::json!({"error": "reject failed"})),
+        )
+    })?;
+    Ok(StatusCode::NO_CONTENT)
+}
+
+// ── Daily-digest subscription endpoints ────────────────────────────────────
+
+#[derive(serde::Deserialize)]
+struct SubscribeBody {
+    email: String,
+}
+
+#[derive(serde::Deserialize)]
+struct TokenQuery {
+    token: String,
+}
+
+/// Lightweight email validator. Real validation happens when Resend tries to
+/// deliver — here we just reject the obvious garbage so the table doesn't
+/// fill up with junk like "asdf".
+fn looks_like_email(s: &str) -> bool {
+    let s = s.trim();
+    if s.len() < 5 || s.len() > 254 {
+        return false;
+    }
+    let at = s.find('@');
+    let Some(at) = at else { return false };
+    let (local, rest) = s.split_at(at);
+    let domain = &rest[1..];
+    !local.is_empty()
+        && !domain.is_empty()
+        && domain.contains('.')
+        && !s.contains(' ')
+        && !s.contains('\n')
+}
+
+/// Generate a 32-char hex token. Uses thread-local RNG via `rand`-free
+/// approach: SHA-256 of (process_pid, monotonic_nanos, email, label).
+/// Not cryptographically perfect, but the token only needs to be
+/// unguessable by an attacker who doesn't know the email — and we have a
+/// UNIQUE constraint that catches accidental collisions.
+fn generate_token(email: &str, label: &str) -> String {
+    use sha2::{Digest, Sha256};
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_nanos())
+        .unwrap_or(0);
+    let pid = std::process::id();
+    let mut h = Sha256::new();
+    h.update(email.as_bytes());
+    h.update(label.as_bytes());
+    h.update(pid.to_be_bytes());
+    h.update(now.to_be_bytes());
+    let digest = h.finalize();
+    hex::encode(&digest[..16])
+}
+
+async fn subscribe(
+    State(state): State<AppState>,
+    Json(body): Json<SubscribeBody>,
+) -> Result<(StatusCode, Json<serde_json::Value>), (StatusCode, Json<serde_json::Value>)> {
+    let email = body.email.trim().to_lowercase();
+    if !looks_like_email(&email) {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            Json(serde_json::json!({"error": "invalid email"})),
+        ));
+    }
+    let confirm = generate_token(&email, "confirm");
+    let unsub = generate_token(&email, "unsub");
+
+    let sub = state
+        .subscribers
+        .upsert_pending(&email, &confirm, &unsub)
+        .await
+        .map_err(|_| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(serde_json::json!({"error": "save failed"})),
+            )
+        })?;
+
+    // Don't reveal whether the address was already subscribed — that would be
+    // an enumeration oracle. Always return the same shape.
+    Ok((
+        StatusCode::ACCEPTED,
+        Json(serde_json::json!({
+            "status": sub.status,
+            "message": "If the address is valid, a confirmation email is on its way.",
+        })),
+    ))
+}
+
+async fn confirm_subscriber(
+    State(state): State<AppState>,
+    Query(q): Query<TokenQuery>,
+) -> Result<axum::response::Html<String>, StatusCode> {
+    let Some(sub) = state
+        .subscribers
+        .find_by_confirm_token(&q.token)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
+    else {
+        return Err(StatusCode::NOT_FOUND);
+    };
+    state
+        .subscribers
+        .mark_confirmed(sub.id)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    Ok(axum::response::Html(
+        "<!doctype html><meta charset=utf-8><title>Confirmed</title>\
+         <body style=\"font-family:Georgia,serif;max-width:520px;margin:60px auto;padding:24px;text-align:center\">\
+         <h1>You're in.</h1><p>The next Bike News Room digest will land in your inbox tomorrow morning.</p>\
+         <p><a href=\"https://bike-news-room.pages.dev/\">Back to the wire →</a></p>"
+            .to_string(),
+    ))
+}
+
+async fn unsubscribe(
+    State(state): State<AppState>,
+    Query(q): Query<TokenQuery>,
+) -> Result<axum::response::Html<String>, StatusCode> {
+    let Some(sub) = state
+        .subscribers
+        .find_by_unsubscribe_token(&q.token)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
+    else {
+        return Err(StatusCode::NOT_FOUND);
+    };
+    state
+        .subscribers
+        .mark_unsubscribed(sub.id)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    Ok(axum::response::Html(
+        "<!doctype html><meta charset=utf-8><title>Unsubscribed</title>\
+         <body style=\"font-family:Georgia,serif;max-width:520px;margin:60px auto;padding:24px;text-align:center\">\
+         <h1>You're out.</h1><p>You'll no longer receive Bike News Room digests.</p>"
+            .to_string(),
+    ))
+}
+
+// ── Live race ticker endpoints ─────────────────────────────────────────────
+
+#[derive(serde::Deserialize)]
+struct LiveTickerQuery {
+    /// Window in hours; defaults to 6 (a typical race-stage length).
+    hours: Option<i64>,
+    limit: Option<i64>,
+}
+
+#[derive(serde::Serialize)]
+struct LiveTickerResponse {
+    entries: Vec<LiveTickerEntry>,
+}
+
+async fn list_live_ticker(
+    State(state): State<AppState>,
+    Query(q): Query<LiveTickerQuery>,
+) -> Result<Json<LiveTickerResponse>, ApiError> {
+    let hours = q.hours.unwrap_or(6).clamp(1, 48);
+    let limit = q.limit.unwrap_or(20).clamp(1, 100);
+    // SQLite's datetime() supports relative arithmetic — keep the cutoff
+    // logic in the query so we don't have to format times client-side.
+    let cutoff = format!("-{hours} hours");
+    let rows = sqlx::query_as::<_, LiveTickerEntry>(
+        "SELECT id, race_name, headline, kind, source_url, posted_at
+         FROM live_ticker_entries
+         WHERE posted_at >= datetime('now', ?)
+         ORDER BY posted_at DESC
+         LIMIT ?",
+    )
+    .bind(&cutoff)
+    .bind(limit)
+    .fetch_all(&state.pool)
+    .await
+    .map_err(|e| {
+        tracing::error!("live-ticker list failed: {e}");
+        ApiError(crate::domain::errors::DomainError::Repository(
+            e.to_string(),
+        ))
+    })?;
+    Ok(Json(LiveTickerResponse { entries: rows }))
+}
+
+#[derive(serde::Deserialize)]
+struct LiveTickerBody {
+    race_name: String,
+    headline: String,
+    kind: Option<String>,
+    source_url: Option<String>,
+}
+
+/// Admin-only — push a single live-ticker entry. Used for now as the
+/// primary insertion path until the PCS scraper is wired in.
+async fn post_live_ticker(
+    State(state): State<AppState>,
+    headers: axum::http::HeaderMap,
+    Json(body): Json<LiveTickerBody>,
+) -> Result<(StatusCode, Json<serde_json::Value>), (StatusCode, Json<serde_json::Value>)> {
+    require_admin(&headers).map_err(|s| (s, Json(serde_json::json!({"error": "forbidden"}))))?;
+
+    let race_name = body.race_name.trim();
+    let headline = body.headline.trim();
+    if race_name.is_empty() || headline.is_empty() || race_name.len() > 80 || headline.len() > 280 {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            Json(
+                serde_json::json!({"error": "race_name and headline required (race_name ≤80, headline ≤280)"}),
+            ),
+        ));
+    }
+    let kind = body
+        .kind
+        .as_deref()
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .unwrap_or("update");
+
+    let id: i64 = sqlx::query_scalar(
+        "INSERT INTO live_ticker_entries (race_name, headline, kind, source_url)
+         VALUES (?, ?, ?, ?) RETURNING id",
+    )
+    .bind(race_name)
+    .bind(headline)
+    .bind(kind)
+    .bind(body.source_url.as_deref())
+    .fetch_one(&state.pool)
+    .await
+    .map_err(|e| {
+        tracing::error!("live-ticker insert failed: {e}");
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(serde_json::json!({"error": "insert failed"})),
+        )
+    })?;
+
+    Ok((StatusCode::CREATED, Json(serde_json::json!({"id": id}))))
+}
+
+#[derive(serde::Deserialize)]
+struct BackfillBody {
+    /// Race slug from the matcher catalogue, e.g. "tour-de-france".
+    race_slug: String,
+    /// Number of years back to scan from the current calendar year.
+    /// Default 3 — covers the typical "last few editions" expectation.
+    years: Option<i32>,
+    /// Skip the 30-day cooldown when set. Used after a publisher
+    /// restructures their archive URLs and we want to re-scan.
+    force: Option<bool>,
+}
+
+#[derive(serde::Serialize)]
+struct BackfillResponseDto {
+    race_slug: String,
+    runs: Vec<BackfillRunDto>,
+    total_inserted: usize,
+    total_linked: usize,
+}
+
+#[derive(serde::Serialize)]
+struct BackfillRunDto {
+    year: i32,
+    fetched: usize,
+    inserted: usize,
+    linked: usize,
+    skipped_existing: usize,
+}
+
+/// Admin-only Internet Archive backfill trigger.
+///
+/// `POST /api/admin/backfill` body: `{ "race_slug": "tour-de-france", "years": 3 }`
+/// Runs the backfill use case once per (race, year) within the
+/// requested range. Each year is rate-limited at 1 req/2s per publisher,
+/// so a 3-year run for a Grand Tour with 4 publishers takes ~5 min in
+/// the worst case. The endpoint blocks until done — admins watch the
+/// terminal logs while it runs.
+async fn post_backfill(
+    State(state): State<AppState>,
+    headers: axum::http::HeaderMap,
+    Json(body): Json<BackfillBody>,
+) -> Result<(StatusCode, Json<BackfillResponseDto>), (StatusCode, Json<serde_json::Value>)> {
+    require_admin(&headers).map_err(|s| (s, Json(serde_json::json!({"error": "forbidden"}))))?;
+
+    let years = body.years.unwrap_or(3).clamp(1, 10);
+    let force = body.force.unwrap_or(false);
+    let current_year = chrono::Utc::now()
+        .format("%Y")
+        .to_string()
+        .parse::<i32>()
+        .unwrap_or(2026);
+
+    let mut total_inserted = 0usize;
+    let mut total_linked = 0usize;
+    let mut runs = Vec::with_capacity(years as usize);
+
+    // Iterate from oldest -> newest so partial-failure runs leave the
+    // most-recent year for last (the year users care about most).
+    for offset in (0..years).rev() {
+        let year = current_year - offset;
+        match state.backfill.run(&body.race_slug, year, force).await {
+            Ok(report) => {
+                total_inserted += report.inserted;
+                total_linked += report.linked;
+                runs.push(BackfillRunDto {
+                    year: report.year,
+                    fetched: report.fetched,
+                    inserted: report.inserted,
+                    linked: report.linked,
+                    skipped_existing: report.skipped_existing,
+                });
+            }
+            Err(e) => {
+                tracing::error!("backfill year {year} failed: {e}");
+                runs.push(BackfillRunDto {
+                    year,
+                    fetched: 0,
+                    inserted: 0,
+                    linked: 0,
+                    skipped_existing: 0,
+                });
+            }
+        }
+    }
+
+    Ok((
+        StatusCode::OK,
+        Json(BackfillResponseDto {
+            race_slug: body.race_slug,
+            runs,
+            total_inserted,
+            total_linked,
+        }),
+    ))
 }

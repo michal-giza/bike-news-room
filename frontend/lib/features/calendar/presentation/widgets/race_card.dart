@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/theme/tokens.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../domain/entities/race.dart';
 
 /// Single row in the race calendar — date strip + name + meta.
@@ -125,10 +126,12 @@ class _RaceCardState extends State<RaceCard> {
           ),
           Text(
             ongoing
-                ? 'NOW'
+                ? AppLocalizations.of(context).raceCardNow
                 : (daysUntil <= 0
-                    ? 'TODAY'
-                    : (daysUntil == 1 ? 'TOMORROW' : '${daysUntil}D')),
+                    ? AppLocalizations.of(context).raceCardToday
+                    : (daysUntil == 1
+                        ? AppLocalizations.of(context).raceCardTomorrow
+                        : AppLocalizations.of(context).raceCardDays(daysUntil))),
             style: AppTheme.mono(
               size: 9,
               color: ongoing ? BnrColors.live : ext.fg3,

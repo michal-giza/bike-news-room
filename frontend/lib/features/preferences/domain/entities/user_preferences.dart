@@ -6,6 +6,8 @@ enum AppThemeMode { dark, light, system }
 
 enum CardDensity { compact, comfort, large }
 
+const _sentinel = Object();
+
 class UserPreferences extends Equatable {
   final AppThemeMode themeMode;
   final PersonaScale persona;
@@ -17,6 +19,16 @@ class UserPreferences extends Equatable {
   final bool reducedMotion;
   final bool onboardingComplete;
 
+  /// Newest article id the user has seen on a previous visit. Used by the
+  /// home feed to show a "X new since you last looked" pill — gives users
+  /// a reason to click through and feels alive between visits.
+  /// `null` until the user has loaded the feed at least once.
+  final int? lastSeenArticleId;
+
+  /// User's preferred locale code (e.g. `en`, `pl`, `es`). `null` means
+  /// "follow the device locale" — the standard Flutter behaviour.
+  final String? localeCode;
+
   const UserPreferences({
     this.themeMode = AppThemeMode.dark,
     this.persona = PersonaScale.younger,
@@ -27,6 +39,8 @@ class UserPreferences extends Equatable {
     this.bookmarkedArticleIds = const {},
     this.reducedMotion = false,
     this.onboardingComplete = false,
+    this.lastSeenArticleId,
+    this.localeCode,
   });
 
   UserPreferences copyWith({
@@ -39,6 +53,8 @@ class UserPreferences extends Equatable {
     Set<int>? bookmarkedArticleIds,
     bool? reducedMotion,
     bool? onboardingComplete,
+    Object? lastSeenArticleId = _sentinel,
+    Object? localeCode = _sentinel,
   }) =>
       UserPreferences(
         themeMode: themeMode ?? this.themeMode,
@@ -51,6 +67,12 @@ class UserPreferences extends Equatable {
             bookmarkedArticleIds ?? this.bookmarkedArticleIds,
         reducedMotion: reducedMotion ?? this.reducedMotion,
         onboardingComplete: onboardingComplete ?? this.onboardingComplete,
+        lastSeenArticleId: identical(lastSeenArticleId, _sentinel)
+            ? this.lastSeenArticleId
+            : lastSeenArticleId as int?,
+        localeCode: identical(localeCode, _sentinel)
+            ? this.localeCode
+            : localeCode as String?,
       );
 
   @override
@@ -64,5 +86,7 @@ class UserPreferences extends Equatable {
         bookmarkedArticleIds,
         reducedMotion,
         onboardingComplete,
+        lastSeenArticleId,
+        localeCode,
       ];
 }

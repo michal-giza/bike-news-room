@@ -44,10 +44,7 @@ impl SyncCalendarUseCase {
                     );
                     total += n;
                 }
-                Err(e) => warn!(
-                    "calendar sync ({}): fetch failed — {e}",
-                    source.discipline
-                ),
+                Err(e) => warn!("calendar sync ({}): fetch failed — {e}", source.discipline),
             }
         }
         total

@@ -43,7 +43,8 @@ pub fn probe_default(html: &str, base_url: &str) -> Vec<ScrapedItem> {
         discipline: "all".into(),
         language: "en".into(),
         selectors: crate::domain::ports::CrawlSelectors {
-            article_list: "article, .post, .post-card, .news-item, .news-tile, .card, .entry".into(),
+            article_list: "article, .post, .post-card, .news-item, .news-tile, .card, .entry"
+                .into(),
             title: "h2 a, h3 a, .post-title a, .entry-title a, .card-title a, a.title".into(),
             link: "h2 a, h3 a, .post-title a, .entry-title a, .card-title a, a.title".into(),
             description: Some(".excerpt, .post-excerpt, .summary, .entry-summary, p".into()),
@@ -154,7 +155,8 @@ fn extract_items(html: &str, target: &CrawlTarget) -> Vec<ScrapedItem> {
                     .or_else(|| {
                         chrono::NaiveDate::parse_from_str(&d, "%Y-%m-%d")
                             .ok()
-                            .map(|nd| nd.and_hms_opt(0, 0, 0).unwrap().and_utc().to_rfc3339())
+                            .and_then(|nd| nd.and_hms_opt(0, 0, 0))
+                            .map(|ndt| ndt.and_utc().to_rfc3339())
                     })
             })
             .unwrap_or_else(|| Utc::now().to_rfc3339());

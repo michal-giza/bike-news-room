@@ -83,6 +83,12 @@ class ArticleFilter extends Equatable {
   final String? category;
   final String? search;
   final DateTime? since;
+  /// Symmetric to `since`. Only articles older than this timestamp.
+  /// Drives the per-race archive page through past editions.
+  final DateTime? before;
+  /// Race slug from the matcher catalogue. When set, the backend joins
+  /// `race_articles` so only articles linked to that race come back.
+  final String? raceSlug;
 
   const ArticleFilter({
     this.page = 1,
@@ -92,6 +98,8 @@ class ArticleFilter extends Equatable {
     this.category,
     this.search,
     this.since,
+    this.before,
+    this.raceSlug,
   });
 
   ArticleFilter copyWith({
@@ -102,6 +110,8 @@ class ArticleFilter extends Equatable {
     Object? category = _sentinel,
     Object? search = _sentinel,
     Object? since = _sentinel,
+    Object? before = _sentinel,
+    Object? raceSlug = _sentinel,
   }) {
     return ArticleFilter(
       page: page ?? this.page,
@@ -112,6 +122,10 @@ class ArticleFilter extends Equatable {
       category: identical(category, _sentinel) ? this.category : category as String?,
       search: identical(search, _sentinel) ? this.search : search as String?,
       since: identical(since, _sentinel) ? this.since : since as DateTime?,
+      before:
+          identical(before, _sentinel) ? this.before : before as DateTime?,
+      raceSlug:
+          identical(raceSlug, _sentinel) ? this.raceSlug : raceSlug as String?,
     );
   }
 
@@ -119,5 +133,5 @@ class ArticleFilter extends Equatable {
 
   @override
   List<Object?> get props =>
-      [page, limit, region, discipline, category, search, since];
+      [page, limit, region, discipline, category, search, since, before, raceSlug];
 }

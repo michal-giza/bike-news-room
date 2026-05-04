@@ -3,6 +3,7 @@
 //! PCS publishes UCI calendar data per discipline at predictable URLs:
 //!   - Road  : https://www.procyclingstats.com/races.php
 //!   - MTB   : https://www.procyclingstats.com/mtb/races.php
+//!
 //! The HTML structure is a `<table class="basic">` with rows of (date, name, country, category, …).
 //!
 //! This crate-internal helper produces [`RaceDraft`]s that the application
@@ -105,21 +106,21 @@ pub fn extract_races(html: &str, discipline: &str) -> Vec<RaceDraft> {
                 if h.starts_with("http") {
                     h.to_string()
                 } else {
-                    format!("https://www.procyclingstats.com/{}", h.trim_start_matches('/'))
+                    format!(
+                        "https://www.procyclingstats.com/{}",
+                        h.trim_start_matches('/')
+                    )
                 }
             });
 
         // Country may be a flag class like "flag pl" — pull the 2-letter code.
-        let country = row
-            .select(&flag_sel)
-            .next()
-            .and_then(|el| {
-                el.value().attr("class").and_then(|cls| {
-                    cls.split_whitespace()
-                        .find(|w| w.len() == 2 && w.chars().all(|c| c.is_ascii_alphabetic()))
-                        .map(|w| w.to_uppercase())
-                })
-            });
+        let country = row.select(&flag_sel).next().and_then(|el| {
+            el.value().attr("class").and_then(|cls| {
+                cls.split_whitespace()
+                    .find(|w| w.len() == 2 && w.chars().all(|c| c.is_ascii_alphabetic()))
+                    .map(|w| w.to_uppercase())
+            })
+        });
 
         let category = cells
             .get(2)

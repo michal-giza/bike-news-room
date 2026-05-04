@@ -12,11 +12,12 @@ pub trait RaceRepository: Send + Sync {
     async fn upsert_race(&self, draft: &RaceDraft) -> DomainResult<i64>;
 
     /// Upcoming races, optionally filtered by discipline. Past races excluded.
-    async fn upcoming_races(
-        &self,
-        discipline: Option<&str>,
-        limit: i64,
-    ) -> DomainResult<Vec<Race>>;
+    async fn upcoming_races(&self, discipline: Option<&str>, limit: i64)
+        -> DomainResult<Vec<Race>>;
+
+    /// Past races, newest-first. Inverse of `upcoming_races`.
+    /// Drives the per-race "past editions" archive view.
+    async fn past_races(&self, discipline: Option<&str>, limit: i64) -> DomainResult<Vec<Race>>;
 
     async fn count_races(&self) -> DomainResult<i64>;
 }

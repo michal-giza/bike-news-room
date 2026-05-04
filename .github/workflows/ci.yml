@@ -50,3 +50,38 @@ jobs:
       - name: Release build
         if: matrix.task == 'build'
         run: cargo build --release
+
+  flutter:
+    name: Flutter ${{ matrix.task }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+    strategy:
+      fail-fast: false
+      matrix:
+        task: [analyze, test, build]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze
+        if: matrix.task == 'analyze'
+        run: flutter analyze
+
+      - name: Tests
+        if: matrix.task == 'test'
+        run: flutter test
+
+      - name: Web build
+        if: matrix.task == 'build'
+        run: flutter build web --release

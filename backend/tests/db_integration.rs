@@ -267,7 +267,11 @@ async fn search_escapes_like_wildcards() {
     let repo = setup_repo().await;
     let feed_id = seed_feed(&repo).await;
 
-    let titles = ["Article about 100% climbs", "Pogacar wins stage", "Anything goes"];
+    let titles = [
+        "Article about 100% climbs",
+        "Pogacar wins stage",
+        "Anything goes",
+    ];
     for (i, title) in titles.iter().enumerate() {
         let mut d = draft(feed_id, &i.to_string(), "world", "road", None);
         d.title = title.to_string();
@@ -364,9 +368,15 @@ async fn race_upcoming_excludes_past_races_and_filters_by_discipline() {
         .format("%Y-%m-%d")
         .to_string();
 
-    repo.upsert_race(&race_draft("Past Race", &yesterday, "road")).await.unwrap();
-    repo.upsert_race(&race_draft("Future Road", &tomorrow, "road")).await.unwrap();
-    repo.upsert_race(&race_draft("Future MTB", &next_week, "mtb")).await.unwrap();
+    repo.upsert_race(&race_draft("Past Race", &yesterday, "road"))
+        .await
+        .unwrap();
+    repo.upsert_race(&race_draft("Future Road", &tomorrow, "road"))
+        .await
+        .unwrap();
+    repo.upsert_race(&race_draft("Future MTB", &next_week, "mtb"))
+        .await
+        .unwrap();
 
     let road = repo.upcoming_races(Some("road"), 10).await.unwrap();
     assert_eq!(road.len(), 1);

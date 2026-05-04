@@ -7,6 +7,7 @@ use chrono::Utc;
 use futures::future::join_all;
 use tracing::{info, warn};
 
+use crate::application::{MineCandidatesUseCase, RaceMatcherUseCase};
 use crate::domain::entities::{ArticleDraft, FeedHealth};
 use crate::domain::ports::{ArticleRepository, FeedFetcher, FeedRepository};
 use crate::domain::services::{
@@ -18,6 +19,8 @@ pub struct IngestFeedsUseCase<F> {
     fetcher: Arc<F>,
     article_repo: Arc<dyn ArticleRepository>,
     feed_repo: Arc<dyn FeedRepository>,
+    miner: Option<Arc<MineCandidatesUseCase>>,
+    race_matcher: Option<Arc<RaceMatcherUseCase>>,
 }
 
 impl<F: FeedFetcher + 'static> IngestFeedsUseCase<F> {
@@ -30,7 +33,25 @@ impl<F: FeedFetcher + 'static> IngestFeedsUseCase<F> {
             fetcher,
             article_repo,
             feed_repo,
+            miner: None,
+            race_matcher: None,
         }
+    }
+
+    /// Attach an outbound-link miner. When set, every newly-inserted article
+    /// has its description scanned for cycling-domain candidates the admin
+    /// can later promote to feeds.
+    pub fn with_miner(mut self, miner: Arc<MineCandidatesUseCase>) -> Self {
+        self.miner = Some(miner);
+        self
+    }
+
+    /// Attach the race matcher. When set, every newly-inserted article is
+    /// scanned against the race catalogue and any matches are persisted to
+    /// `race_articles` (which also retention-exempts the article).
+    pub fn with_race_matcher(mut self, matcher: Arc<RaceMatcherUseCase>) -> Self {
+        self.race_matcher = Some(matcher);
+        self
     }
 
     /// Process a single feed source. Returns the number of new articles inserted,
@@ -128,6 +149,21 @@ impl<F: FeedFetcher + 'static> IngestFeedsUseCase<F> {
                         let _ = self
                             .article_repo
                             .mark_duplicate(article_id, canonical_id)
+                            .await;
+                    }
+                    if let Some(miner) = &self.miner {
+                        miner
+                            .mine_article(draft.description.as_deref(), &draft.url)
+                            .await;
+                    }
+                    if let Some(matcher) = &self.race_matcher {
+                        matcher
+                            .match_and_link(
+                                article_id,
+                                &draft.title,
+                                draft.description.as_deref(),
+                                Some(&draft.discipline),
+                            )
                             .await;
                     }
                 }

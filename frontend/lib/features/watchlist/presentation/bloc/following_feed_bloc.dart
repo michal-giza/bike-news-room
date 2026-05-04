@@ -1,6 +1,8 @@
+import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/error/failures.dart';
 import '../../../feed/domain/entities/article.dart';
 import '../../../feed/domain/usecases/get_articles.dart';
 import '../../domain/entities/watched_entity.dart';
@@ -75,16 +77,35 @@ class FollowingFeedBloc extends Bloc<FollowingFeedEvent, FollowingFeedState> {
 
     emit(state.copyWith(loading: true, errorMessage: null));
 
-    // Fan out one query per watched entity using its primary name. (We
-    // could also expand to aliases but that doubles the calls — most aliases
-    // are substring/accent variants which the backend's LIKE matches anyway.)
-    final futures = event.following.map((entity) {
-      return getArticles(ArticleFilter(
-        page: 1,
-        limit: 50,
-        search: entity.name,
-      ));
-    }).toList();
+    // Fan out one query per `name` AND per alias for every watched entity.
+    // We learned the hard way that primary-name-only search misses too
+    // much: articles writing "Pogacar" (anglicised) are missed by a
+    // "Tadej Pogačar" search, and "Giro 2026" misses an entity named
+    // "Giro d'Italia". Aliases are short — at avg 4 per entity this is
+    // ~5× the calls of the old approach but still well under a second
+    // wall-clock with `Future.wait` at the API's sub-100ms p50.
+    //
+    // To keep load reasonable we cap unique terms per call at 8 — covers
+    // every real entity in the seed; user-added entities with lots of
+    // custom aliases get the first 8.
+    const maxTermsPerEntity = 8;
+
+    final futures = <Future<Either<Failure, ArticlePage>>>[];
+    for (final entity in event.following) {
+      final terms = <String>{
+        entity.name.trim(),
+        ...entity.aliases.map((a) => a.trim()),
+      }
+          .where((t) => t.isNotEmpty)
+          .take(maxTermsPerEntity);
+      for (final term in terms) {
+        futures.add(getArticles(ArticleFilter(
+          page: 1,
+          limit: 50,
+          search: term,
+        )));
+      }
+    }
 
     final results = await Future.wait(futures);
 

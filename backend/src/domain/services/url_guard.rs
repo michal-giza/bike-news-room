@@ -72,11 +72,7 @@ pub fn validate(raw: &str) -> Result<Url, UrlGuardError> {
             // corporate feed); we rely on payload-size + timeout limits +
             // unprivileged process for that residual risk.
             let lower = domain.to_ascii_lowercase();
-            const BLOCKED_DOMAINS: &[&str] = &[
-                "localhost",
-                "ip6-localhost",
-                "ip6-loopback",
-            ];
+            const BLOCKED_DOMAINS: &[&str] = &["localhost", "ip6-localhost", "ip6-loopback"];
             if BLOCKED_DOMAINS.contains(&lower.as_str()) {
                 return Err(UrlGuardError::PrivateHost);
             }
@@ -137,16 +133,31 @@ mod tests {
 
     #[test]
     fn rejects_localhost_variants() {
-        assert_eq!(validate("http://localhost/"), Err(UrlGuardError::PrivateHost));
-        assert_eq!(validate("http://127.0.0.1/"), Err(UrlGuardError::PrivateHost));
+        assert_eq!(
+            validate("http://localhost/"),
+            Err(UrlGuardError::PrivateHost)
+        );
+        assert_eq!(
+            validate("http://127.0.0.1/"),
+            Err(UrlGuardError::PrivateHost)
+        );
         assert_eq!(validate("http://[::1]/"), Err(UrlGuardError::PrivateHost));
     }
 
     #[test]
     fn rejects_rfc1918_and_metadata() {
-        assert_eq!(validate("http://10.0.0.1/"), Err(UrlGuardError::PrivateHost));
-        assert_eq!(validate("http://192.168.1.1/"), Err(UrlGuardError::PrivateHost));
-        assert_eq!(validate("http://172.16.0.1/"), Err(UrlGuardError::PrivateHost));
+        assert_eq!(
+            validate("http://10.0.0.1/"),
+            Err(UrlGuardError::PrivateHost)
+        );
+        assert_eq!(
+            validate("http://192.168.1.1/"),
+            Err(UrlGuardError::PrivateHost)
+        );
+        assert_eq!(
+            validate("http://172.16.0.1/"),
+            Err(UrlGuardError::PrivateHost)
+        );
         assert_eq!(
             validate("http://169.254.169.254/latest/meta-data/"),
             Err(UrlGuardError::PrivateHost),

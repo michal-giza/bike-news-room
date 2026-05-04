@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/theme/tokens.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../../preferences/domain/entities/user_preferences.dart';
 import '../../../preferences/presentation/cubit/preferences_cubit.dart';
 import '../../../preferences/presentation/pages/onboarding_page.dart';
@@ -11,6 +12,9 @@ import '../bloc/feed_bloc.dart';
 import '../cubit/sources_cubit.dart';
 import '../widgets/active_filter_chips.dart';
 import '../widgets/article_card.dart';
+import '../widgets/article_card_skeleton.dart';
+import '../widgets/digest_signup.dart';
+import '../widgets/live_ticker_bar.dart';
 import '../widgets/bottom_nav.dart';
 import '../widgets/breaking_panel.dart';
 import '../widgets/filter_drawer.dart';
@@ -23,6 +27,8 @@ import '../../../calendar/presentation/pages/calendar_page.dart';
 import '../../../watchlist/presentation/cubit/watchlist_cubit.dart';
 import '../../../watchlist/presentation/pages/following_page.dart';
 import '../../../../core/di/injection.dart';
+import '../../../preferences/presentation/pages/settings_page.dart';
+import '../bookmark_action.dart';
 import 'article_detail_modal.dart';
 import 'bookmarks_page.dart';
 
@@ -44,10 +50,56 @@ class _FeedPageState extends State<FeedPage> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-    // Trigger initial load
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<FeedBloc>().add(const FeedRequested());
+      _maybeOpenDeepLinkedArticle();
     });
+  }
+
+  /// On the web, when a user lands at `?article=<id>` (typically from a
+  /// shared link that hit our backend's /article/:id and 302'd to the SPA),
+  /// open the article detail modal automatically once the feed has loaded.
+  ///
+  /// We watch the FeedBloc state instead of fetching the article up-front
+  /// because (a) the article will likely be in the first page of the feed
+  /// anyway, (b) if not, we can still show its modal once the user scrolls
+  /// it into view, and (c) we avoid the extra round-trip on every cold
+  /// load. The `_deepLinkHandled` flag prevents repeat-opens.
+  bool _deepLinkHandled = false;
+  void _maybeOpenDeepLinkedArticle() {
+    final raw = Uri.base.queryParameters['article'];
+    final id = int.tryParse(raw ?? '');
+    if (id == null || _deepLinkHandled) return;
+    _deepLinkHandled = true;
+    _waitForArticleAndOpen(id);
+  }
+
+  Future<void> _waitForArticleAndOpen(int articleId) async {
+    // Poll the FeedBloc state until the article shows up — at most ~6s.
+    for (var i = 0; i < 12; i++) {
+      if (!mounted) return;
+      final state = context.read<FeedBloc>().state;
+      final match = state.articles
+          .where((a) => a.id == articleId)
+          .firstOrNull;
+      if (match != null) {
+        if (!mounted) return;
+        final prefs = context.read<PreferencesCubit>().state;
+        final sources = context.read<SourcesCubit>().state;
+        ArticleDetailModal.show(
+          context,
+          article: match,
+          sourceName: sources.displayFor(match.feedId),
+          bookmarked: prefs.bookmarkedArticleIds.contains(match.id),
+          onBookmark: () =>
+              toggleBookmark(context, match),
+        );
+        return;
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 500));
+    }
+    // Article not in the first page — silently give up. Acceptable degraded
+    // behaviour: user lands on the home feed, which is fine.
   }
 
   void _onScroll() {
@@ -94,11 +146,12 @@ class _FeedPageState extends State<FeedPage> {
             b.errorMessage != null &&
             b.articles.isNotEmpty,
         listener: (context, state) {
+          final t = AppLocalizations.of(context);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text("Couldn't load more: ${state.errorMessage}"),
+              content: Text(t.couldntLoadMore(state.errorMessage ?? '')),
               action: SnackBarAction(
-                label: 'Retry',
+                label: t.retry,
                 onPressed: () =>
                     context.read<FeedBloc>().add(const FeedLoadMoreRequested()),
               ),
@@ -107,11 +160,18 @@ class _FeedPageState extends State<FeedPage> {
         },
         child: Scaffold(
           key: _scaffoldKey,
-          appBar: TopBar(onSearchTap: _openSearch),
+          appBar: TopBar(
+            onSearchTap: _openSearch,
+            onSettingsTap: () => SettingsPage.show(context),
+          ),
           drawer: showBottomNav ? _buildDrawer(context) : null,
-        body: Row(
+        body: Column(
           children: [
-            if (showSidebar)
+            const LiveTickerBar(),
+            Expanded(
+              child: Row(
+                children: [
+                  if (showSidebar)
               SizedBox(
                 width: 280,
                 child: BlocBuilder<FeedBloc, FeedState>(
@@ -142,7 +202,10 @@ class _FeedPageState extends State<FeedPage> {
                   ),
                 ),
               ),
-            Expanded(child: _feedColumn(context)),
+                  Expanded(child: _feedColumn(context)),
+                ],
+              ),
+            ),
           ],
         ),
         bottomNavigationBar: showBottomNav
@@ -274,7 +337,9 @@ class _FeedPageState extends State<FeedPage> {
               child: switch (state.status) {
                 FeedStatus.initial || FeedStatus.loading
                     when state.articles.isEmpty =>
-                  const Center(child: CircularProgressIndicator()),
+                  _SkeletonList(
+                    density: context.watch<PreferencesCubit>().state.density,
+                  ),
                 FeedStatus.error when state.articles.isEmpty =>
                   _ErrorState(message: state.errorMessage),
                 _ when state.articles.isEmpty => _EmptyState(),
@@ -290,6 +355,25 @@ class _FeedPageState extends State<FeedPage> {
   Widget _content(BuildContext context, FeedState state) {
     final prefs = context.watch<PreferencesCubit>().state;
 
+    final newestId =
+        state.articles.isEmpty ? null : state.articles.first.id;
+    final lastSeen = prefs.lastSeenArticleId;
+    // Count articles newer than the user's last visit. Only meaningful when
+    // we have a baseline; on first launch we silently set the baseline below.
+    final newSinceCount = (lastSeen == null)
+        ? 0
+        : state.articles.where((a) => a.id > lastSeen).length;
+
+    // Establish the baseline silently the very first time the feed loads,
+    // and quietly advance it once the user has acknowledged "what's new"
+    // (we treat the pill tap as the acknowledgment — see _NewSincePill).
+    if (lastSeen == null && newestId != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        context.read<PreferencesCubit>().markLastSeenArticleId(newestId);
+      });
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -297,6 +381,23 @@ class _FeedPageState extends State<FeedPage> {
           total: state.total,
           newestAt: state.articles.isEmpty ? null : state.articles.first.publishedAt,
         ),
+        if (newSinceCount > 0 && newestId != null) ...[
+          const SizedBox(height: BnrSpacing.s4),
+          _NewSincePill(
+            label: AppLocalizations.of(context)
+                .newSinceLastVisit(newSinceCount),
+            onTap: () {
+              context
+                  .read<PreferencesCubit>()
+                  .markLastSeenArticleId(newestId);
+              _scrollController.animateTo(
+                0,
+                duration: BnrMotion.m3,
+                curve: BnrMotion.ease,
+              );
+            },
+          ),
+        ],
         const SizedBox(height: BnrSpacing.s6),
         ActiveFilterChips(
           filter: state.filter,
@@ -350,16 +451,25 @@ class _FeedPageState extends State<FeedPage> {
               sourceName: sources.displayFor(article.feedId),
               bookmarked: prefs.bookmarkedArticleIds.contains(article.id),
               onBookmark: () =>
-                  context.read<PreferencesCubit>().toggleBookmark(article.id),
+                  toggleBookmark(context, article),
             ),
           );
         }
 
         final feedIndex = index - breakingOffset;
         if (feedIndex >= feedArticles.length) {
-          return _Footer(
-              loading: state.status == FeedStatus.loadingMore,
-              hasMore: state.hasMore);
+          return Column(
+            children: [
+              // Show the digest signup once we've reached the end of the
+              // feed (i.e. there's no more pagination). Showing it mid-load
+              // would feel premature.
+              if (!state.hasMore) const DigestSignup(),
+              _Footer(
+                loading: state.status == FeedStatus.loadingMore,
+                hasMore: state.hasMore,
+              ),
+            ],
+          );
         }
 
         final article = feedArticles[feedIndex];
@@ -379,10 +489,10 @@ class _FeedPageState extends State<FeedPage> {
             sourceName: sourceName,
             bookmarked: prefs.bookmarkedArticleIds.contains(article.id),
             onBookmark: () =>
-                context.read<PreferencesCubit>().toggleBookmark(article.id),
+                toggleBookmark(context, article),
           ),
           onBookmark: () =>
-              context.read<PreferencesCubit>().toggleBookmark(article.id),
+              toggleBookmark(context, article),
           sourceName: sourceName,
         );
       },
@@ -397,26 +507,30 @@ class _FeedHeader extends StatelessWidget {
   final int total;
   const _FeedHeader({required this.total, this.newestAt});
 
-  String _agoLabel(DateTime? t) {
-    if (t == null) return 'UPDATED · ';
+  String _agoLabel(BuildContext context, DateTime? t) {
+    final l = AppLocalizations.of(context);
+    if (t == null) return '';
     final mins = DateTime.now().difference(t).inMinutes;
-    if (mins < 1) return 'UPDATED JUST NOW · ';
-    if (mins < 60) return 'UPDATED ${mins}M AGO · ';
+    if (mins < 1) return l.updatedJustNow;
+    if (mins < 60) return l.updatedMinutesAgo(mins);
     final h = mins ~/ 60;
-    if (h < 24) return 'UPDATED ${h}H AGO · ';
-    return 'UPDATED ${h ~/ 24}D AGO · ';
+    if (h < 24) return l.updatedHoursAgo(h);
+    return l.updatedDaysAgo(h ~/ 24);
   }
 
   @override
   Widget build(BuildContext context) {
     final ext = context.bnr;
+    final l = AppLocalizations.of(context);
+    final agoLabel = _agoLabel(context, newestAt);
+    final separator = agoLabel.isEmpty ? '' : ' · ';
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          "Today's wire",
+          l.todaysWire,
           style: AppTheme.serif(
             size: 32,
             weight: FontWeight.w600,
@@ -437,7 +551,7 @@ class _FeedHeader extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Text(
-              '${_agoLabel(newestAt)}$total STORIES',
+              '$agoLabel$separator${l.storiesCount(total)}',
               style: AppTheme.mono(
                 size: 11,
                 color: ext.fg2,
@@ -470,13 +584,83 @@ class _Footer extends StatelessWidget {
                 child: CircularProgressIndicator(strokeWidth: 2),
               )
             : Text(
-                hasMore ? 'SCROLL FOR MORE' : '— END OF FEED —',
+                hasMore
+                    ? AppLocalizations.of(context).scrollForMore
+                    : AppLocalizations.of(context).endOfFeed,
                 style: AppTheme.mono(
                   size: 11,
                   color: ext.fg2,
                   letterSpacing: 0.18,
                 ),
               ),
+      ),
+    );
+  }
+}
+
+class _SkeletonList extends StatelessWidget {
+  final CardDensity density;
+  const _SkeletonList({required this.density});
+
+  @override
+  Widget build(BuildContext context) {
+    // 6 cards is enough to fill a typical viewport; the real list will swap
+    // in well before scroll engages.
+    return ListView.builder(
+      itemCount: 6,
+      itemBuilder: (_, __) => ArticleCardSkeleton(density: density),
+    );
+  }
+}
+
+class _NewSincePill extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+  const _NewSincePill({required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Material(
+        color: BnrColors.accent,
+        borderRadius: BorderRadius.circular(BnrRadius.r3),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(BnrRadius.r3),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: BnrSpacing.s4,
+              vertical: BnrSpacing.s2,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 7,
+                  height: 7,
+                  decoration: const BoxDecoration(
+                    color: BnrColors.accentInk,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  label,
+                  style: AppTheme.mono(
+                    size: 11,
+                    color: BnrColors.accentInk,
+                    letterSpacing: 0.14,
+                    weight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Icon(Icons.arrow_upward,
+                    size: 13, color: BnrColors.accentInk),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -489,6 +673,7 @@ class _ErrorState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ext = context.bnr;
+    final l = AppLocalizations.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(BnrSpacing.s8),
@@ -498,7 +683,7 @@ class _ErrorState extends StatelessWidget {
             Icon(Icons.wifi_off, color: ext.fg2, size: 40),
             const SizedBox(height: BnrSpacing.s4),
             Text(
-              "Couldn't reach the news room",
+              l.couldNotReachNewsRoom,
               style: AppTheme.serif(size: 24, color: ext.fg0),
             ),
             const SizedBox(height: 8),
@@ -512,7 +697,7 @@ class _ErrorState extends StatelessWidget {
             FilledButton(
               onPressed: () =>
                   context.read<FeedBloc>().add(const FeedRefreshRequested()),
-              child: const Text('Retry'),
+              child: Text(l.retry),
             ),
           ],
         ),
@@ -525,6 +710,7 @@ class _EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ext = context.bnr;
+    final l = AppLocalizations.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(BnrSpacing.s8),
@@ -534,12 +720,12 @@ class _EmptyState extends StatelessWidget {
             Icon(Icons.inbox_outlined, color: ext.fg2, size: 40),
             const SizedBox(height: BnrSpacing.s4),
             Text(
-              'No articles match these filters',
+              l.noArticlesMatch,
               style: AppTheme.serif(size: 24, color: ext.fg0),
             ),
             const SizedBox(height: 8),
             Text(
-              'Try broadening or clearing your filters.',
+              l.tryBroadeningFilters,
               style: AppTheme.sans(size: 14, color: ext.fg2),
             ),
           ],

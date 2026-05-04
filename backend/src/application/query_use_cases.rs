@@ -34,6 +34,14 @@ impl QueryUseCases {
         self.race_repo.upcoming_races(discipline, limit).await
     }
 
+    pub async fn past_races(
+        &self,
+        discipline: Option<&str>,
+        limit: i64,
+    ) -> DomainResult<Vec<Race>> {
+        self.race_repo.past_races(discipline, limit).await
+    }
+
     pub async fn list_articles(&self, q: &ArticleQuery) -> DomainResult<(Vec<Article>, i64)> {
         self.article_repo.query(q).await
     }

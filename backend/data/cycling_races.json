@@ -1,0 +1,191 @@
+{
+  "$comment": "Race catalogue used by the backend RaceMatcherUseCase to auto-tag articles with the races they cover. Mirrors the 'races' array in frontend/assets/catalogue/watchlist_seed.json — keep them in sync. Aliases marked 'strong' are used for auto-tagging; 'weak' aliases (short ambiguous forms like 'Giro' alone) are excluded from auto-tagging but still serve frontend search. Quality > recall: a missed match is recoverable via user search; a false positive permanently exempts noise from retention sweeps.",
+  "version": 1,
+  "races": [
+    {
+      "id": "tour-de-france", "name": "Tour de France", "discipline": "road",
+      "strong_aliases": ["Tour de France", "Le Tour de France"],
+      "weak_aliases": ["Le Tour", "TdF"]
+    },
+    {
+      "id": "giro-italia", "name": "Giro d'Italia", "discipline": "road",
+      "strong_aliases": ["Giro d'Italia", "Giro d Italia", "Il Giro"],
+      "weak_aliases": ["Giro"]
+    },
+    {
+      "id": "vuelta-espana", "name": "Vuelta a España", "discipline": "road",
+      "strong_aliases": ["Vuelta a España", "Vuelta a Espana", "La Vuelta"],
+      "weak_aliases": ["Vuelta"]
+    },
+    {
+      "id": "milan-sanremo", "name": "Milan-San Remo", "discipline": "road",
+      "strong_aliases": ["Milan-San Remo", "Milan San Remo", "Milano-Sanremo", "Milano Sanremo"],
+      "weak_aliases": ["MSR", "La Primavera"]
+    },
+    {
+      "id": "paris-roubaix", "name": "Paris-Roubaix", "discipline": "road",
+      "strong_aliases": ["Paris-Roubaix", "Paris Roubaix", "Paris–Roubaix", "Hell of the North", "L'Enfer du Nord"],
+      "weak_aliases": []
+    },
+    {
+      "id": "ronde", "name": "Tour of Flanders", "discipline": "road",
+      "strong_aliases": ["Tour of Flanders", "Ronde van Vlaanderen", "Tour des Flandres", "De Ronde"],
+      "weak_aliases": ["Ronde"]
+    },
+    {
+      "id": "lbl", "name": "Liège-Bastogne-Liège", "discipline": "road",
+      "strong_aliases": ["Liège-Bastogne-Liège", "Liege-Bastogne-Liege", "Liège–Bastogne–Liège", "La Doyenne"],
+      "weak_aliases": ["LBL"]
+    },
+    {
+      "id": "lombardia", "name": "Il Lombardia", "discipline": "road",
+      "strong_aliases": ["Il Lombardia", "Tour of Lombardy", "Giro di Lombardia", "Race of the Falling Leaves"],
+      "weak_aliases": ["Lombardia"]
+    },
+    {
+      "id": "paris-nice", "name": "Paris-Nice", "discipline": "road",
+      "strong_aliases": ["Paris-Nice", "Paris Nice", "Race to the Sun", "Course au Soleil"],
+      "weak_aliases": []
+    },
+    {
+      "id": "tirreno", "name": "Tirreno-Adriatico", "discipline": "road",
+      "strong_aliases": ["Tirreno-Adriatico", "Tirreno Adriatico", "Race of the Two Seas", "Corsa dei Due Mari"],
+      "weak_aliases": []
+    },
+    {
+      "id": "dauphine", "name": "Critérium du Dauphiné", "discipline": "road",
+      "strong_aliases": ["Critérium du Dauphiné", "Criterium du Dauphine", "Critérium du Dauphine"],
+      "weak_aliases": ["Dauphiné", "Dauphine"]
+    },
+    {
+      "id": "tour-suisse", "name": "Tour de Suisse", "discipline": "road",
+      "strong_aliases": ["Tour de Suisse", "Tour of Switzerland"],
+      "weak_aliases": ["TdS"]
+    },
+    {
+      "id": "tour-pologne", "name": "Tour de Pologne", "discipline": "road",
+      "strong_aliases": ["Tour de Pologne", "Tour of Poland", "Wyścig Tour de Pologne"],
+      "weak_aliases": ["TdP"]
+    },
+    {
+      "id": "itzulia", "name": "Itzulia Basque Country", "discipline": "road",
+      "strong_aliases": ["Itzulia Basque Country", "Tour of the Basque Country", "Vuelta al País Vasco", "Vuelta al Pais Vasco"],
+      "weak_aliases": ["Itzulia"]
+    },
+    {
+      "id": "catalunya", "name": "Volta a Catalunya", "discipline": "road",
+      "strong_aliases": ["Volta a Catalunya", "Tour of Catalonia", "Vuelta a Cataluña", "Vuelta a Cataluna"],
+      "weak_aliases": []
+    },
+    {
+      "id": "tour-down-under", "name": "Tour Down Under", "discipline": "road",
+      "strong_aliases": ["Tour Down Under", "Santos Tour Down Under"],
+      "weak_aliases": ["TDU"]
+    },
+    {
+      "id": "uae-tour", "name": "UAE Tour", "discipline": "road",
+      "strong_aliases": ["UAE Tour", "Tour of the UAE"],
+      "weak_aliases": []
+    },
+    {
+      "id": "romandie", "name": "Tour de Romandie", "discipline": "road",
+      "strong_aliases": ["Tour de Romandie", "Tour of Romandie"],
+      "weak_aliases": []
+    },
+    {
+      "id": "uci-worlds-road", "name": "UCI Road World Championships", "discipline": "road",
+      "strong_aliases": ["UCI Road World Championships", "Road World Championships", "Road Worlds"],
+      "weak_aliases": ["Mondiali", "Mistrzostwa Świata"]
+    },
+    {
+      "id": "olympics-road", "name": "Olympic Games Cycling", "discipline": "road",
+      "strong_aliases": ["Olympic Games Cycling", "Olympic road race", "Olympics cycling", "Olympic cycling"],
+      "weak_aliases": []
+    },
+    {
+      "id": "euros-road", "name": "European Road Championships", "discipline": "road",
+      "strong_aliases": ["European Road Championships", "European Cycling Championships", "Mistrzostwa Europy"],
+      "weak_aliases": ["Road Euros"]
+    },
+    {
+      "id": "uci-xco-wc", "name": "UCI XCO World Cup", "discipline": "mtb",
+      "strong_aliases": ["UCI XCO World Cup", "UCI Mountain Bike World Cup", "MTB XCO World Cup", "Cross-country World Cup", "XCO World Cup"],
+      "weak_aliases": []
+    },
+    {
+      "id": "uci-dh-wc", "name": "UCI Downhill World Cup", "discipline": "mtb",
+      "strong_aliases": ["UCI Downhill World Cup", "Downhill World Cup", "MTB DH World Cup", "DH World Cup"],
+      "weak_aliases": []
+    },
+    {
+      "id": "mtb-worlds", "name": "UCI Mountain Bike World Championships", "discipline": "mtb",
+      "strong_aliases": ["UCI Mountain Bike World Championships", "Mountain Bike Worlds", "MTB World Championships", "MTB Worlds"],
+      "weak_aliases": []
+    },
+    {
+      "id": "cape-epic", "name": "Cape Epic", "discipline": "mtb",
+      "strong_aliases": ["Cape Epic", "Absa Cape Epic", "Untamed African MTB Race"],
+      "weak_aliases": []
+    },
+    {
+      "id": "redbull-rampage", "name": "Red Bull Rampage", "discipline": "mtb",
+      "strong_aliases": ["Red Bull Rampage", "Red Bull Rampage Utah"],
+      "weak_aliases": ["Rampage"]
+    },
+    {
+      "id": "redbull-hardline", "name": "Red Bull Hardline", "discipline": "mtb",
+      "strong_aliases": ["Red Bull Hardline", "Red Bull Hardline Wales", "Red Bull Hardline Tasmania"],
+      "weak_aliases": ["Hardline"]
+    },
+    {
+      "id": "redbull-x-alps", "name": "Red Bull X-Alps", "discipline": "mtb",
+      "strong_aliases": ["Red Bull X-Alps", "Red Bull X Alps"],
+      "weak_aliases": ["X-Alps"]
+    },
+    {
+      "id": "crankworx", "name": "Crankworx", "discipline": "mtb",
+      "strong_aliases": ["Crankworx World Tour", "Crankworx Whistler", "Crankworx Innsbruck", "Crankworx Rotorua", "Crankworx Cairns"],
+      "weak_aliases": ["Crankworx"]
+    },
+    {
+      "id": "unbound", "name": "Unbound Gravel", "discipline": "gravel",
+      "strong_aliases": ["Unbound Gravel", "Dirty Kanza", "Unbound 200"],
+      "weak_aliases": ["Unbound"]
+    },
+    {
+      "id": "sea-otter", "name": "Sea Otter Classic", "discipline": "gravel",
+      "strong_aliases": ["Sea Otter Classic", "Sea Otter Europe"],
+      "weak_aliases": []
+    },
+    {
+      "id": "gravel-worlds-uci", "name": "UCI Gravel World Championships", "discipline": "gravel",
+      "strong_aliases": ["UCI Gravel World Championships", "Gravel World Championships", "Gravel Worlds"],
+      "weak_aliases": []
+    },
+    {
+      "id": "uci-cx-wc", "name": "UCI Cyclocross World Cup", "discipline": "cx",
+      "strong_aliases": ["UCI Cyclocross World Cup", "Cyclocross World Cup", "CX World Cup"],
+      "weak_aliases": []
+    },
+    {
+      "id": "cx-worlds", "name": "UCI Cyclocross World Championships", "discipline": "cx",
+      "strong_aliases": ["UCI Cyclocross World Championships", "Cyclocross World Championships", "Cyclocross Worlds"],
+      "weak_aliases": ["CX Worlds"]
+    },
+    {
+      "id": "uci-track-wc", "name": "UCI Track Champions League", "discipline": "track",
+      "strong_aliases": ["UCI Track Champions League", "Track Champions League"],
+      "weak_aliases": ["TCL"]
+    },
+    {
+      "id": "track-worlds", "name": "UCI Track World Championships", "discipline": "track",
+      "strong_aliases": ["UCI Track World Championships", "Track World Championships", "Track Worlds"],
+      "weak_aliases": []
+    },
+    {
+      "id": "uci-bmx-wc", "name": "UCI BMX Racing World Championships", "discipline": "bmx",
+      "strong_aliases": ["UCI BMX Racing World Championships", "BMX World Championships", "BMX Worlds"],
+      "weak_aliases": []
+    }
+  ]
+}

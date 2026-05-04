@@ -53,6 +53,19 @@ class WatchlistRepository {
           fromCatalogue: true,
         ));
       }
+      for (final r in (json['races'] as List<dynamic>? ?? const [])
+          .whereType<Map<String, dynamic>>()) {
+        list.add(WatchedEntity(
+          id: r['id'] as String,
+          kind: WatchedKind.race,
+          name: r['name'] as String,
+          aliases: (r['aliases'] as List<dynamic>? ?? const [])
+              .whereType<String>()
+              .toList(),
+          discipline: r['discipline'] as String?,
+          fromCatalogue: true,
+        ));
+      }
       _catalogueCache = list;
       return list;
     } catch (_) {

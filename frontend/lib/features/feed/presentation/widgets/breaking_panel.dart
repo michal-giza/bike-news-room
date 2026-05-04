@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/theme/tokens.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../domain/entities/article.dart';
 import 'live_dot.dart';
 import 'time_ago.dart';
@@ -90,7 +91,7 @@ class BreakingPanel extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _head(),
+                _head(context),
                 const SizedBox(height: 14),
                 ...articles.asMap().entries.map((e) => _row(
                       context,
@@ -105,13 +106,13 @@ class BreakingPanel extends StatelessWidget {
     );
   }
 
-  Widget _head() {
+  Widget _head(BuildContext context) {
     return Row(
       children: [
         const LiveDot(),
         const SizedBox(width: 8),
         Text(
-          'BREAKING · LAST HOUR',
+          AppLocalizations.of(context).breakingHeader,
           style: AppTheme.mono(
             size: 11,
             color: BnrColors.live,

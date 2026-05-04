@@ -3,14 +3,18 @@ use std::sync::Arc;
 
 use sqlx::sqlite::SqlitePoolOptions;
 use tokio_cron_scheduler::{Job, JobScheduler};
-use tracing::{error, info};
+use tracing::{error, info, warn};
 use tracing_subscriber::EnvFilter;
 
 use bike_news_room::application::{
-    AddUserSourceUseCase, CrawlSitesUseCase, IngestFeedsUseCase, QueryUseCases,
-    SyncCalendarUseCase,
+    AddUserSourceUseCase, AutoTweetUseCase, BackfillArchiveUseCase, CrawlSitesUseCase,
+    DigestUseCase, IngestFeedsUseCase, MineCandidatesUseCase, QueryUseCases, RaceMatcherUseCase,
+    RetentionUseCase, SyncCalendarUseCase,
 };
-use bike_news_room::domain::ports::{ArticleRepository, FeedRepository, RaceRepository};
+use bike_news_room::domain::ports::{
+    ArticleRepository, FeedRepository, RaceLinkRepository, RaceRepository,
+    SourceCandidateRepository, SubscriberRepository,
+};
 use bike_news_room::infrastructure::{
     init_schema, snapshot, spawn_periodic_snapshot, AppConfig, ReqwestRssFetcher,
     ScraperHtmlCrawler, SnapshotConfig, SqliteRepository,
@@ -81,28 +85,64 @@ async fn main() -> anyhow::Result<()> {
         }
     }
 
-    let repository = Arc::new(SqliteRepository::new(pool));
+    let repository = Arc::new(SqliteRepository::new(pool.clone()));
     let article_repo: Arc<dyn ArticleRepository> = repository.clone();
     let feed_repo: Arc<dyn FeedRepository> = repository.clone();
     let race_repo: Arc<dyn RaceRepository> = repository.clone();
+    let candidate_repo: Arc<dyn SourceCandidateRepository> = repository.clone();
+    let subscriber_repo: Arc<dyn SubscriberRepository> = repository.clone();
+    let race_link_repo: Arc<dyn RaceLinkRepository> = repository.clone();
 
     let rss_fetcher = Arc::new(ReqwestRssFetcher::new());
     let html_crawler = Arc::new(ScraperHtmlCrawler::new());
 
     // ── Application (use cases) ──────────────────────────────────────────
-    let ingest_uc = Arc::new(IngestFeedsUseCase::new(
-        rss_fetcher,
-        article_repo.clone(),
-        feed_repo.clone(),
+    let miner = Arc::new(MineCandidatesUseCase::new(candidate_repo.clone()));
+    let race_matcher = Arc::new(RaceMatcherUseCase::new(
+        race_link_repo.clone(),
+        pool.clone(),
     ));
+
+    // Seed the race catalogue + run a one-shot retro-scan over the
+    // existing inventory before the matcher starts attaching to the
+    // ingest pipeline. The retro-scan is idempotent, so re-deploying
+    // won't double-link articles. Both run inline at startup — the
+    // catalogue is small (~36 races) and the retro-scan caps at the
+    // 365-day window so total cost is < 5 seconds on a populous DB.
+    let race_catalogue_path = std::env::var("RACE_CATALOGUE_PATH")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| PathBuf::from("data/cycling_races.json"));
+    if let Err(e) = race_matcher.seed_from_catalogue(&race_catalogue_path).await {
+        warn!("race catalogue seed failed: {e}");
+    }
+    if let Err(e) = race_matcher.retro_scan(365).await {
+        warn!("race retro-scan failed: {e}");
+    }
+
+    let ingest_uc = Arc::new(
+        IngestFeedsUseCase::new(rss_fetcher, article_repo.clone(), feed_repo.clone())
+            .with_miner(miner)
+            .with_race_matcher(race_matcher),
+    );
     let crawl_uc = Arc::new(CrawlSitesUseCase::new(
         html_crawler,
         article_repo.clone(),
         feed_repo.clone(),
     ));
     let calendar_uc = Arc::new(SyncCalendarUseCase::new(race_repo.clone()));
-    let add_source_uc =
-        Arc::new(AddUserSourceUseCase::new(feed_repo.clone()));
+    let add_source_uc = Arc::new(AddUserSourceUseCase::new(feed_repo.clone()));
+    let digest_uc = Arc::new(DigestUseCase::new(
+        article_repo.clone(),
+        subscriber_repo.clone(),
+    ));
+    let auto_tweet_uc = Arc::new(AutoTweetUseCase::new(article_repo.clone(), pool.clone()));
+    let retention_uc = Arc::new(RetentionUseCase::new(pool.clone()));
+    let backfill_uc = Arc::new(BackfillArchiveUseCase::new(
+        article_repo.clone(),
+        feed_repo.clone(),
+        race_link_repo.clone(),
+        pool.clone(),
+    ));
     let query_uc = QueryUseCases::new(article_repo, feed_repo, race_repo);
 
     // ── Initial fetch on startup ────────────────────────────────────────
@@ -139,6 +179,53 @@ async fn main() -> anyhow::Result<()> {
                 ingest.execute(&feeds).await;
                 crawl.execute(&targets).await;
                 info!("scheduled fetch complete");
+            })
+        })?)
+        .await?;
+
+    // Auto-tweet runs hourly at :15 — staggered off the RSS cron (which runs
+    // at :00/:30) so the new articles have a moment to land before we tweet.
+    let hourly_tweet = auto_tweet_uc.clone();
+    scheduler
+        .add(Job::new_async("0 15 * * * *", move |_, _| {
+            let tweeter = hourly_tweet.clone();
+            Box::pin(async move {
+                info!("hourly auto-tweet starting...");
+                let posted = tweeter.execute().await;
+                info!("hourly auto-tweet complete: {posted} tweets");
+            })
+        })?)
+        .await?;
+
+    // Daily-digest email sends at 07:00 UTC — early enough for European
+    // morning commute, late enough to capture overnight North American
+    // race results.
+    let daily_digest = digest_uc.clone();
+    scheduler
+        .add(Job::new_async("0 0 7 * * *", move |_, _| {
+            let digest = daily_digest.clone();
+            Box::pin(async move {
+                info!("daily digest send starting...");
+                let sent = digest.execute().await;
+                info!("daily digest send complete: {sent} emails dispatched");
+            })
+        })?)
+        .await?;
+
+    // Retention sweep at 04:00 daily — runs after the calendar sync window
+    // so VACUUM doesn't compete with active writes. Tunable via the
+    // `ARTICLE_RETENTION_DAYS` env var (default 90).
+    let daily_retention = retention_uc.clone();
+    scheduler
+        .add(Job::new_async("0 0 4 * * *", move |_, _| {
+            let r = daily_retention.clone();
+            Box::pin(async move {
+                info!("daily retention sweep starting...");
+                let report = r.execute().await;
+                info!(
+                    "daily retention sweep complete: {} rows reclaimed",
+                    report.total_deleted()
+                );
             })
         })?)
         .await?;
@@ -191,15 +278,20 @@ async fn main() -> anyhow::Result<()> {
         ))
         .layer(SetResponseHeaderLayer::if_not_present(
             axum::http::header::HeaderName::from_static("content-security-policy"),
-            axum::http::HeaderValue::from_static(
-                "default-src 'none'; frame-ancestors 'none'",
-            ),
+            axum::http::HeaderValue::from_static("default-src 'none'; frame-ancestors 'none'"),
         ));
 
-    let app = create_router(query_uc, add_source_uc)
-        .layer(cors)
-        .layer(header_layers)
-        .layer(governor_layer);
+    let app = create_router(
+        query_uc,
+        add_source_uc.clone(),
+        candidate_repo.clone(),
+        subscriber_repo.clone(),
+        backfill_uc.clone(),
+        pool.clone(),
+    )
+    .layer(cors)
+    .layer(header_layers)
+    .layer(governor_layer);
 
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{port}")).await?;
     info!("server listening on port {port}");
@@ -252,10 +344,7 @@ fn build_cors_layer() -> tower_http::cors::CorsLayer {
             CorsLayer::new()
                 .allow_origin(AllowOrigin::list(parsed))
                 .allow_methods([axum::http::Method::GET])
-                .allow_headers([
-                    axum::http::header::ACCEPT,
-                    axum::http::header::CONTENT_TYPE,
-                ])
+                .allow_headers([axum::http::header::ACCEPT, axum::http::header::CONTENT_TYPE])
         }
         None => {
             info!("CORS: permissive mode (set ALLOWED_ORIGINS in production!)");

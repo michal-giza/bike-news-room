@@ -1,0 +1,334 @@
+{
+  "$comment": "Curated list of cycling-news sites known to expose RSS / Atom that our backend probe successfully ingests. Each entry stores the verified feed URL (not the homepage), so 'Add a source' bypasses auto-discovery entirely and goes straight to a known-good feed. Update with `scripts/verify-catalogue.sh` after adding new entries.",
+  "version": 1,
+  "sources": [
+    {
+      "name": "Cyclingnews",
+      "url": "https://www.cyclingnews.com/rss/news/",
+      "homepage": "https://www.cyclingnews.com",
+      "region": "world",
+      "discipline": "road",
+      "language": "en"
+    },
+    {
+      "name": "VeloNews / Outside",
+      "url": "https://velo.outsideonline.com/feed/",
+      "homepage": "https://velo.outsideonline.com",
+      "region": "world",
+      "discipline": "road",
+      "language": "en"
+    },
+    {
+      "name": "Cycling Weekly",
+      "url": "https://www.cyclingweekly.com/feeds/all",
+      "homepage": "https://www.cyclingweekly.com",
+      "region": "world",
+      "discipline": "road",
+      "language": "en"
+    },
+    {
+      "name": "Escape Collective",
+      "url": "https://escapecollective.com/feed/",
+      "homepage": "https://escapecollective.com",
+      "region": "world",
+      "discipline": "road",
+      "language": "en"
+    },
+    {
+      "name": "Pinkbike",
+      "url": "https://www.pinkbike.com/news/feed/",
+      "homepage": "https://www.pinkbike.com",
+      "region": "world",
+      "discipline": "mtb",
+      "language": "en"
+    },
+    {
+      "name": "Vital MTB",
+      "url": "https://www.vitalmtb.com/news.rss",
+      "homepage": "https://www.vitalmtb.com",
+      "region": "world",
+      "discipline": "mtb",
+      "language": "en"
+    },
+    {
+      "name": "ENDURO Mountainbike Magazine",
+      "url": "https://enduro-mtb.com/en/feed/",
+      "homepage": "https://enduro-mtb.com/en",
+      "region": "world",
+      "discipline": "mtb",
+      "language": "en"
+    },
+    {
+      "name": "BikeRadar",
+      "url": "https://www.bikeradar.com/feed/",
+      "homepage": "https://www.bikeradar.com",
+      "region": "world",
+      "discipline": "all",
+      "language": "en"
+    },
+    {
+      "name": "Bicycling.com",
+      "url": "https://www.bicycling.com/rss/all.xml/",
+      "homepage": "https://www.bicycling.com",
+      "region": "world",
+      "discipline": "all",
+      "language": "en"
+    },
+    {
+      "name": "GravelBike",
+      "url": "https://gravelbike.com/feed/",
+      "homepage": "https://gravelbike.com",
+      "region": "world",
+      "discipline": "gravel",
+      "language": "en"
+    },
+    {
+      "name": "Road.cc",
+      "url": "https://road.cc/rss.xml",
+      "homepage": "https://road.cc",
+      "region": "world",
+      "discipline": "road",
+      "language": "en"
+    },
+
+    {
+      "name": "NaSzosie",
+      "url": "https://naszosie.pl/feed/",
+      "homepage": "https://naszosie.pl",
+      "region": "poland",
+      "discipline": "road",
+      "language": "pl"
+    },
+    {
+      "name": "Kolarstwo.info",
+      "url": "https://kolarstwo.info/feed/",
+      "homepage": "https://kolarstwo.info",
+      "region": "poland",
+      "discipline": "road",
+      "language": "pl"
+    },
+    {
+      "name": "Rowery.org",
+      "url": "https://rowery.org/feed/",
+      "homepage": "https://rowery.org",
+      "region": "poland",
+      "discipline": "all",
+      "language": "pl"
+    },
+    {
+      "name": "MTB.pl",
+      "url": "https://mtb.pl/feed/",
+      "homepage": "https://mtb.pl",
+      "region": "poland",
+      "discipline": "mtb",
+      "language": "pl"
+    },
+    {
+      "name": "BikeBoard",
+      "url": "https://bikeboard.pl/feed/",
+      "homepage": "https://bikeboard.pl",
+      "region": "poland",
+      "discipline": "all",
+      "language": "pl"
+    },
+
+    {
+      "name": "Ciclismo Internacional",
+      "url": "https://ciclismointernacional.com/feed/",
+      "homepage": "https://ciclismointernacional.com",
+      "region": "spain",
+      "discipline": "road",
+      "language": "es"
+    },
+    {
+      "name": "todoMTB",
+      "url": "https://www.todomountainbike.net/feed/",
+      "homepage": "https://www.todomountainbike.net",
+      "region": "spain",
+      "discipline": "mtb",
+      "language": "es"
+    },
+    {
+      "name": "Ciclismo a Fondo",
+      "url": "https://www.ciclismoafondo.es/rss/all",
+      "homepage": "https://www.ciclismoafondo.es",
+      "region": "spain",
+      "discipline": "road",
+      "language": "es"
+    },
+    {
+      "name": "Brújula Bike",
+      "url": "https://brujulabike.com/feed/",
+      "homepage": "https://brujulabike.com",
+      "region": "spain",
+      "discipline": "mtb",
+      "language": "es"
+    },
+
+    {
+      "name": "Velo Magazine",
+      "url": "https://www.velomagazine.fr/feed/",
+      "homepage": "https://www.velomagazine.fr",
+      "region": "eu",
+      "discipline": "road",
+      "language": "fr"
+    },
+    {
+      "name": "Cyclism'Actu",
+      "url": "https://www.cyclismactu.net/feed/",
+      "homepage": "https://www.cyclismactu.net",
+      "region": "eu",
+      "discipline": "road",
+      "language": "fr"
+    },
+    {
+      "name": "Velo101",
+      "url": "https://www.velo101.com/rss/news.xml",
+      "homepage": "https://www.velo101.com",
+      "region": "eu",
+      "discipline": "all",
+      "language": "fr"
+    },
+    {
+      "name": "Velo Vert",
+      "url": "https://www.velovert.com/feed",
+      "homepage": "https://www.velovert.com",
+      "region": "eu",
+      "discipline": "mtb",
+      "language": "fr"
+    },
+
+    {
+      "name": "TuttoBici",
+      "url": "https://www.tuttobiciweb.it/rss/news",
+      "homepage": "https://www.tuttobiciweb.it",
+      "region": "eu",
+      "discipline": "road",
+      "language": "it"
+    },
+    {
+      "name": "Spazio Ciclismo",
+      "url": "https://www.spaziociclismo.it/feed/",
+      "homepage": "https://www.spaziociclismo.it",
+      "region": "eu",
+      "discipline": "road",
+      "language": "it"
+    },
+    {
+      "name": "MTB Mag IT",
+      "url": "https://www.mtb-mag.com/feed/",
+      "homepage": "https://www.mtb-mag.com",
+      "region": "eu",
+      "discipline": "mtb",
+      "language": "it"
+    },
+    {
+      "name": "Cyclinside",
+      "url": "https://www.cyclinside.com/feed",
+      "homepage": "https://www.cyclinside.com",
+      "region": "eu",
+      "discipline": "all",
+      "language": "it"
+    },
+
+    {
+      "name": "Tour Magazin",
+      "url": "https://www.tour-magazin.de/rss/all",
+      "homepage": "https://www.tour-magazin.de",
+      "region": "eu",
+      "discipline": "road",
+      "language": "de"
+    },
+    {
+      "name": "Rennrad-News",
+      "url": "https://www.rennrad-news.de/feed",
+      "homepage": "https://www.rennrad-news.de",
+      "region": "eu",
+      "discipline": "road",
+      "language": "de"
+    },
+    {
+      "name": "MTB-News",
+      "url": "https://www.mtb-news.de/news/feed/",
+      "homepage": "https://www.mtb-news.de",
+      "region": "eu",
+      "discipline": "mtb",
+      "language": "de"
+    },
+    {
+      "name": "Radsport-News",
+      "url": "https://www.radsport-news.com/rss/news.xml",
+      "homepage": "https://www.radsport-news.com",
+      "region": "eu",
+      "discipline": "road",
+      "language": "de"
+    },
+
+    {
+      "name": "WielerFlits",
+      "url": "https://wielerflits.nl/feed/",
+      "homepage": "https://wielerflits.nl",
+      "region": "eu",
+      "discipline": "road",
+      "language": "nl"
+    },
+    {
+      "name": "WielerRevue",
+      "url": "https://www.wielerrevue.nl/feed/",
+      "homepage": "https://www.wielerrevue.nl",
+      "region": "eu",
+      "discipline": "road",
+      "language": "nl"
+    },
+    {
+      "name": "Mountainbike NL",
+      "url": "https://www.mountainbike.nl/feed/",
+      "homepage": "https://www.mountainbike.nl",
+      "region": "eu",
+      "discipline": "mtb",
+      "language": "nl"
+    },
+    {
+      "name": "Sporza Wielrennen",
+      "url": "https://sporza.be/nl/categorie/wielrennen.rss",
+      "homepage": "https://sporza.be/nl/categorie/wielrennen",
+      "region": "eu",
+      "discipline": "road",
+      "language": "nl"
+    },
+
+    {
+      "name": "Cyclistas",
+      "url": "https://cyclistas.pt/feed/",
+      "homepage": "https://cyclistas.pt",
+      "region": "eu",
+      "discipline": "all",
+      "language": "pt"
+    },
+    {
+      "name": "Bicimax",
+      "url": "https://bicimax.com.pt/feed/",
+      "homepage": "https://bicimax.com.pt",
+      "region": "eu",
+      "discipline": "all",
+      "language": "pt"
+    },
+
+    {
+      "name": "Cyclist Japan",
+      "url": "https://cyclist.sanspo.com/feed/",
+      "homepage": "https://cyclist.sanspo.com",
+      "region": "world",
+      "discipline": "all",
+      "language": "ja"
+    },
+    {
+      "name": "Cycle Sports",
+      "url": "https://cyclesports.jp/feed/",
+      "homepage": "https://cyclesports.jp",
+      "region": "world",
+      "discipline": "all",
+      "language": "ja"
+    }
+  ]
+}

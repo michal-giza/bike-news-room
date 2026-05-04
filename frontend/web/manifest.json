@@ -2,11 +2,16 @@
     "name": "Bike News Room",
     "short_name": "BNR",
     "start_url": ".",
+    "scope": ".",
     "display": "standalone",
+    "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
     "background_color": "#0E0F11",
-    "theme_color": "#0E0F11",
-    "description": "Cycling news aggregator — all bike racing in one news room.",
+    "theme_color": "#E8C54A",
+    "description": "Cycling news from around the world — road, MTB, gravel, track, and cyclocross. Aggregated from public RSS feeds, refreshed every 30 minutes.",
     "orientation": "any",
+    "lang": "en",
+    "dir": "ltr",
+    "categories": ["news", "sports"],
     "prefer_related_applications": false,
     "id": "com.majksquare.bike_news_room",
     "icons": [
@@ -31,6 +36,22 @@
             "sizes": "512x512",
             "type": "image/png",
             "purpose": "maskable"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "Calendar",
+            "short_name": "Calendar",
+            "description": "Upcoming races",
+            "url": "./?tab=races",
+            "icons": [{"src": "icons/Icon-192.png", "sizes": "192x192"}]
+        },
+        {
+            "name": "Following",
+            "short_name": "Following",
+            "description": "Your watchlist",
+            "url": "./?tab=following",
+            "icons": [{"src": "icons/Icon-192.png", "sizes": "192x192"}]
         }
     ]
 }

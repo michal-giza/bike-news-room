@@ -4,8 +4,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/theme/tokens.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../domain/repositories/sources_repository.dart';
 import '../cubit/sources_cubit.dart';
+import 'suggested_sources.dart';
 
 /// "Add a source" dialog — the entry point for users to teach Bike News Room
 /// a new website. We keep the form minimal: URL is required, everything else
@@ -50,6 +52,32 @@ class _AddSourceModalState extends State<AddSourceModal> {
     super.dispose();
   }
 
+  /// Pre-fill the form from a curated-catalogue chip. We push the verified
+  /// feed URL (not the homepage) so the backend probe is a single hop and
+  /// always succeeds — the catalogue's whole point is to bypass the
+  /// resolution waterfall for the most-used sites.
+  void _applyCatalogueEntry(CatalogueEntry e) {
+    setState(() {
+      _urlCtrl.text = e.url;
+      _nameCtrl.text = e.name;
+      _region = _supportedRegions.contains(e.region) ? e.region : 'world';
+      _discipline =
+          _supportedDisciplines.contains(e.discipline) ? e.discipline : 'all';
+    });
+  }
+
+  /// Lockstep with the items in `_regionDropdown` — keep them in sync.
+  static const _supportedRegions = {'world', 'eu', 'poland', 'spain'};
+  static const _supportedDisciplines = {
+    'all',
+    'road',
+    'mtb',
+    'gravel',
+    'track',
+    'cx',
+    'bmx',
+  };
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     FocusScope.of(context).unfocus();
@@ -92,6 +120,7 @@ class _AddSourceModalState extends State<AddSourceModal> {
                     children: [
                       _header(ext),
                       const SizedBox(height: BnrSpacing.s5),
+                      SuggestedSources(onPick: _applyCatalogueEntry),
                       _urlField(ext),
                       const SizedBox(height: BnrSpacing.s4),
                       _nameField(ext),
@@ -219,33 +248,35 @@ class _AddSourceModalState extends State<AddSourceModal> {
   }
 
   Widget _regionDropdown(BnrThemeExt ext) {
+    final l = AppLocalizations.of(context);
     return DropdownButtonFormField<String>(
       initialValue: _region,
       style: AppTheme.sans(size: 14, color: ext.fg0),
       decoration: _input(ext, 'Region', ''),
-      items: const [
-        DropdownMenuItem(value: 'world', child: Text('🌍 World')),
-        DropdownMenuItem(value: 'eu', child: Text('🇪🇺 EU')),
-        DropdownMenuItem(value: 'poland', child: Text('🇵🇱 Poland')),
-        DropdownMenuItem(value: 'spain', child: Text('🇪🇸 Spain')),
+      items: [
+        DropdownMenuItem(value: 'world', child: Text(l.regionWorld)),
+        DropdownMenuItem(value: 'eu', child: Text(l.regionEu)),
+        DropdownMenuItem(value: 'poland', child: Text(l.regionPoland)),
+        DropdownMenuItem(value: 'spain', child: Text(l.regionSpain)),
       ],
       onChanged: (v) => setState(() => _region = v ?? 'world'),
     );
   }
 
   Widget _disciplineDropdown(BnrThemeExt ext) {
+    final l = AppLocalizations.of(context);
     return DropdownButtonFormField<String>(
       initialValue: _discipline,
       style: AppTheme.sans(size: 14, color: ext.fg0),
       decoration: _input(ext, 'Discipline', ''),
-      items: const [
-        DropdownMenuItem(value: 'all', child: Text('All')),
-        DropdownMenuItem(value: 'road', child: Text('Road')),
-        DropdownMenuItem(value: 'mtb', child: Text('MTB')),
-        DropdownMenuItem(value: 'gravel', child: Text('Gravel')),
-        DropdownMenuItem(value: 'track', child: Text('Track')),
-        DropdownMenuItem(value: 'cx', child: Text('CX')),
-        DropdownMenuItem(value: 'bmx', child: Text('BMX')),
+      items: [
+        DropdownMenuItem(value: 'all', child: Text(l.disciplineAll)),
+        DropdownMenuItem(value: 'road', child: Text(l.disciplineRoad)),
+        DropdownMenuItem(value: 'mtb', child: Text(l.disciplineMtb)),
+        DropdownMenuItem(value: 'gravel', child: Text(l.disciplineGravel)),
+        DropdownMenuItem(value: 'track', child: Text(l.disciplineTrack)),
+        DropdownMenuItem(value: 'cx', child: Text(l.disciplineCx)),
+        DropdownMenuItem(value: 'bmx', child: Text(l.disciplineBmx)),
       ],
       onChanged: (v) => setState(() => _discipline = v ?? 'all'),
     );

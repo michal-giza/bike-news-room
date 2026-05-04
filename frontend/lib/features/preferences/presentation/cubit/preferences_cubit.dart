@@ -27,6 +27,20 @@ class PreferencesCubit extends Cubit<UserPreferences> {
   Future<void> setReducedMotion(bool enabled) =>
       _update(state.copyWith(reducedMotion: enabled));
 
+  /// Set the user's preferred locale. Pass `null` to fall back to the
+  /// device locale (the default Flutter behaviour).
+  Future<void> setLocale(String? code) =>
+      _update(state.copyWith(localeCode: code));
+
+  /// Mark the highest article id the user has now seen. Only advances —
+  /// never moves backwards, so refreshing an older feed page doesn't reset
+  /// the "what's new" baseline.
+  Future<void> markLastSeenArticleId(int articleId) {
+    final current = state.lastSeenArticleId ?? 0;
+    if (articleId <= current) return Future.value();
+    return _update(state.copyWith(lastSeenArticleId: articleId));
+  }
+
   /// Soft cap so a long-running app doesn't grow shared_preferences without
   /// bound. We keep insertion order via a [LinkedHashSet] so the oldest
   /// bookmark is the one we drop.
@@ -56,6 +70,24 @@ class PreferencesCubit extends Cubit<UserPreferences> {
     final ids = Set<int>.from(state.hiddenSourceIds)..remove(feedId);
     return _update(state.copyWith(hiddenSourceIds: ids));
   }
+
+  /// Reset the onboarding gate so the user is taken back through the
+  /// region/discipline/density picker. Bookmarks and watchlist stay intact —
+  /// only the gate flag flips. Called from the Settings page.
+  Future<void> restartOnboarding() => _update(
+        UserPreferences(
+          themeMode: state.themeMode,
+          persona: state.persona,
+          density: state.density,
+          preferredRegions: const {},
+          preferredDisciplines: const {},
+          hiddenSourceIds: state.hiddenSourceIds,
+          bookmarkedArticleIds: state.bookmarkedArticleIds,
+          reducedMotion: state.reducedMotion,
+          onboardingComplete: false,
+          lastSeenArticleId: state.lastSeenArticleId,
+        ),
+      );
 
   Future<void> completeOnboarding({
     required Set<String> regions,

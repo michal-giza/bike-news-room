@@ -29,6 +29,9 @@ class FeedRemoteDataSourceImpl implements FeedRemoteDataSource {
       if (filter.search != null && filter.search!.isNotEmpty)
         'search': filter.search,
       if (filter.since != null) 'since': filter.since!.toIso8601String(),
+      if (filter.before != null) 'before': filter.before!.toIso8601String(),
+      if (filter.raceSlug != null && filter.raceSlug!.isNotEmpty)
+        'race_slug': filter.raceSlug,
     };
     final response = await dio.get<Map<String, dynamic>>(
       '/api/articles',

@@ -1,6 +1,12 @@
 import 'package:equatable/equatable.dart';
 
-enum WatchedKind { rider, team }
+/// What sort of cycling subject the user is following.
+///
+/// `race` covers any event a user might want a permanent feed of —
+/// Grand Tours, Monuments, MTB World Cup rounds, Red Bull Rampage, etc.
+/// Year-agnostic: "Tour de France" matches every edition, with the year
+/// disambiguated by article body content rather than separate entities.
+enum WatchedKind { rider, team, race }
 
 /// A rider or team the user is following.
 ///

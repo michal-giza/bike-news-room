@@ -6,6 +6,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/theme/tokens.dart';
 import '../../../../core/url/safe_url.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 import '../bloc/calendar_bloc.dart';
 import '../widgets/race_card.dart';
 
@@ -66,7 +67,7 @@ class CalendarPage extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         child: Row(
           children: [
-            _filterChip(context, label: 'ALL', selected: state.discipline == null,
+            _filterChip(context, label: AppLocalizations.of(context).calendarFilterAll, selected: state.discipline == null,
                 onTap: () => context.read<CalendarBloc>()
                     .add(const CalendarDisciplineChanged(null))),
             for (final d in _disciplines)
@@ -213,14 +214,8 @@ class CalendarPage extends StatelessWidget {
           children: [
             Icon(Icons.calendar_today, color: ext.fg2, size: 40),
             const SizedBox(height: BnrSpacing.s4),
-            Text('No upcoming races yet',
+            Text(AppLocalizations.of(context).calendarEmpty,
                 style: AppTheme.serif(size: 24, color: ext.fg0)),
-            const SizedBox(height: 8),
-            Text(
-              'The first calendar sync runs at startup, then daily at 3 AM.',
-              textAlign: TextAlign.center,
-              style: AppTheme.sans(size: 14, color: ext.fg2),
-            ),
           ],
         ),
       ),
@@ -237,7 +232,7 @@ class CalendarPage extends StatelessWidget {
           children: [
             Icon(Icons.wifi_off, color: ext.fg2, size: 40),
             const SizedBox(height: BnrSpacing.s4),
-            Text("Couldn't load the calendar",
+            Text(AppLocalizations.of(context).calendarError,
                 style: AppTheme.serif(size: 24, color: ext.fg0)),
             const SizedBox(height: 8),
             if (msg != null)
@@ -248,7 +243,7 @@ class CalendarPage extends StatelessWidget {
             FilledButton(
               onPressed: () =>
                   context.read<CalendarBloc>().add(const CalendarRequested()),
-              child: const Text('Retry'),
+              child: Text(AppLocalizations.of(context).retry),
             ),
           ],
         ),

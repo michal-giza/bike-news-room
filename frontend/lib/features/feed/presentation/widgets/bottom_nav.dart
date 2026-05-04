@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/theme/tokens.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 
 enum BnrTab { feed, search, following, calendar, bookmarks }
 
@@ -30,11 +31,16 @@ class BottomNav extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _btn(context, BnrTab.feed, Icons.home_outlined, 'FEED'),
-          _btn(context, BnrTab.following, Icons.person_outline, 'FOLLOWING'),
-          _btn(context, BnrTab.search, Icons.search, 'SEARCH'),
-          _btn(context, BnrTab.calendar, Icons.calendar_today_outlined, 'RACES'),
-          _btn(context, BnrTab.bookmarks, Icons.bookmark_border, 'SAVED'),
+          _btn(context, BnrTab.feed, Icons.home_outlined,
+              AppLocalizations.of(context).tabFeed.toUpperCase()),
+          _btn(context, BnrTab.following, Icons.person_outline,
+              AppLocalizations.of(context).tabFollowing.toUpperCase()),
+          _btn(context, BnrTab.search, Icons.search,
+              AppLocalizations.of(context).tabSearch.toUpperCase()),
+          _btn(context, BnrTab.calendar, Icons.calendar_today_outlined,
+              AppLocalizations.of(context).tabCalendar.toUpperCase()),
+          _btn(context, BnrTab.bookmarks, Icons.bookmark_border,
+              AppLocalizations.of(context).tabBookmarks.toUpperCase()),
         ],
       ),
     );

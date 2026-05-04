@@ -5,9 +5,11 @@ use std::sync::Arc;
 
 use axum::body::Body;
 use axum::http::{Request, StatusCode};
-use bike_news_room::application::{AddUserSourceUseCase, QueryUseCases};
+use bike_news_room::application::{AddUserSourceUseCase, BackfillArchiveUseCase, QueryUseCases};
 use bike_news_room::domain::entities::{ArticleDraft, ArticleQuery};
-use bike_news_room::domain::ports::{ArticleRepository, FeedRepository};
+use bike_news_room::domain::ports::{
+    ArticleRepository, FeedRepository, SourceCandidateRepository, SubscriberRepository,
+};
 use bike_news_room::infrastructure::{init_schema, SqliteRepository};
 use bike_news_room::web::create_router;
 use http_body_util::BodyExt;
@@ -21,7 +23,7 @@ async fn setup_app_with_seed() -> (axum::Router, Arc<SqliteRepository>) {
         .await
         .unwrap();
     init_schema(&pool).await.unwrap();
-    let repo = Arc::new(SqliteRepository::new(pool));
+    let repo = Arc::new(SqliteRepository::new(pool.clone()));
 
     let feed_id = repo
         .upsert("https://test.com/feed", "TestFeed", "world", "road", "en")
@@ -55,7 +57,24 @@ async fn setup_app_with_seed() -> (axum::Router, Arc<SqliteRepository>) {
 
     let queries = QueryUseCases::new(repo.clone(), repo.clone(), repo.clone());
     let add_source = Arc::new(AddUserSourceUseCase::new(repo.clone()));
-    (create_router(queries, add_source), repo)
+    let candidates: Arc<dyn SourceCandidateRepository> = repo.clone();
+    let subscribers: Arc<dyn SubscriberRepository> = repo.clone();
+    (
+        create_router(
+            queries,
+            add_source,
+            candidates,
+            subscribers,
+            Arc::new(BackfillArchiveUseCase::new(
+                repo.clone(),
+                repo.clone(),
+                repo.clone(),
+                pool.clone(),
+            )),
+            pool,
+        ),
+        repo,
+    )
 }
 
 async fn json_response(app: axum::Router, uri: &str) -> (StatusCode, Value) {
@@ -210,10 +229,18 @@ async fn empty_db_returns_empty_array() {
         .await
         .unwrap();
     init_schema(&pool).await.unwrap();
-    let repo = Arc::new(SqliteRepository::new(pool));
+    let repo = Arc::new(SqliteRepository::new(pool.clone()));
     let queries = QueryUseCases::new(repo.clone(), repo.clone(), repo.clone());
     let add_source = Arc::new(AddUserSourceUseCase::new(repo.clone()));
-    let app = create_router(queries, add_source);
+    let candidates: Arc<dyn SourceCandidateRepository> = repo.clone();
+    let subscribers: Arc<dyn SubscriberRepository> = repo.clone();
+    let backfill = Arc::new(BackfillArchiveUseCase::new(
+        repo.clone(),
+        repo.clone(),
+        repo.clone(),
+        pool.clone(),
+    ));
+    let app = create_router(queries, add_source, candidates, subscribers, backfill, pool);
 
     let (status, body) = json_response(app, "/api/articles").await;
     assert_eq!(status, StatusCode::OK);

@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/theme/tokens.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../../sources/presentation/widgets/add_source_modal.dart';
 import '../../../watchlist/domain/entities/watched_entity.dart';
 import '../../../watchlist/presentation/cubit/watchlist_cubit.dart';
@@ -91,7 +92,10 @@ class _SearchOverlayState extends State<SearchOverlay> {
     context.read<WatchlistCubit>().follow(entity);
     Navigator.of(context).pop();
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Following ${entity.name}')),
+      SnackBar(
+        content:
+            Text(AppLocalizations.of(context).followingName(entity.name)),
+      ),
     );
   }
 
@@ -171,7 +175,7 @@ class _SearchOverlayState extends State<SearchOverlay> {
                 isCollapsed: true,
                 contentPadding: EdgeInsets.zero,
                 border: InputBorder.none,
-                hintText: 'Search articles, riders, races…',
+                hintText: AppLocalizations.of(context).searchHint,
                 hintStyle: AppTheme.serif(
                   size: 22,
                   weight: FontWeight.w400,
@@ -216,9 +220,11 @@ class _SearchOverlayState extends State<SearchOverlay> {
                   child: Row(
                     children: [
                       Icon(
-                        entity.kind == WatchedKind.team
-                            ? Icons.groups_outlined
-                            : Icons.person_outline,
+                        switch (entity.kind) {
+                          WatchedKind.team => Icons.groups_outlined,
+                          WatchedKind.race => Icons.flag_outlined,
+                          WatchedKind.rider => Icons.person_outline,
+                        },
                         size: 14,
                         color: BnrColors.disciplineColor(entity.discipline),
                       ),
@@ -254,7 +260,7 @@ class _SearchOverlayState extends State<SearchOverlay> {
                           borderRadius: BorderRadius.circular(BnrRadius.r1),
                         ),
                         child: Text(
-                          '+ FOLLOW',
+                          AppLocalizations.of(context).follow,
                           style: AppTheme.mono(
                             size: 10,
                             color: BnrColors.accentInk,
@@ -303,7 +309,7 @@ class _SearchOverlayState extends State<SearchOverlay> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "Don't see what you're looking for?",
+                      AppLocalizations.of(context).searchAddSourceTitle,
                       style: AppTheme.sans(
                         size: 13,
                         color: ext.fg0,
@@ -311,7 +317,7 @@ class _SearchOverlayState extends State<SearchOverlay> {
                       ),
                     ),
                     Text(
-                      'Paste any RSS feed or website to add it as a source.',
+                      AppLocalizations.of(context).searchAddSourceBody,
                       style: AppTheme.sans(
                         size: 12,
                         color: ext.fg2,
@@ -414,14 +420,14 @@ class _SearchOverlayState extends State<SearchOverlay> {
           _key(context, '↵'),
           const SizedBox(width: 4),
           Text(
-            'to search',
+            AppLocalizations.of(context).searchKeyToSearch,
             style: AppTheme.mono(size: 11, color: ext.fg2),
           ),
           const SizedBox(width: 16),
           _key(context, 'esc'),
           const SizedBox(width: 4),
           Text(
-            'to close',
+            AppLocalizations.of(context).searchKeyToClose,
             style: AppTheme.mono(size: 11, color: ext.fg2),
           ),
         ],

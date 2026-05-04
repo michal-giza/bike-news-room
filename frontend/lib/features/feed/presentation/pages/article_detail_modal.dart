@@ -5,6 +5,9 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/theme/tokens.dart';
 import '../../../../core/url/safe_url.dart';
+import '../../../../l10n/generated/app_localizations.dart';
+import '../widgets/related_stories.dart';
+import '../widgets/share_row.dart';
 import '../../domain/entities/article.dart';
 import '../widgets/article_meta_row.dart';
 import '../widgets/image_placeholder.dart';
@@ -142,17 +145,12 @@ class ArticleDetailModal extends StatelessWidget {
               size: 18,
               color: bookmarked ? BnrColors.accent : ext.fg1,
             ),
-            tooltip: 'Bookmark',
+            tooltip: AppLocalizations.of(context).tooltipBookmark,
             onPressed: onBookmark,
           ),
           IconButton(
-            icon: Icon(Icons.share_outlined, size: 18, color: ext.fg1),
-            tooltip: 'Share',
-            onPressed: () {},
-          ),
-          IconButton(
             icon: Icon(Icons.close, size: 18, color: ext.fg1),
-            tooltip: 'Close',
+            tooltip: AppLocalizations.of(context).tooltipClose,
             onPressed: () => Navigator.of(context).pop(),
           ),
         ],
@@ -200,6 +198,8 @@ class ArticleDetailModal extends StatelessWidget {
           // rarely does for RSS feeds. Skip the duplicate.)
           const SizedBox(height: BnrSpacing.s6),
           _readOnSourceButton(context),
+          ShareRow(article: article),
+          RelatedStories(article: article),
         ],
       ),
     );

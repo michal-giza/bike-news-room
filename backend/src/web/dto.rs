@@ -64,6 +64,10 @@ pub struct RacesResponse {
 pub struct RacesQueryParams {
     pub discipline: Option<String>,
     pub limit: Option<i64>,
+    /// `true` (default): future races only — preserves the existing
+    /// calendar-page contract. `false`: past races, newest-first. Drives
+    /// the per-race "past editions" view.
+    pub upcoming: Option<bool>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -75,6 +79,13 @@ pub struct ArticleQueryParams {
     pub category: Option<String>,
     pub search: Option<String>,
     pub since: Option<String>,
+    /// ISO-8601 (or SQLite-style) cutoff. Only returns articles older
+    /// than this. Powers the per-race "past edition" archive view.
+    pub before: Option<String>,
+    /// Race slug from the matcher catalogue. When set, joins the
+    /// `race_articles` link table so only articles tagged for that race
+    /// are returned.
+    pub race_slug: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]

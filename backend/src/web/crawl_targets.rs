@@ -114,8 +114,7 @@ pub fn default_targets() -> Vec<CrawlTarget> {
             discipline: "mtb".into(), // dominant — most Red Bull bike events are MTB/BMX
             language: "en".into(),
             selectors: CrawlSelectors {
-                article_list:
-                    "article, .card, [data-test-id='card'], .event-card".into(),
+                article_list: "article, .card, [data-test-id='card'], .event-card".into(),
                 title: "h2, h3, .card-title, [data-test-id='card-title']".into(),
                 link: "a".into(),
                 description: Some(".description, .summary, p, .card-text".into()),

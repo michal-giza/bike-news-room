@@ -17,6 +17,8 @@ class PreferencesRepository {
   static const _kBookmarks = 'pref.bookmarks';
   static const _kReducedMotion = 'pref.reducedMotion';
   static const _kOnboarding = 'pref.onboardingComplete';
+  static const _kLastSeen = 'pref.lastSeenArticleId';
+  static const _kLocale = 'pref.localeCode';
 
   UserPreferences load() {
     return UserPreferences(
@@ -45,6 +47,8 @@ class PreferencesRepository {
           .toSet(),
       reducedMotion: prefs.getBool(_kReducedMotion) ?? false,
       onboardingComplete: prefs.getBool(_kOnboarding) ?? false,
+      lastSeenArticleId: prefs.getInt(_kLastSeen),
+      localeCode: prefs.getString(_kLocale),
     );
   }
 
@@ -60,5 +64,17 @@ class PreferencesRepository {
         _kBookmarks, p.bookmarkedArticleIds.map((e) => '$e').toList());
     await prefs.setBool(_kReducedMotion, p.reducedMotion);
     await prefs.setBool(_kOnboarding, p.onboardingComplete);
+    final lastSeen = p.lastSeenArticleId;
+    if (lastSeen == null) {
+      await prefs.remove(_kLastSeen);
+    } else {
+      await prefs.setInt(_kLastSeen, lastSeen);
+    }
+    final loc = p.localeCode;
+    if (loc == null) {
+      await prefs.remove(_kLocale);
+    } else {
+      await prefs.setString(_kLocale, loc);
+    }
   }
 }

@@ -6,7 +6,9 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/theme/tokens.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../../feed/domain/usecases/get_articles.dart';
+import '../../../feed/presentation/bookmark_action.dart';
 import '../../../feed/presentation/cubit/sources_cubit.dart';
 import '../../../feed/presentation/pages/article_detail_modal.dart';
 import '../../../feed/presentation/widgets/article_card.dart';
@@ -14,6 +16,7 @@ import '../../../preferences/presentation/cubit/preferences_cubit.dart';
 import '../../domain/entities/watched_entity.dart';
 import '../bloc/following_feed_bloc.dart';
 import '../cubit/watchlist_cubit.dart';
+import 'race_detail_page.dart';
 
 /// "Following" — watched riders/teams + the articles that match them.
 ///
@@ -126,44 +129,57 @@ class _EntityChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final ext = context.bnr;
     final accent = BnrColors.disciplineColor(entity.discipline);
-    return Container(
+    // Race chips open the per-race archive page on tap. Rider/team
+    // chips don't need a detail view — their content already aggregates
+    // into the parent FollowingFeedBloc.
+    final tappable = entity.kind == WatchedKind.race;
+    final body = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          switch (entity.kind) {
+            WatchedKind.team => Icons.groups_outlined,
+            WatchedKind.race => Icons.flag_outlined,
+            WatchedKind.rider => Icons.person_outline,
+          },
+          size: 12,
+          color: accent,
+        ),
+        const SizedBox(width: 6),
+        Text(
+          entity.name,
+          style: AppTheme.sans(
+            size: 12,
+            color: ext.fg0,
+            weight: FontWeight.w500,
+          ),
+        ),
+        IconButton(
+          iconSize: 14,
+          visualDensity: VisualDensity.compact,
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          constraints: const BoxConstraints(),
+          tooltip: AppLocalizations.of(context).tooltipUnfollow,
+          icon: Icon(Icons.close, size: 14, color: ext.fg2),
+          onPressed: () =>
+              context.read<WatchlistCubit>().unfollow(entity.id),
+        ),
+      ],
+    );
+    final container = Container(
       padding: const EdgeInsets.fromLTRB(8, 4, 4, 4),
       decoration: BoxDecoration(
         color: ext.bg2,
         border: Border.all(color: accent.withValues(alpha: 0.5)),
         borderRadius: BorderRadius.circular(BnrRadius.pill),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            entity.kind == WatchedKind.team
-                ? Icons.groups_outlined
-                : Icons.person_outline,
-            size: 12,
-            color: accent,
-          ),
-          const SizedBox(width: 6),
-          Text(
-            entity.name,
-            style: AppTheme.sans(
-              size: 12,
-              color: ext.fg0,
-              weight: FontWeight.w500,
-            ),
-          ),
-          IconButton(
-            iconSize: 14,
-            visualDensity: VisualDensity.compact,
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            constraints: const BoxConstraints(),
-            tooltip: 'Unfollow',
-            icon: Icon(Icons.close, size: 14, color: ext.fg2),
-            onPressed: () =>
-                context.read<WatchlistCubit>().unfollow(entity.id),
-          ),
-        ],
-      ),
+      child: body,
+    );
+    if (!tappable) return container;
+    return InkWell(
+      onTap: () => RaceDetailPage.show(context, entity),
+      borderRadius: BorderRadius.circular(BnrRadius.pill),
+      child: container,
     );
   }
 }
@@ -222,13 +238,9 @@ class _MatchesList extends StatelessWidget {
                   sourceName: sources.displayFor(article.feedId),
                   bookmarked:
                       prefs.bookmarkedArticleIds.contains(article.id),
-                  onBookmark: () => context
-                      .read<PreferencesCubit>()
-                      .toggleBookmark(article.id),
+                  onBookmark: () => toggleBookmark(context, article),
                 ),
-                onBookmark: () => context
-                    .read<PreferencesCubit>()
-                    .toggleBookmark(article.id),
+                onBookmark: () => toggleBookmark(context, article),
               );
             },
           ),
@@ -347,7 +359,7 @@ class _ErrorState extends StatelessWidget {
               onPressed: () => context
                   .read<FollowingFeedBloc>()
                   .add(FollowingFeedRequested(watchlist.following)),
-              child: const Text('Retry'),
+              child: Text(AppLocalizations.of(context).retry),
             ),
           ],
         ),

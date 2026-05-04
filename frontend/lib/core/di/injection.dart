@@ -1,6 +1,10 @@
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../features/feed/data/datasources/article_snapshot_store.dart';
+import '../ads/ad_service.dart';
+import '../ads/consent_service.dart';
+
 import '../../features/calendar/data/datasources/calendar_remote_data_source.dart';
 import '../../features/calendar/data/repositories/calendar_repository_impl.dart';
 import '../../features/calendar/domain/repositories/calendar_repository.dart';
@@ -34,6 +38,9 @@ Future<void> configureDependencies() async {
   );
   getIt.registerSingleton<WatchlistRepository>(
     WatchlistRepository(sharedPrefs),
+  );
+  getIt.registerSingleton<ArticleSnapshotStore>(
+    ArticleSnapshotStore(sharedPrefs),
   );
 
   // Feed feature
@@ -74,4 +81,12 @@ Future<void> configureDependencies() async {
   getIt.registerLazySingleton<AddSource>(
     () => AddSource(getIt<SourcesRepository>()),
   );
+
+  // ── Ads + consent ─────────────────────────────────────────────────
+  // ALWAYS register against the abstract `IAdService` so tests can
+  // override with `NoopAdService`. Concrete `AdMobService` is created
+  // here but never directly resolved — the rest of the app reads
+  // `getIt<IAdService>()` only.
+  getIt.registerSingleton<IAdService>(AdMobService());
+  getIt.registerSingleton<ConsentService>(ConsentService());
 }

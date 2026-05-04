@@ -318,6 +318,10 @@ class _OnboardingPageState extends State<OnboardingPage> {
             ),
           ),
         TextButton(
+          // ValueKey for integration tests: locale-independent finder so
+          // Patrol/flutter_test can drive the onboarding without parsing
+          // translated strings ("Skip" / "Pomiń" / "Saltar" / …).
+          key: const ValueKey('onboardingSkipBtn'),
           onPressed: _skip,
           child: Text(
             l.onboardingSkip,
@@ -326,6 +330,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
         ),
         const Spacer(),
         FilledButton.icon(
+          key: const ValueKey('onboardingAdvanceBtn'),
           onPressed: canAdvance ? _advance : null,
           style: FilledButton.styleFrom(
             backgroundColor: BnrColors.accent,

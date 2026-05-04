@@ -32,6 +32,12 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  # integration_test drives the on-device scenario suite. We use the
+  # plain `flutter_test` driver kind from phone-controll (no Patrol
+  # native shim required) because it covers our smoke + critical-path
+  # scenarios cleanly across Android + iOS without per-platform setup.
+  integration_test:
+    sdk: flutter
   flutter_lints: ^5.0.0
   bloc_test: ^10.0.0
   mocktail: ^1.0.4

@@ -64,6 +64,16 @@ language = "en"
 ## NaSzosie's RSS works locally but its CDN returns an HTML challenge page
 ## to HF Spaces' IP range (probably geo / anti-bot fence). Moved to the
 ## HTML crawler — see backend/src/web/crawl_targets.rs.
+## mtb.pl publishes a clean WordPress RSS feed at /feed/ — verified
+## reachable from HF IPs. Adds Polish-language MTB coverage that the
+## crawler-based PL feeds (PZKol, Rowery.org) don't cover.
+
+[[feeds]]
+url = "https://mtb.pl/feed/"
+title = "MTB.pl"
+region = "poland"
+discipline = "mtb"
+language = "pl"
 
 ## Spain
 ## Replaced El Pelotón (elpeloton.es) — domain dead.

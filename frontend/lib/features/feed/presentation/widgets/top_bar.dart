@@ -49,8 +49,16 @@ class TopBar extends StatelessWidget implements PreferredSizeWidget {
             ),
           ),
           const Spacer(),
-          _IconBtn(icon: Icons.bookmark_border, onTap: onBookmarksTap),
-          _IconBtn(icon: Icons.settings_outlined, onTap: onSettingsTap),
+          _IconBtn(
+            key: const ValueKey('topBarBookmarksBtn'),
+            icon: Icons.bookmark_border,
+            onTap: onBookmarksTap,
+          ),
+          _IconBtn(
+            key: const ValueKey('topBarSettingsBtn'),
+            icon: Icons.settings_outlined,
+            onTap: onSettingsTap,
+          ),
         ],
       ),
     );
@@ -181,7 +189,7 @@ class _SearchPillState extends State<_SearchPill> {
 class _IconBtn extends StatefulWidget {
   final IconData icon;
   final VoidCallback? onTap;
-  const _IconBtn({required this.icon, this.onTap});
+  const _IconBtn({super.key, required this.icon, this.onTap});
 
   @override
   State<_IconBtn> createState() => _IconBtnState();

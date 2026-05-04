@@ -6,16 +6,27 @@ use crate::domain::ports::{CrawlSelectors, CrawlTarget};
 pub fn default_targets() -> Vec<CrawlTarget> {
     vec![
         CrawlTarget {
+            // PZKol — Polski Związek Kolarski (federation news).
+            // The trailing-slash variant returns a 301 *with* an HTML
+            // body announcing "moved" to the no-slash URL. Our crawler
+            // doesn't currently follow that body's redirect, so the
+            // canonical URL is the no-slash form. Verified by
+            //   curl -L https://www.pzkol.pl/aktualnosci → 200 + content.
+            // Article cards on the page render as `.article` blocks
+            // with a `.title` anchor inside; default selectors
+            // (article, .news-item, .post) didn't match, so we add
+            // `.article` and `.title` explicitly. `relative_links: true`
+            // is required because anchor hrefs are root-relative.
             name: "PZKol".into(),
-            url: "https://www.pzkol.pl/aktualnosci/".into(),
+            url: "https://www.pzkol.pl/aktualnosci".into(),
             region: "poland".into(),
             discipline: "all".into(),
             language: "pl".into(),
             selectors: CrawlSelectors {
-                article_list: "article, .news-item, .post".into(),
-                title: "h2 a, h3 a, .title a".into(),
-                link: "h2 a, h3 a, .title a".into(),
-                description: Some("p, .excerpt, .summary".into()),
+                article_list: "article, .article, .news-item, .post".into(),
+                title: "h2 a, h3 a, .title a, a.title".into(),
+                link: "h2 a, h3 a, .title a, a.title".into(),
+                description: Some("p, .excerpt, .summary, .lead".into()),
                 image: Some("img".into()),
                 date: Some("time, .date, .post-date".into()),
                 relative_links: true,
@@ -69,22 +80,14 @@ pub fn default_targets() -> Vec<CrawlTarget> {
                 relative_links: true,
             },
         },
-        CrawlTarget {
-            name: "Rowery.org".into(),
-            url: "https://rowery.org/".into(),
-            region: "poland".into(),
-            discipline: "all".into(),
-            language: "pl".into(),
-            selectors: CrawlSelectors {
-                article_list: "article, .post, .news-item".into(),
-                title: "h2 a, h3 a, .entry-title a".into(),
-                link: "h2 a, h3 a, .entry-title a".into(),
-                description: Some(".entry-summary, .excerpt, p".into()),
-                image: Some("img".into()),
-                date: Some("time, .entry-date, .date".into()),
-                relative_links: true,
-            },
-        },
+        // Rowery.org closed on 2024-12-15. Their homepage banner now
+        // reads "Czas pożegnania — wortal rowery.org zakończył
+        // działalność" ("Time to say goodbye — the rowery.org portal
+        // has ended operations") and the article archive at /posts/
+        // shows a dated, frozen snapshot. Removed from the crawler
+        // list — keeping it would just emit zero articles every cron
+        // tick and inflate the feed-health metrics with a healthy-but-
+        // useless source. Replaced by mtb.pl in feeds.toml (real RSS).
         // NaSzosie — Polish road-cycling magazine. Their /feed/ endpoint
         // returns an anti-bot HTML page to HF Spaces' IPs, but the homepage
         // serves clean WordPress markup. Crawl that instead.

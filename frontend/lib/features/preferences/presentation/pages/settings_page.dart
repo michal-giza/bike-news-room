@@ -35,6 +35,7 @@ class SettingsPage extends StatelessWidget {
     final ext = context.bnr;
     final l = AppLocalizations.of(context);
     return Scaffold(
+      key: const ValueKey('settingsPageScaffold'),
       appBar: AppBar(title: Text(l.settings)),
       body: BlocBuilder<PreferencesCubit, UserPreferences>(
         builder: (context, prefs) {

@@ -173,6 +173,10 @@ impl<F: FeedFetcher + 'static> IngestFeedsUseCase<F> {
         }
 
         let _ = self.feed_repo.mark_fetched(feed_id).await;
+        // Track empty-streak so the staleness detector can flag long-
+        // quiet feeds. record_fetch_yield is idempotent — safe to call
+        // even when new_count = 0 (it just bumps the streak counter).
+        let _ = self.feed_repo.record_fetch_yield(feed_id, new_count).await;
         info!(
             "feed '{}': {} new articles from {} entries",
             source.title,

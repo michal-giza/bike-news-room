@@ -21,6 +21,7 @@
 // translated strings because the same UI ships in 9 locales and CI
 // could run under any of them.
 
+import 'package:bike_news_room/core/di/injection.dart';
 import 'package:bike_news_room/features/preferences/data/preferences_repository.dart';
 import 'package:bike_news_room/features/preferences/domain/entities/user_preferences.dart';
 import 'package:bike_news_room/main.dart' as app;
@@ -33,9 +34,13 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   // Ensure clean prefs before each test so the onboarding tests aren't
-  // skewed by a previous run's state.
+  // skewed by a previous run's state. Also reset get_it because every
+  // call to app.main() runs configureDependencies(), which registers
+  // singletons; re-registering throws "already registered". Tests that
+  // run a fresh app instance must start from an empty container.
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
+    await getIt.reset();
   });
 
   testWidgets('cold start with no prefs renders onboarding step 1', (

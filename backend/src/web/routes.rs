@@ -71,6 +71,8 @@ pub fn create_router(
         .route("/api/live-ticker", get(list_live_ticker))
         .route("/api/admin/live-ticker", post(post_live_ticker))
         .route("/api/admin/backfill", post(post_backfill))
+        .route("/api/admin/feeds/stale", get(list_stale_feeds))
+        .route("/api/admin/feeds/dead", get(list_dead_feeds))
         .route("/api/subscribers", post(subscribe))
         .route("/api/subscribers/confirm", get(confirm_subscriber))
         .route("/api/subscribers/unsubscribe", get(unsubscribe))
@@ -775,4 +777,62 @@ async fn post_backfill(
             total_linked,
         }),
     ))
+}
+
+#[derive(serde::Deserialize)]
+struct StaleQuery {
+    /// Minimum consecutive-empty-fetches to flag a source as stale.
+    /// Default 30 ≈ 15 days at 30-min ingest cadence — conservative
+    /// enough that genuinely-quiet weekly publishers don't get flagged
+    /// by a one-off slow week.
+    min_streak: Option<i32>,
+}
+
+/// Admin-only — list feeds whose empty-streak counter has crossed the
+/// staleness threshold. These are the "200 OK but emitting nothing"
+/// candidates the empty-streak tracker picks up after ~5–15 days. Ops
+/// reviews the list and either deletes the source or fixes its
+/// crawl_targets selectors.
+async fn list_stale_feeds(
+    State(state): State<AppState>,
+    headers: axum::http::HeaderMap,
+    Query(q): Query<StaleQuery>,
+) -> Result<Json<serde_json::Value>, (StatusCode, Json<serde_json::Value>)> {
+    require_admin(&headers).map_err(|s| (s, Json(serde_json::json!({"error": "forbidden"}))))?;
+    let min_streak = q.min_streak.unwrap_or(30).clamp(1, 1000);
+    let feeds = state
+        .queries
+        .list_stale_feeds(min_streak)
+        .await
+        .map_err(|_| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(serde_json::json!({"error": "lookup failed"})),
+            )
+        })?;
+    Ok(Json(serde_json::json!({
+        "min_streak": min_streak,
+        "count": feeds.len(),
+        "feeds": feeds,
+    })))
+}
+
+/// Admin-only — list feeds the shutdown-banner detector marked dead.
+/// `dead_reason` carries the matched phrase so ops can verify the
+/// detection wasn't a false positive before deleting.
+async fn list_dead_feeds(
+    State(state): State<AppState>,
+    headers: axum::http::HeaderMap,
+) -> Result<Json<serde_json::Value>, (StatusCode, Json<serde_json::Value>)> {
+    require_admin(&headers).map_err(|s| (s, Json(serde_json::json!({"error": "forbidden"}))))?;
+    let feeds = state.queries.list_dead_feeds().await.map_err(|_| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(serde_json::json!({"error": "lookup failed"})),
+        )
+    })?;
+    Ok(Json(serde_json::json!({
+        "count": feeds.len(),
+        "feeds": feeds,
+    })))
 }

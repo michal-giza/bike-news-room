@@ -57,6 +57,22 @@ pub struct Feed {
     pub last_fetched_at: Option<String>,
     pub error_count: i32,
     pub active: i32,
+    /// Consecutive successful fetches that yielded zero new articles.
+    /// Reset to 0 every time a fetch produces ≥1 new article. Surfaced
+    /// via /api/admin/feeds/stale — when this climbs past the
+    /// staleness threshold the source is probably dead even though
+    /// HTTP says 200.
+    #[sqlx(default)]
+    pub consecutive_empty_fetches: i32,
+    /// Wall-clock UTC timestamp of the most-recent fetch that yielded
+    /// at least one new article. NULL on a feed that's never produced.
+    #[sqlx(default)]
+    pub last_nonempty_at: Option<String>,
+    /// Set by the shutdown-banner detector when the feed body contains
+    /// a known closure phrase. Shape: "shutdown banner detected: {phrase}".
+    /// Non-NULL implies the feed is dead — the scheduler skips it.
+    #[sqlx(default)]
+    pub dead_reason: Option<String>,
 }
 
 /// Per-category counts for the categories endpoint.

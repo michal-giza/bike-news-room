@@ -32,6 +32,25 @@ pub async fn init_schema(pool: &SqlitePool) -> DomainResult<()> {
     .execute(pool)
     .await?;
 
+    // Idempotent migrations for the staleness-detection feature. Each
+    // ALTER COLUMN is wrapped in `.ok()` so a re-run of init_schema on a
+    // DB that already has the column doesn't panic. SQLite rejects
+    // duplicate ADD COLUMN; the .ok() swallows that one specific case.
+    sqlx::query(
+        "ALTER TABLE feeds ADD COLUMN consecutive_empty_fetches INTEGER NOT NULL DEFAULT 0",
+    )
+    .execute(pool)
+    .await
+    .ok();
+    sqlx::query("ALTER TABLE feeds ADD COLUMN last_nonempty_at TEXT")
+        .execute(pool)
+        .await
+        .ok();
+    sqlx::query("ALTER TABLE feeds ADD COLUMN dead_reason TEXT")
+        .execute(pool)
+        .await
+        .ok();
+
     sqlx::query(
         "CREATE TABLE IF NOT EXISTS articles (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -443,6 +462,62 @@ impl FeedRepository for SqliteRepository {
         .fetch_one(&self.pool)
         .await?;
         Ok(result)
+    }
+
+    async fn record_fetch_yield(&self, feed_id: i64, new_count: usize) -> DomainResult<()> {
+        if new_count > 0 {
+            // Yielded — reset streak + stamp the last-non-empty marker.
+            sqlx::query(
+                "UPDATE feeds
+                 SET consecutive_empty_fetches = 0,
+                     last_nonempty_at = datetime('now')
+                 WHERE id = ?",
+            )
+            .bind(feed_id)
+            .execute(&self.pool)
+            .await?;
+        } else {
+            sqlx::query(
+                "UPDATE feeds SET consecutive_empty_fetches = consecutive_empty_fetches + 1
+                 WHERE id = ?",
+            )
+            .bind(feed_id)
+            .execute(&self.pool)
+            .await?;
+        }
+        Ok(())
+    }
+
+    async fn mark_dead(&self, feed_id: i64, reason: &str) -> DomainResult<()> {
+        sqlx::query("UPDATE feeds SET dead_reason = ?, active = 0 WHERE id = ?")
+            .bind(reason)
+            .bind(feed_id)
+            .execute(&self.pool)
+            .await?;
+        Ok(())
+    }
+
+    async fn list_stale(&self, min_empty_streak: i32) -> DomainResult<Vec<Feed>> {
+        let rows = sqlx::query_as::<_, Feed>(
+            "SELECT * FROM feeds
+             WHERE consecutive_empty_fetches >= ?
+               AND dead_reason IS NULL
+               AND active = 1
+             ORDER BY consecutive_empty_fetches DESC",
+        )
+        .bind(min_empty_streak)
+        .fetch_all(&self.pool)
+        .await?;
+        Ok(rows)
+    }
+
+    async fn list_dead(&self) -> DomainResult<Vec<Feed>> {
+        let rows = sqlx::query_as::<_, Feed>(
+            "SELECT * FROM feeds WHERE dead_reason IS NOT NULL ORDER BY title ASC",
+        )
+        .fetch_all(&self.pool)
+        .await?;
+        Ok(rows)
     }
 }
 

@@ -174,6 +174,9 @@ impl FeedRepository for MockFeedRepo {
             last_fetched_at: None,
             error_count: 0,
             active: 1,
+            consecutive_empty_fetches: 0,
+            last_nonempty_at: None,
+            dead_reason: None,
         });
         Ok(id)
     }
@@ -208,6 +211,50 @@ impl FeedRepository for MockFeedRepo {
     }
     async fn last_fetch_time(&self) -> DomainResult<Option<String>> {
         Ok(None)
+    }
+    async fn record_fetch_yield(&self, feed_id: i64, new_count: usize) -> DomainResult<()> {
+        let mut feeds = self.feeds.lock().unwrap();
+        if let Some(f) = feeds.iter_mut().find(|f| f.id == feed_id) {
+            if new_count > 0 {
+                f.consecutive_empty_fetches = 0;
+                f.last_nonempty_at = Some("now".into());
+            } else {
+                f.consecutive_empty_fetches += 1;
+            }
+        }
+        Ok(())
+    }
+    async fn mark_dead(&self, feed_id: i64, reason: &str) -> DomainResult<()> {
+        let mut feeds = self.feeds.lock().unwrap();
+        if let Some(f) = feeds.iter_mut().find(|f| f.id == feed_id) {
+            f.dead_reason = Some(reason.into());
+            f.active = 0;
+        }
+        Ok(())
+    }
+    async fn list_stale(&self, min_empty_streak: i32) -> DomainResult<Vec<Feed>> {
+        Ok(self
+            .feeds
+            .lock()
+            .unwrap()
+            .iter()
+            .filter(|f| {
+                f.consecutive_empty_fetches >= min_empty_streak
+                    && f.dead_reason.is_none()
+                    && f.active == 1
+            })
+            .cloned()
+            .collect())
+    }
+    async fn list_dead(&self) -> DomainResult<Vec<Feed>> {
+        Ok(self
+            .feeds
+            .lock()
+            .unwrap()
+            .iter()
+            .filter(|f| f.dead_reason.is_some())
+            .cloned()
+            .collect())
     }
 }
 

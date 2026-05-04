@@ -58,6 +58,19 @@ impl QueryUseCases {
         self.feed_repo.list_all().await
     }
 
+    /// Feeds whose empty-streak crossed the staleness threshold —
+    /// alive (HTTP 200, no errors) but consistently producing nothing.
+    /// Default threshold of 30 ≈ 15 days at our 30-min ingest cadence.
+    pub async fn list_stale_feeds(&self, min_empty_streak: i32) -> DomainResult<Vec<Feed>> {
+        self.feed_repo.list_stale(min_empty_streak).await
+    }
+
+    /// Feeds the shutdown-banner detector flagged dead. Same shape as
+    /// stale; admin UI usually distinguishes them by colour or column.
+    pub async fn list_dead_feeds(&self) -> DomainResult<Vec<Feed>> {
+        self.feed_repo.list_dead().await
+    }
+
     pub async fn category_counts(&self) -> DomainResult<Vec<CategoryCount>> {
         self.article_repo.category_counts().await
     }

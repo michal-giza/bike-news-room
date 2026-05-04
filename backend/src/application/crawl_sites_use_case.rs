@@ -136,6 +136,11 @@ impl<C: WebCrawler + 'static> CrawlSitesUseCase<C> {
         }
 
         let _ = self.feed_repo.mark_fetched(feed_id).await;
+        // Empty-streak tracker — when a crawler keeps returning zero
+        // new articles run after run, the staleness detector surfaces
+        // the source for ops review. Common case: site closed, layout
+        // changed past our default selectors, anti-bot challenge.
+        let _ = self.feed_repo.record_fetch_yield(feed_id, new_count).await;
         info!("crawled '{}': {} new articles", target.name, new_count);
         Some(new_count)
     }

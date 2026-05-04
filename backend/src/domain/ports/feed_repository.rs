@@ -29,4 +29,26 @@ pub trait FeedRepository: Send + Sync {
     async fn find_feed(&self, id: i64) -> DomainResult<Option<Feed>>;
 
     async fn last_fetch_time(&self) -> DomainResult<Option<String>>;
+
+    /// Record the outcome of a fetch's article-yield count. When the
+    /// fetch produced ≥1 new article, resets the empty-streak counter
+    /// and stamps `last_nonempty_at`. When zero, increments the streak
+    /// counter so the staleness reporter can flag long-quiet sources.
+    async fn record_fetch_yield(&self, feed_id: i64, new_count: usize) -> DomainResult<()>;
+
+    /// Mark a feed as dead — it served HTTP 200 but its body contained
+    /// a known shutdown banner phrase. Stores the matched phrase in
+    /// `dead_reason` for ops review, sets `active=0` so the scheduler
+    /// stops fetching it on the next pass.
+    async fn mark_dead(&self, feed_id: i64, reason: &str) -> DomainResult<()>;
+
+    /// Feeds that look stale: alive (no errors), but the empty-streak
+    /// counter exceeds `min_empty_streak`. Surfaced by the admin
+    /// endpoint so an operator can review + retire.
+    async fn list_stale(&self, min_empty_streak: i32) -> DomainResult<Vec<Feed>>;
+
+    /// Feeds explicitly marked dead by the shutdown detector. Same
+    /// shape as list_stale, separate query so the admin UI can colour
+    /// them differently.
+    async fn list_dead(&self) -> DomainResult<Vec<Feed>>;
 }

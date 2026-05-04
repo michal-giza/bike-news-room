@@ -287,10 +287,21 @@ class _SearchOverlayState extends State<SearchOverlay> {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 6, 20, 6),
       child: InkWell(
-        onTap: () {
-          // Pop the overlay first so the modal sits on a clean surface.
+        onTap: () async {
+          // Layer the AddSourceModal on top of the search overlay rather
+          // than popping the overlay first. Popping a route and then
+          // pushing through the same `context` deactivates the element,
+          // and on Flutter Web has been observed to leave the user on a
+          // dead Scaffold after the modal is later dismissed (the
+          // overlay's element tree is gone but the modal closed via the
+          // root navigator). Layering keeps both routes valid until the
+          // user dismisses each in order.
+          await AddSourceModal.show(context, prefillName: _query.trim());
+          if (!context.mounted) return;
+          // Once the modal closes, dismiss the overlay so the user lands
+          // back on the feed instead of being stuck staring at the
+          // search field.
           Navigator.of(context).pop();
-          AddSourceModal.show(context, prefillName: _query.trim());
         },
         borderRadius: BorderRadius.circular(BnrRadius.r2),
         child: Container(

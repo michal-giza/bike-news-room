@@ -23,8 +23,15 @@ RUN apt-get update \
 RUN mkdir -p /data /etc/bike-news-room
 COPY --from=builder /app/target/release/bike-news-room /usr/local/bin/
 COPY feeds.toml /etc/bike-news-room/
+# Race-matcher catalogue. Without this, the matcher logs
+# "race catalogue at … unreadable, skipping seed" at startup, the
+# tracked_races table stays empty, and /api/articles?race_slug=… always
+# returns 0 even when the DB is full of matching articles. Verified
+# regression after the 4cc3602 deploy.
+COPY data/ /etc/bike-news-room/data/
 
 EXPOSE 7860
 ENV DATABASE_URL="sqlite:///data/bike_news.db?mode=rwc"
 ENV FEEDS_PATH="/etc/bike-news-room/feeds.toml"
+ENV RACE_CATALOGUE_PATH="/etc/bike-news-room/data/cycling_races.json"
 CMD ["bike-news-room"]

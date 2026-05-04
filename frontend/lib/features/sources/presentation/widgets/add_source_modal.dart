@@ -21,8 +21,15 @@ class AddSourceModal extends StatefulWidget {
   const AddSourceModal({super.key, this.prefillName});
 
   static Future<void> show(BuildContext context, {String? prefillName}) {
+    // Use rootNavigator so the modal pushes onto the application's root
+    // overlay rather than whichever inner Navigator the caller's context
+    // happens to belong to. This makes the dialog robust against being
+    // opened from inside other dialogs (e.g. the search overlay), where
+    // closing the parent dialog first would otherwise deactivate the
+    // context and leave the modal pushed onto a stale navigator.
     return showDialog<void>(
       context: context,
+      useRootNavigator: true,
       barrierColor: Colors.black.withValues(alpha: 0.55),
       builder: (_) => AddSourceModal(prefillName: prefillName),
     );
@@ -90,7 +97,11 @@ class _AddSourceModalState extends State<AddSourceModal> {
       language: null,
     ));
     if (!mounted) return;
-    if (ok) Navigator.of(context).pop();
+    // Pop on the same navigator the dialog was pushed onto. Since `show`
+    // uses `useRootNavigator: true`, popping the root navigator's
+    // top-most route is what closes us — the inner pop would no-op when
+    // the dialog is layered above other modal routes.
+    if (ok) Navigator.of(context, rootNavigator: true).pop();
   }
 
   @override
@@ -171,7 +182,7 @@ class _AddSourceModalState extends State<AddSourceModal> {
         ),
         IconButton(
           icon: Icon(Icons.close, size: 20, color: ext.fg1),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
         ),
       ],
     );
@@ -311,7 +322,7 @@ class _AddSourceModalState extends State<AddSourceModal> {
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
         TextButton(
-          onPressed: submitting ? null : () => Navigator.of(context).pop(),
+          onPressed: submitting ? null : () => Navigator.of(context, rootNavigator: true).pop(),
           child: Text(
             'Cancel',
             style: AppTheme.sans(size: 13, color: ext.fg2),

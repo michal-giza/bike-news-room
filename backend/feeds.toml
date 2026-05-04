@@ -84,6 +84,49 @@ region = "spain"
 discipline = "mtb"
 language = "es"
 
+## EU
+## Cross-border European cycling coverage. Each language drops in
+## a single highly-trafficked feed so the "EU" filter has signal.
+## Verified RSS endpoints from the curated catalogue at
+## frontend/assets/catalogue/cycling_sources.json. If any of these
+## start returning empty / 403 / wall-of-text, demote them to the
+## crawler fallback in src/web/crawl_targets.rs.
+
+[[feeds]]
+url = "https://www.cyclismactu.net/rss.html"
+title = "Cyclism'Actu"
+region = "eu"
+discipline = "road"
+language = "fr"
+
+[[feeds]]
+url = "https://www.spaziociclismo.it/feed/"
+title = "Spazio Ciclismo"
+region = "eu"
+discipline = "road"
+language = "it"
+
+[[feeds]]
+url = "https://www.rennrad-news.de/feed"
+title = "Rennrad-News"
+region = "eu"
+discipline = "road"
+language = "de"
+
+[[feeds]]
+url = "https://wielerflits.nl/feed/"
+title = "WielerFlits"
+region = "eu"
+discipline = "road"
+language = "nl"
+
+[[feeds]]
+url = "https://www.mtb-news.de/news/feed/"
+title = "MTB-News"
+region = "eu"
+discipline = "mtb"
+language = "de"
+
 ## NOTE: The following sources are crawled via HTML scrape (no working RSS):
 ##   - Pinkbike (Cloudflare-blocked) — Vital MTB — Rowery.org — PZKol — RFEC — UCI
 ## See backend/src/web/crawl_targets.rs for selectors.

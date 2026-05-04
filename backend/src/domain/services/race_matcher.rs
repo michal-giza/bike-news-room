@@ -145,7 +145,7 @@ fn discipline_compatible(article_disc: Option<&str>, race_disc: &str) -> bool {
         return true;
     }
     match article_disc {
-        None | Some("") => true,
+        None | Some("") | Some("all") => true,
         Some(d) => d.eq_ignore_ascii_case(race_disc),
     }
 }
@@ -229,6 +229,20 @@ mod tests {
         );
         assert_eq!(hits.len(), 1);
         assert_eq!(hits[0].race_id, "lombardia");
+    }
+
+    #[test]
+    fn article_discipline_all_is_treated_as_wildcard() {
+        // Many feeds (CyclingNews, BikeRadar, Bicycling.com) ingest with
+        // discipline="all". The matcher must NOT treat that as a literal
+        // value to compare against — it's a wildcard meaning "this feed
+        // covers everything", and articles from such feeds should be
+        // eligible for any race match.
+        let cat = RaceCatalogue {
+            entries: vec![entry("giro-italia", "road", &["Giro d'Italia"])],
+        };
+        let hits = cat.match_article("Pogacar wins Giro d'Italia stage 4", None, Some("all"));
+        assert_eq!(hits.len(), 1, "discipline=all article must match road race");
     }
 
     #[test]

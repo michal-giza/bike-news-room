@@ -23,7 +23,7 @@ jobs:
         task: [fmt, clippy, test, build]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -63,7 +63,7 @@ jobs:
         task: [analyze, test, build]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install Flutter
         uses: subosito/flutter-action@v2

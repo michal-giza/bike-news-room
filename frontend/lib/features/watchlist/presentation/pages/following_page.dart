@@ -60,6 +60,7 @@ class _FollowingView extends StatelessWidget {
             .add(FollowingFeedRequested(state.following));
       },
       child: Scaffold(
+        key: const ValueKey('followingPageScaffold'),
         backgroundColor: ext.bg0,
         appBar: AppBar(
           backgroundColor: ext.bg0,

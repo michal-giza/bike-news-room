@@ -163,6 +163,25 @@ class _FeedPageState extends State<FeedPage> {
           appBar: TopBar(
             onSearchTap: _openSearch,
             onSettingsTap: () => SettingsPage.show(context),
+            // The bookmarks icon was previously a dead button — its
+            // onTap was unwired so taps did nothing. Integration test
+            // "bookmarks: opens from top bar" caught this. Wire it to
+            // the same MultiBlocProvider-wrapped BookmarksPage that
+            // BottomNav opens, so desktop + mobile share the same path.
+            onBookmarksTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => MultiBlocProvider(
+                  providers: [
+                    BlocProvider.value(value: context.read<FeedBloc>()),
+                    BlocProvider.value(
+                      value: context.read<PreferencesCubit>(),
+                    ),
+                    BlocProvider.value(value: context.read<SourcesCubit>()),
+                  ],
+                  child: const BookmarksPage(),
+                ),
+              ),
+            ),
           ),
           drawer: showBottomNav ? _buildDrawer(context) : null,
         body: Column(
@@ -341,8 +360,12 @@ class _FeedPageState extends State<FeedPage> {
                     density: context.watch<PreferencesCubit>().state.density,
                   ),
                 FeedStatus.error when state.articles.isEmpty =>
-                  _ErrorState(message: state.errorMessage),
-                _ when state.articles.isEmpty => _EmptyState(),
+                  _ErrorState(
+                    key: const ValueKey('feedErrorState'),
+                    message: state.errorMessage,
+                  ),
+                _ when state.articles.isEmpty =>
+                  _EmptyState(key: const ValueKey('feedEmptyState')),
                 _ => _content(context, state),
               },
             ),
@@ -525,9 +548,16 @@ class _FeedHeader extends StatelessWidget {
     final agoLabel = _agoLabel(context, newestAt);
     final separator = agoLabel.isEmpty ? '' : ' · ';
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    // Wrap in a horizontal-overflow-safe container: the headline +
+    // meta row used to crash on narrow phones (~360 px) because the
+    // Row's `mainAxisAlignment: spaceBetween` doesn't shrink children.
+    // We use Wrap instead, which falls back to a vertical stack when
+    // there isn't enough horizontal room. On desktop the row stays
+    // single-line; on a Galaxy S25 the meta row drops below the headline.
+    return Wrap(
+      crossAxisAlignment: WrapCrossAlignment.end,
+      alignment: WrapAlignment.spaceBetween,
+      runSpacing: 8,
       children: [
         Text(
           l.todaysWire,
@@ -540,6 +570,7 @@ class _FeedHeader extends StatelessWidget {
           ),
         ),
         Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Container(
               width: 7,
@@ -550,12 +581,19 @@ class _FeedHeader extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            Text(
-              '$agoLabel$separator${l.storiesCount(total)}',
-              style: AppTheme.mono(
-                size: 11,
-                color: ext.fg2,
-                letterSpacing: 0.12,
+            // Flexible + softWrap=false + ellipsis prevents the meta
+            // text from pushing the Row past the parent Wrap's run
+            // width on narrow phones. The label is short enough that
+            // ellipsis only kicks in below ~340 px.
+            Flexible(
+              child: Text(
+                '$agoLabel$separator${l.storiesCount(total)}',
+                overflow: TextOverflow.ellipsis,
+                style: AppTheme.mono(
+                  size: 11,
+                  color: ext.fg2,
+                  letterSpacing: 0.12,
+                ),
               ),
             ),
           ],
@@ -668,7 +706,7 @@ class _NewSincePill extends StatelessWidget {
 
 class _ErrorState extends StatelessWidget {
   final String? message;
-  const _ErrorState({this.message});
+  const _ErrorState({super.key, this.message});
 
   @override
   Widget build(BuildContext context) {
@@ -707,6 +745,8 @@ class _ErrorState extends StatelessWidget {
 }
 
 class _EmptyState extends StatelessWidget {
+  const _EmptyState({super.key});
+
   @override
   Widget build(BuildContext context) {
     final ext = context.bnr;

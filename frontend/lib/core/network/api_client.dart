@@ -24,4 +24,9 @@ class ApiClient {
     ));
     return ApiClient._(dio);
   }
+
+  /// Test-only constructor — wraps a pre-configured [Dio] (typically
+  /// with a `MockApi` HttpClientAdapter) so integration tests can
+  /// inject canned responses. Production code never calls this.
+  factory ApiClient.testWith(Dio dio) => ApiClient._(dio);
 }

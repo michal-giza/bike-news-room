@@ -32,6 +32,7 @@ class InfoPage extends StatelessWidget {
       length: 3,
       initialIndex: initial.index,
       child: Scaffold(
+        key: const ValueKey('infoPageScaffold'),
         appBar: AppBar(
           title: Text(l.appName),
           bottom: TabBar(

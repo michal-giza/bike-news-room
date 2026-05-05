@@ -1,59 +1,63 @@
-// Integration tests for Bike News Room. Covers the critical-path
-// scenarios that have to be working before any release ships:
+// Integration tests for Bike News Room — exercised on a real Android
+// or iOS device via `flutter test integration_test/`.
 //
-//   1. App boots without exceptions
-//   2. Onboarding can be skipped — first-run user lands on the feed
-//   3. From the feed, the Settings page is reachable + dismissable
-//   4. Returning user (onboarding already complete) goes straight
-//      to the feed without seeing onboarding again
+// Coverage matrix (must stay green before any release):
+//
+//   Success paths:
+//     1. Cold-start boots without exception (returning user → feed)
+//     2. Cold-start with empty prefs renders onboarding step 1
+//     3. Feed renders article cards from a populated backend
+//     4. Tap article card → ArticleDetailModal opens
+//     5. Tap settings icon → SettingsPage opens, pop returns to feed
+//     6. Tap bookmarks icon → BookmarksPage opens
+//
+//   Failure / corrupted paths:
+//     7. Backend returns empty articles → feed shows empty state
+//     8. Backend returns 500 → feed shows error state
+//     9. Backend returns 404 → feed shows error state
 //
 // Drivers:
-//   • `tester.pumpAndSettle()` waits up to 10 s for animations + initial
-//     network response. We do NOT mock the network — these tests run
-//     against the production-deployed backend so failures here mirror
-//     the real user-visible behaviour. If the backend is unhealthy, the
-//     feed test will still pass (we only assert structure, not content)
-//     but the article-load assertion would flake; we avoid asserting on
-//     remote content for that reason.
-//
-// Locale-stable finders: every interactive widget the tests poke at has
-// a `ValueKey('<feature><Action>Btn')`. Tests should never `find.text()`
-// translated strings because the same UI ships in 9 locales and CI
-// could run under any of them.
+//   • TestHarness.launch / .launchFeedWith register a MockApi adapter
+//     so tests don't depend on the live backend. Failure modes (500,
+//     network error) are simulated by stubbing the matching path.
+//   • All finders are by ValueKey so the suite works under any of our
+//     9 locales without translating strings.
+//   • Onboarding is bypassed by default (pref.onboardingComplete=true)
+//     because the production Skip flow tunnels through the UMP consent
+//     SDK + AdMobService.initialize(), which can't resolve in a test
+//     environment. Test 2 explicitly opts in.
 
-import 'package:bike_news_room/core/di/injection.dart';
-import 'package:bike_news_room/features/preferences/data/preferences_repository.dart';
-import 'package:bike_news_room/features/preferences/domain/entities/user_preferences.dart';
-import 'package:bike_news_room/main.dart' as app;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
+import 'helpers/mock_api.dart';
+import 'helpers/test_harness.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  // Ensure clean prefs before each test so the onboarding tests aren't
-  // skewed by a previous run's state. Also reset get_it because every
-  // call to app.main() runs configureDependencies(), which registers
-  // singletons; re-registering throws "already registered". Tests that
-  // run a fresh app instance must start from an empty container.
-  setUp(() async {
-    SharedPreferences.setMockInitialValues({});
-    await getIt.reset();
+  // ───────── Success paths ─────────
+
+  testWidgets('boot: returning user lands on the feed', (tester) async {
+    await TestHarness.launchFeedWith(tester, articles: const []);
+    expect(
+      find.byKey(const ValueKey('topBarSettingsBtn')),
+      findsOneWidget,
+      reason: 'top bar settings icon must be present on the feed',
+    );
   });
 
-  testWidgets('cold start with no prefs renders onboarding step 1', (
+  testWidgets('boot: cold start with empty prefs shows onboarding', (
     tester,
   ) async {
-    await app.main();
-    // pump + settle gives the app time to wire DI, run main.dart's
-    // post-consent init no-op (ATT not requested on Android), and lay
-    // out the onboarding scaffold.
-    await tester.pumpAndSettle(const Duration(seconds: 5));
-
-    // The Skip button is the most stable widget on the onboarding step
-    // (visible on every step, locale-key driven).
+    final api = MockApi()..onAnyGet();
+    await TestHarness.launch(
+      tester,
+      api: api,
+      prefs: <String, dynamic>{},
+      seedOnboardingComplete: false,
+    );
     expect(
       find.byKey(const ValueKey('onboardingSkipBtn')),
       findsOneWidget,
@@ -61,97 +65,110 @@ void main() {
     );
   });
 
-  // NOTE: a "tap Skip → land on feed" integration test was attempted but
-  // pulled in the full UMP consent flow + AdMobService.initialize() chain
-  // on Android, which the consent SDK can't resolve in test environments
-  // (no Play Console linkage, no provider). The downstream behaviour is
-  // covered by `returning user … skips straight to feed` below, which
-  // pre-seeds onboardingComplete=true and exercises the same FeedPage
-  // render path without the consent gate. The Skip flow itself is
-  // covered indirectly by the unit-test on PreferencesCubit and by
-  // manual smoke testing on physical devices before each release.
-
-  testWidgets('returning user (onboarding done) skips straight to feed', (
+  testWidgets('feed: renders article cards from populated backend', (
     tester,
   ) async {
-    // Pre-seed prefs with `onboardingComplete=true` to simulate a user
-    // who's been here before. This bypasses the onboarding gate in
-    // `BikeNewsRoomApp.build`.
-    SharedPreferences.setMockInitialValues({
-      // Mirror the keys PreferencesRepository.save() writes.
-      'pref.theme': AppThemeMode.dark.name,
-      'pref.density': CardDensity.comfort.name,
-      'pref.regions': <String>[],
-      'pref.disciplines': <String>[],
-      'pref.hiddenSources': <String>[],
-      'pref.bookmarks': <String>[],
-      'pref.reducedMotion': false,
-      'pref.onboardingComplete': true,
-    });
-    // Re-load prefs through the repository so the test asserts on the
-    // same code path the app uses at boot.
-    final prefs = await SharedPreferences.getInstance();
-    final repo = PreferencesRepository(prefs);
+    await TestHarness.launchFeedWith(tester, articles: [
+      stubArticle(id: 101, title: 'Pogačar wins Giro stage 4'),
+      stubArticle(id: 102, title: 'Vingegaard prepares for Tour'),
+      stubArticle(id: 103, title: 'Van der Poel skips classics'),
+    ]);
+    // Only assert on the first card — phone viewports may not lay out
+    // the third before the user scrolls. Finding any card is enough
+    // proof that the list-builder rendered the data.
     expect(
-      repo.load().onboardingComplete,
-      isTrue,
-      reason: 'pre-seed must take effect before app starts',
-    );
-
-    await app.main();
-    await tester.pumpAndSettle(const Duration(seconds: 5));
-
-    expect(
-      find.byKey(const ValueKey('topBarSettingsBtn')),
+      find.byKey(const ValueKey('articleCard_101')),
       findsOneWidget,
-      reason: 'returning user must land on feed without onboarding',
+      reason: 'first article card from a populated feed must render',
     );
     expect(
-      find.byKey(const ValueKey('onboardingSkipBtn')),
+      find.byKey(const ValueKey('feedEmptyState')),
       findsNothing,
-      reason: 'onboarding must NOT be visible to a returning user',
+      reason: 'when the backend has data, the empty-state must NOT show',
     );
   });
 
-  testWidgets('settings page opens from top bar and pops back', (tester) async {
-    SharedPreferences.setMockInitialValues({
-      'pref.theme': AppThemeMode.dark.name,
-      'pref.density': CardDensity.comfort.name,
-      'pref.regions': <String>[],
-      'pref.disciplines': <String>[],
-      'pref.hiddenSources': <String>[],
-      'pref.bookmarks': <String>[],
-      'pref.reducedMotion': false,
-      'pref.onboardingComplete': true,
-    });
-
-    await app.main();
-    await tester.pumpAndSettle(const Duration(seconds: 5));
-
-    // Open settings via the gear icon.
-    await tester.tap(find.byKey(const ValueKey('topBarSettingsBtn')));
-    await tester.pumpAndSettle(const Duration(seconds: 3));
-
+  testWidgets('article: tap card opens detail modal', (tester) async {
+    await TestHarness.launchFeedWith(tester, articles: [
+      stubArticle(id: 201, title: 'Stage 5 results'),
+    ]);
+    await tester.tap(find.byKey(const ValueKey('articleCard_201')));
+    await tester.pumpAndSettle(const Duration(seconds: 2));
+    // ArticleDetailModal renders via showGeneralDialog (not showDialog),
+    // so it doesn't push a Material `Dialog` widget. We anchor on the
+    // ValueKey we added to the modal's content frame instead.
     expect(
-      find.byKey(const ValueKey('settingsPageScaffold')),
+      find.byKey(const ValueKey('articleDetailModal')),
       findsOneWidget,
-      reason: 'tapping the settings icon must push SettingsPage',
+      reason: 'tapping an article card must push the article detail modal',
     );
+  });
 
-    // Close via system back / AppBar back leading.
+  testWidgets('settings: opens from top bar and dismisses cleanly', (
+    tester,
+  ) async {
+    await TestHarness.launchFeedWith(tester, articles: const []);
+
+    await tester.tap(find.byKey(const ValueKey('topBarSettingsBtn')));
+    await tester.pumpAndSettle(const Duration(seconds: 2));
+    expect(find.byKey(const ValueKey('settingsPageScaffold')), findsOneWidget);
+
     final NavigatorState nav = tester.state(find.byType(Navigator).first);
     nav.pop();
-    await tester.pumpAndSettle(const Duration(seconds: 3));
+    await tester.pumpAndSettle(const Duration(seconds: 2));
+    expect(find.byKey(const ValueKey('settingsPageScaffold')), findsNothing);
+    expect(find.byKey(const ValueKey('topBarSettingsBtn')), findsOneWidget);
+  });
 
+  testWidgets('bookmarks: opens from top bar', (tester) async {
+    await TestHarness.launchFeedWith(tester, articles: const []);
+    await tester.tap(find.byKey(const ValueKey('topBarBookmarksBtn')));
+    await tester.pumpAndSettle(const Duration(seconds: 2));
+    expect(find.byKey(const ValueKey('bookmarksPageScaffold')), findsOneWidget);
+  });
+
+  // ───────── Failure paths ─────────
+
+  testWidgets('failure: backend empty → feed shows empty state', (
+    tester,
+  ) async {
+    await TestHarness.launchFeedWith(tester, articles: const []);
     expect(
-      find.byKey(const ValueKey('settingsPageScaffold')),
-      findsNothing,
-      reason: 'popping must dismiss the SettingsPage',
-    );
-    expect(
-      find.byKey(const ValueKey('topBarSettingsBtn')),
+      find.byKey(const ValueKey('feedEmptyState')),
       findsOneWidget,
-      reason: 'after pop user must be back on the feed',
+      reason: 'empty backend must trigger the empty-state widget',
+    );
+  });
+
+  testWidgets('failure: backend 500 → feed shows error state', (tester) async {
+    final api = MockApi()
+      ..onGetMatchingFails('/api/articles', statusCode: 500)
+      ..onGetMatching('/api/feeds', json: {'feeds': []})
+      ..onGetMatching('/api/categories', json: {'categories': []})
+      ..onGetMatching('/api/live-ticker', json: {'entries': []})
+      ..onGetMatching('/api/sources/candidates', json: {'candidates': []})
+      ..onAnyGet();
+    await TestHarness.launch(tester, api: api);
+    expect(
+      find.byKey(const ValueKey('feedErrorState')),
+      findsOneWidget,
+      reason: 'a 500 from /api/articles must surface the error widget',
+    );
+  });
+
+  testWidgets('failure: backend 404 → feed shows error state', (tester) async {
+    final api = MockApi()
+      ..onGetMatchingFails('/api/articles', statusCode: 404)
+      ..onGetMatching('/api/feeds', json: {'feeds': []})
+      ..onGetMatching('/api/categories', json: {'categories': []})
+      ..onGetMatching('/api/live-ticker', json: {'entries': []})
+      ..onGetMatching('/api/sources/candidates', json: {'candidates': []})
+      ..onAnyGet();
+    await TestHarness.launch(tester, api: api);
+    expect(
+      find.byKey(const ValueKey('feedErrorState')),
+      findsOneWidget,
+      reason: 'a 404 from /api/articles must surface the error widget',
     );
   });
 }

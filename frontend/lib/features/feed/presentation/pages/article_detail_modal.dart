@@ -89,6 +89,10 @@ class ArticleDetailModal extends StatelessWidget {
         child: Align(
           alignment: isCompact ? Alignment.bottomCenter : Alignment.center,
           child: GestureDetector(
+            // ValueKey on the modal's content frame so integration
+            // tests can find the modal independently of how it was
+            // shown (showGeneralDialog vs showDialog vs route push).
+            key: const ValueKey('articleDetailModal'),
             onTap: () {}, // swallow taps inside the modal
             child: ConstrainedBox(
               constraints: BoxConstraints(

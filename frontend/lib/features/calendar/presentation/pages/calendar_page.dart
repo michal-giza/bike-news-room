@@ -27,6 +27,7 @@ class CalendarPage extends StatelessWidget {
     final ext = context.bnr;
 
     return Scaffold(
+      key: const ValueKey('calendarPageScaffold'),
       backgroundColor: ext.bg0,
       appBar: AppBar(
         backgroundColor: ext.bg0,

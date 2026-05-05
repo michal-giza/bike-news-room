@@ -38,6 +38,7 @@ class BookmarksPage extends StatelessWidget {
         final ids = prefs.bookmarkedArticleIds.toList().reversed.toList();
 
         return Scaffold(
+          key: const ValueKey('bookmarksPageScaffold'),
           backgroundColor: ext.bg0,
           appBar: AppBar(
             backgroundColor: ext.bg0,

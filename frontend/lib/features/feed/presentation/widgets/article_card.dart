@@ -54,6 +54,10 @@ class _ArticleCardState extends State<ArticleCard> {
   @override
   Widget build(BuildContext context) {
     return MouseRegion(
+      // Per-article ValueKey so integration tests can locate a specific
+      // card when the feed renders multiple. The id-based key is stable
+      // across rebuilds and locale switches.
+      key: ValueKey('articleCard_${widget.article.id}'),
       onEnter: (_) => setState(() => _hover = true),
       onExit: (_) => setState(() => _hover = false),
       cursor: SystemMouseCursors.click,

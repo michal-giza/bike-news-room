@@ -46,7 +46,9 @@ class LanguagePicker extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             DropdownButtonFormField<String?>(
+              key: const ValueKey('settingsLanguagePicker'),
               initialValue: current,
+              isExpanded: true,
               isDense: true,
               decoration: InputDecoration(
                 filled: true,

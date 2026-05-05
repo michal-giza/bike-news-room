@@ -321,4 +321,124 @@ void main() {
       expect($(const ValueKey('articleCard_999')), findsOneWidget);
     },
   );
+
+  // ─────────────────── BOOKMARK ROUND-TRIP ───────────────────────────
+
+  patrolWidgetTest(
+    'M2 — bookmark from feed → persists to prefs',
+    ($) async {
+      // Tap the heart on a feed card → the article id must be stored
+      // in `pref.bookmarks`. Exercises the full state-flow:
+      //   • PreferencesCubit.toggleBookmark
+      //   • SharedPreferences write path
+      //   • ArticleSnapshotStore.save (so the bookmarks page can
+      //     render the article even when offline)
+      await TestHarness.launchFeedWith($.tester, articles: [
+        stubArticle(id: 501, title: 'Bookmark target'),
+      ]);
+
+      // The action row is now always rendered on touch platforms
+      // (after the _showActions fix in commit ahead), so the bookmark
+      // icon is in the tree on a phone. We still use WidgetTester.tap
+      // directly — Patrol's wait-for-visibility is over-conservative
+      // on AnimatedOpacity children that fade in under 200 ms.
+      await $.tester.tap(
+        find.byKey(const ValueKey('articleCardBookmark_501')),
+        warnIfMissed: false,
+      );
+      await $.tester.pumpAndSettle(const Duration(seconds: 2));
+
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getStringList('pref.bookmarks') ?? const [];
+      expect(
+        raw.contains('501'),
+        isTrue,
+        reason: 'tapping the bookmark icon must persist the article id',
+      );
+    },
+  );
+
+  // ───────────── ARTICLE DETAIL: BOOKMARK INSIDE MODAL ───────────────
+
+  patrolWidgetTest(
+    'D2 — bookmark icon inside detail modal toggles state',
+    ($) async {
+      await TestHarness.launchFeedWith($.tester, articles: [
+        stubArticle(id: 502, title: 'Modal bookmark test'),
+      ]);
+      await $(const ValueKey('articleCard_502')).tap();
+      expect($(const ValueKey('articleDetailModal')), findsOneWidget);
+
+      // Tap the modal's bookmark icon — the article id must be
+      // persisted to prefs the same way as the feed card's heart.
+      await $(const ValueKey('articleDetailBookmarkBtn')).tap();
+      await $.tester.pumpAndSettle(const Duration(seconds: 1));
+
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getStringList('pref.bookmarks') ?? const [];
+      expect(
+        raw.contains('502'),
+        isTrue,
+        reason:
+            'the modal bookmark icon must call the same toggle helper '
+            'as the feed card heart',
+      );
+    },
+  );
+
+  // ─────────────────────── NETWORK TIMEOUT ───────────────────────────
+
+  patrolWidgetTest(
+    'F6 — gateway timeout (504) on /api/articles → error state',
+    ($) async {
+      // Completes the failure matrix alongside F3 (empty), F4 (500),
+      // F5 (404). We simulate an upstream timeout by returning a 504
+      // Gateway Timeout — deterministic and goes through the same
+      // NetworkFailure → FeedStatus.error mapping as a real Dio
+      // receiveTimeout, without depending on integration_test's timer
+      // semantics (pumpAndSettle returns early when Dio is blocked
+      // on a delayed Future, making real-timeout tests flaky).
+      final api = MockApi()
+        ..onGetMatchingFails('/api/articles', statusCode: 504)
+        ..onGetMatching('/api/feeds', json: {'feeds': []})
+        ..onGetMatching('/api/categories', json: {'categories': []})
+        ..onGetMatching('/api/live-ticker', json: {'entries': []})
+        ..onGetMatching('/api/sources/candidates', json: {'candidates': []})
+        ..onAnyGet();
+      await TestHarness.launch(
+        $.tester,
+        api: api,
+        settle: const Duration(seconds: 2),
+      );
+      await $.tester.pumpAndSettle(const Duration(seconds: 2));
+      expect(
+        find.byKey(const ValueKey('feedErrorState')),
+        findsOneWidget,
+        reason: 'a 504 Gateway Timeout must surface the feed error widget',
+      );
+    },
+  );
+
+  // ─────────────────────── LOCALE SWITCH ─────────────────────────────
+
+  patrolWidgetTest(
+    'S2 — language picker is reachable from settings',
+    ($) async {
+      // Structural test: the language picker dropdown is rendered on
+      // the SettingsPage. The full "switch → UI re-renders in pl"
+      // flow requires Material's DropdownButton menu interaction
+      // which is tricky on a phone viewport (the menu opens off-screen).
+      // We verify the picker exists; the locale-switch behaviour is
+      // covered by unit tests on PreferencesCubit + the existing
+      // l10n generator's per-locale ARB validation.
+      await TestHarness.launchFeedWith($.tester, articles: const []);
+      await $(const ValueKey('topBarSettingsBtn')).tap();
+      expect($(const ValueKey('settingsPageScaffold')), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('settingsLanguagePicker')),
+        findsOneWidget,
+        reason: 'SettingsPage must expose the language picker dropdown',
+      );
+    },
+  );
 }

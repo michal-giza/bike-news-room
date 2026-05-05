@@ -41,9 +41,33 @@ dev_dependencies:
   integration_test:
     sdk: flutter
   patrol: ^3.20.0
+  # Generates the native iOS LaunchScreen.storyboard image set + the
+  # Android launch_background drawable from a single config block.
+  # Run `dart run flutter_native_splash:create` after editing the
+  # `flutter_native_splash:` section below.
+  flutter_native_splash: ^2.4.6
   flutter_lints: ^5.0.0
   bloc_test: ^10.0.0
   mocktail: ^1.0.4
+
+flutter_native_splash:
+  # Centred brand mark on the dark tile that matches the in-app
+  # background. The PWA's 512×512 maskable Icon-512.png is the same
+  # asset we use for app icons + Android adaptive icons, so the
+  # launch screen, app icon, and feed background read as one design.
+  color: "#0E0F11"
+  color_dark: "#0E0F11"
+  image: "web/icons/Icon-512.png"
+  image_dark: "web/icons/Icon-512.png"
+  android_12:
+    # Android 12+ has a separate splash mechanism (theme attr +
+    # adaptive icon foreground). The icon foreground gets centred
+    # and tinted; we use the maskable variant which already has
+    # safe-zone padding baked in.
+    color: "#0E0F11"
+    color_dark: "#0E0F11"
+    image: "web/icons/Icon-maskable-512.png"
+    image_dark: "web/icons/Icon-maskable-512.png"
 
 flutter:
   uses-material-design: true

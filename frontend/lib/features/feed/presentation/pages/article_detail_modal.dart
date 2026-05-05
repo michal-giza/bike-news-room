@@ -144,6 +144,7 @@ class ArticleDetailModal extends StatelessWidget {
             ),
           ),
           IconButton(
+            key: const ValueKey('articleDetailBookmarkBtn'),
             icon: Icon(
               bookmarked ? Icons.bookmark : Icons.bookmark_border,
               size: 18,

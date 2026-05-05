@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb, TargetPlatform;
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
@@ -50,6 +51,25 @@ class ArticleCard extends StatefulWidget {
 
 class _ArticleCardState extends State<ArticleCard> {
   bool _hover = false;
+
+  /// Touch platforms (Android, iOS) never fire hover events, so the
+  /// action row (bookmark, hide, share) used to be permanently
+  /// invisible there — mobile users had no way to bookmark from the
+  /// feed without first opening the detail modal. We treat touch
+  /// platforms as "always hovered" so the actions are persistently
+  /// visible. Desktop (Web on macOS / Windows / Linux) keeps the
+  /// hover behaviour. Caught by integration test M2.
+  bool get _showActions {
+    if (_hover || widget.selected) return true;
+    if (kIsWeb) return false;
+    switch (defaultTargetPlatform) {
+      case TargetPlatform.android:
+      case TargetPlatform.iOS:
+        return true;
+      default:
+        return false;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -128,7 +148,7 @@ class _ArticleCardState extends State<ArticleCard> {
               ],
             ),
           ),
-          if (_hover) _buildActions(ext),
+          if (_showActions) _buildActions(ext),
         ],
       ),
     );
@@ -238,7 +258,7 @@ class _ArticleCardState extends State<ArticleCard> {
               ],
             ),
           ),
-          if (_hover) _buildActions(ext),
+          if (_showActions) _buildActions(ext),
           if (_hover || widget.selected)
             Positioned(
               left: 0,
@@ -341,7 +361,7 @@ class _ArticleCardState extends State<ArticleCard> {
       right: BnrSpacing.s2,
       child: AnimatedOpacity(
         duration: BnrMotion.m2,
-        opacity: _hover ? 1.0 : 0.0,
+        opacity: _showActions ? 1.0 : 0.0,
         child: Container(
           padding: const EdgeInsets.all(3),
           decoration: BoxDecoration(
@@ -353,6 +373,7 @@ class _ArticleCardState extends State<ArticleCard> {
             mainAxisSize: MainAxisSize.min,
             children: [
               _actionBtn(
+                key: ValueKey('articleCardBookmark_${widget.article.id}'),
                 icon: widget.bookmarked
                     ? Icons.bookmark
                     : Icons.bookmark_border,
@@ -375,11 +396,13 @@ class _ArticleCardState extends State<ArticleCard> {
   }
 
   Widget _actionBtn({
+    Key? key,
     required IconData icon,
     VoidCallback? onTap,
     bool active = false,
   }) {
     return Material(
+      key: key,
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,

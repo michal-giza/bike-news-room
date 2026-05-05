@@ -63,6 +63,23 @@ class MockApi implements HttpClientAdapter {
     ));
   }
 
+  /// Stub a request that hangs longer than the Dio receiveTimeout
+  /// configured by `TestHarness` (5 s), so the front-end surfaces a
+  /// `DioExceptionType.receiveTimeout` and renders the error state.
+  /// Drives the "network timeout → error state" coverage.
+  void onGetMatchingTimesOut(
+    String pattern, {
+    Duration delay = const Duration(seconds: 6),
+  }) {
+    _stubs.add(_Stub(
+      method: 'GET',
+      pattern: pattern,
+      body: '{}',
+      statusCode: 200,
+      delay: delay,
+    ));
+  }
+
   /// Empty fallback: any URL not explicitly stubbed returns `{}` with
   /// 200. Prevents tests from accidentally hitting the live network
   /// when a code path makes an unexpected request.
@@ -99,6 +116,18 @@ class MockApi implements HttpClientAdapter {
       if (stub.pattern.isNotEmpty && !fullPath.contains(stub.pattern)) {
         continue;
       }
+      // Optional delay: if a stub asks to hang longer than Dio's
+      // configured receiveTimeout, the wait below trips that timeout
+      // and Dio raises DioExceptionType.receiveTimeout — exactly the
+      // path the frontend's NetworkFailure mapping handles. We honour
+      // the cancelFuture so the test can early-cancel if needed.
+      if (stub.delay != null) {
+        // ignore: discarded_futures
+        await Future.any([
+          Future<void>.delayed(stub.delay!),
+          if (cancelFuture != null) cancelFuture,
+        ]);
+      }
       final bytes = utf8.encode(stub.body);
       return ResponseBody.fromBytes(
         bytes,
@@ -132,12 +161,16 @@ class _Stub {
   final String body;
   final int statusCode;
   final bool isFallback;
+  /// When set, the adapter waits this long before responding —
+  /// drives `DioExceptionType.receiveTimeout` test cases.
+  final Duration? delay;
   _Stub({
     required this.method,
     required this.pattern,
     required this.body,
     required this.statusCode,
     this.isFallback = false,
+    this.delay,
   });
 }
 

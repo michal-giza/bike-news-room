@@ -156,7 +156,30 @@ class _FeedPageState extends State<FeedPage> {
 
     return CmdKShortcut(
       onTrigger: _openSearch,
-      child: BlocListener<FeedBloc, FeedState>(
+      // Re-seed the feed filter when onboarding finishes — initState's
+      // post-frame callback runs while the user is still on the onboarding
+      // page (preferredRegions empty), so without this outer listener the
+      // user picks "Poland" but the feed keeps showing the global article
+      // list it loaded at boot. We fire FeedFilterChanged once when
+      // preferredRegions/Disciplines change so the bloc re-requests
+      // /api/articles?region=poland with the new selection.
+      child: BlocListener<PreferencesCubit, UserPreferences>(
+        listenWhen: (a, b) =>
+            a.preferredRegions != b.preferredRegions ||
+            a.preferredDisciplines != b.preferredDisciplines,
+        listener: (context, p) {
+          context.read<FeedBloc>().add(FeedFilterChanged(
+                region: p.preferredRegions.isNotEmpty
+                    ? p.preferredRegions.first
+                    : null,
+                clearRegion: p.preferredRegions.isEmpty,
+                discipline: p.preferredDisciplines.isNotEmpty
+                    ? p.preferredDisciplines.first
+                    : null,
+                clearDiscipline: p.preferredDisciplines.isEmpty,
+              ));
+        },
+        child: BlocListener<FeedBloc, FeedState>(
         // Surface paginated load-more errors as a transient snackbar — the
         // existing articles stay visible (we don't want to wipe the list on
         // a network blip), but we acknowledge the failure to the user.
@@ -334,6 +357,7 @@ class _FeedPageState extends State<FeedPage> {
             : null,
           floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
         ),
+      ),
       ),
     );
   }

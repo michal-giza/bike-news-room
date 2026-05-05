@@ -57,7 +57,9 @@
 
 import 'package:bike_news_room/features/preferences/data/preferences_repository.dart';
 import 'package:bike_news_room/features/preferences/domain/entities/user_preferences.dart';
+import 'package:bike_news_room/features/preferences/presentation/cubit/preferences_cubit.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:patrol/patrol.dart';
@@ -549,6 +551,56 @@ void main() {
         articleCalls.any((r) => r.uri.queryParameters['region'] == 'poland'),
         isTrue,
         reason: 'feed must request region=poland when prefs.regions=[poland]',
+      );
+    },
+  );
+
+  patrolWidgetTest(
+    'F8b — region change after onboarding re-fires the feed request',
+    ($) async {
+      // Companion to F8: F8 only proves the *initial* request carries
+      // the region when prefs are pre-seeded. The real-world bug the
+      // user hit is that prefs change AFTER the FeedPage initState
+      // postFrame callback already fired (because the user is still
+      // on the onboarding page when initState runs). The fix is a
+      // BlocListener<PreferencesCubit> in FeedPage that re-fires
+      // FeedFilterChanged whenever preferredRegions changes. This
+      // test simulates the exact transition: boot with empty regions,
+      // then mutate via PreferencesCubit, then assert the most recent
+      // /api/articles call carries region=poland.
+      final api = MockApi()
+        ..onGetMatching('/api/articles', json: stubArticlesPage(articles: []))
+        ..onGetMatching('/api/feeds', json: {'feeds': []})
+        ..onGetMatching('/api/categories', json: {'categories': []})
+        ..onGetMatching('/api/races', json: {'races': []})
+        ..onGetMatching('/api/live-ticker', json: {'entries': []})
+        ..onGetMatching('/api/sources/candidates', json: {'candidates': []})
+        ..onAnyGet();
+      await TestHarness.launch($.tester, api: api);
+      // Initial boot: no region selected → no `region` query param.
+      api.requestLog.clear();
+
+      // Trigger a "user picked Poland in onboarding" event by mutating
+      // the cubit directly. The BlocListener<PreferencesCubit> in
+      // FeedPage should observe the change and dispatch
+      // FeedFilterChanged(region: 'poland').
+      final ctx = $.tester.element(find.byType(MaterialApp));
+      final prefsCubit = BlocProvider.of<PreferencesCubit>(ctx);
+      await prefsCubit.completeOnboarding(
+        regions: {'poland'},
+        disciplines: const {},
+        density: CardDensity.comfort,
+      );
+      await $.tester.pumpAndSettle(const Duration(seconds: 2));
+
+      final articleCalls = api.requestLog
+          .where((r) => r.uri.path.contains('/api/articles'))
+          .toList();
+      expect(
+        articleCalls.any((r) => r.uri.queryParameters['region'] == 'poland'),
+        isTrue,
+        reason: 'changing prefs.regions=[poland] post-boot must re-fire '
+            'the feed request with region=poland',
       );
     },
   );

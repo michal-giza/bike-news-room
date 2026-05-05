@@ -121,9 +121,15 @@ class _AddSourceModalState extends State<AddSourceModal> {
           constraints: BoxConstraints(maxWidth: maxWidth),
           child: BlocBuilder<UserSourcesCubit, UserSourcesState>(
             builder: (context, state) {
+              // SingleChildScrollView prevents the modal Column from
+              // overflowing when the soft keyboard pops or the device
+              // is in a short landscape orientation. The integration
+              // test "A1 — search overlay → AddSource modal opens"
+              // caught a 300 px bottom-overflow on Galaxy S25 with no
+              // keyboard up — the modal genuinely doesn't fit.
               return Form(
                 key: _formKey,
-                child: Padding(
+                child: SingleChildScrollView(
                   padding: const EdgeInsets.all(BnrSpacing.s6),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -190,6 +196,7 @@ class _AddSourceModalState extends State<AddSourceModal> {
 
   Widget _urlField(BnrThemeExt ext) {
     return TextFormField(
+      key: const ValueKey('addSourceUrlField'),
       controller: _urlCtrl,
       autofocus: true,
       keyboardType: TextInputType.url,
@@ -261,14 +268,19 @@ class _AddSourceModalState extends State<AddSourceModal> {
   Widget _regionDropdown(BnrThemeExt ext) {
     final l = AppLocalizations.of(context);
     return DropdownButtonFormField<String>(
+      // `isExpanded: true` forces the inner Row to fill the available
+      // width, which lets long localised labels (e.g. "🇪🇸 Hiszpania")
+      // ellipsis instead of overflowing the parent Expanded by ~1 px.
+      // Caught by integration test A1 on Galaxy S25.
+      isExpanded: true,
       initialValue: _region,
       style: AppTheme.sans(size: 14, color: ext.fg0),
       decoration: _input(ext, 'Region', ''),
       items: [
-        DropdownMenuItem(value: 'world', child: Text(l.regionWorld)),
-        DropdownMenuItem(value: 'eu', child: Text(l.regionEu)),
-        DropdownMenuItem(value: 'poland', child: Text(l.regionPoland)),
-        DropdownMenuItem(value: 'spain', child: Text(l.regionSpain)),
+        DropdownMenuItem(value: 'world', child: Text(l.regionWorld, overflow: TextOverflow.ellipsis)),
+        DropdownMenuItem(value: 'eu', child: Text(l.regionEu, overflow: TextOverflow.ellipsis)),
+        DropdownMenuItem(value: 'poland', child: Text(l.regionPoland, overflow: TextOverflow.ellipsis)),
+        DropdownMenuItem(value: 'spain', child: Text(l.regionSpain, overflow: TextOverflow.ellipsis)),
       ],
       onChanged: (v) => setState(() => _region = v ?? 'world'),
     );
@@ -277,6 +289,7 @@ class _AddSourceModalState extends State<AddSourceModal> {
   Widget _disciplineDropdown(BnrThemeExt ext) {
     final l = AppLocalizations.of(context);
     return DropdownButtonFormField<String>(
+      isExpanded: true,
       initialValue: _discipline,
       style: AppTheme.sans(size: 14, color: ext.fg0),
       decoration: _input(ext, 'Discipline', ''),
@@ -330,6 +343,7 @@ class _AddSourceModalState extends State<AddSourceModal> {
         ),
         const SizedBox(width: 8),
         FilledButton.icon(
+          key: const ValueKey('addSourceSubmitBtn'),
           onPressed: submitting ? null : _submit,
           style: FilledButton.styleFrom(
             backgroundColor: BnrColors.accent,

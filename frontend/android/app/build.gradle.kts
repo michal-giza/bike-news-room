@@ -20,23 +20,34 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.majksquare.bike_news_room"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        // Patrol uses its own JUnit runner to bridge Flutter's
+        // integration_test harness to Android's instrumentation
+        // framework. Required for `patrol test` / the MCP
+        // `run_patrol_test` driver.
+        testInstrumentationRunner = "pl.leancode.patrol.PatrolJUnitRunner"
+        testInstrumentationRunnerArguments["clearPackageData"] = "true"
+    }
+
+    testOptions {
+        execution = "ANDROIDX_TEST_ORCHESTRATOR"
     }
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
         }
     }
+}
+
+dependencies {
+    androidTestUtil("androidx.test:orchestrator:1.5.1")
 }
 
 flutter {

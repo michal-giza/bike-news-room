@@ -162,6 +162,7 @@ class _SearchOverlayState extends State<SearchOverlay> {
           const SizedBox(width: 12),
           Expanded(
             child: TextField(
+              key: const ValueKey('searchOverlayField'),
               controller: _controller,
               focusNode: _focus,
               onSubmitted: _submit,
@@ -287,6 +288,7 @@ class _SearchOverlayState extends State<SearchOverlay> {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 6, 20, 6),
       child: InkWell(
+        key: const ValueKey('searchAddSourceRow'),
         onTap: () async {
           // Layer the AddSourceModal on top of the search overlay rather
           // than popping the overlay first. Popping a route and then

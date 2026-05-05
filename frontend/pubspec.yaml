@@ -32,12 +32,15 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  # integration_test drives the on-device scenario suite. We use the
-  # plain `flutter_test` driver kind from phone-controll (no Patrol
-  # native shim required) because it covers our smoke + critical-path
-  # scenarios cleanly across Android + iOS without per-platform setup.
+  # integration_test + patrol drive the on-device scenario suite.
+  # Patrol's `patrolWidgetTest` is a drop-in for `testWidgets` that
+  # adds (a) locale-independent finders via `$(Key)`, (b) native
+  # automator hooks for ATT / UMP / runtime-permission dialogs, and
+  # (c) better timeout + retry semantics on real devices. We keep
+  # `integration_test` as a transitive — `patrol` requires it.
   integration_test:
     sdk: flutter
+  patrol: ^3.20.0
   flutter_lints: ^5.0.0
   bloc_test: ^10.0.0
   mocktail: ^1.0.4

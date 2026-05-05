@@ -44,7 +44,10 @@ class TopBar extends StatelessWidget implements PreferredSizeWidget {
             child: Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 520),
-                child: _SearchPill(onTap: onSearchTap),
+                child: _SearchPill(
+                  key: const ValueKey('topBarSearchPill'),
+                  onTap: onSearchTap,
+                ),
               ),
             ),
           ),
@@ -106,7 +109,7 @@ class _Brand extends StatelessWidget {
 
 class _SearchPill extends StatefulWidget {
   final VoidCallback? onTap;
-  const _SearchPill({this.onTap});
+  const _SearchPill({super.key, this.onTap});
 
   @override
   State<_SearchPill> createState() => _SearchPillState();

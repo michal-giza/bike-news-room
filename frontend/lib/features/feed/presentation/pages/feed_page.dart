@@ -51,7 +51,26 @@ class _FeedPageState extends State<FeedPage> {
     super.initState();
     _scrollController.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<FeedBloc>().add(const FeedRequested());
+      // Seed the initial filter from onboarding preferences. Without this,
+      // a user who picks "Poland" in onboarding still sees the global feed
+      // because preferredRegions never reaches FeedBloc. Backend `region`
+      // is a single value — pick the first preferred region; full multi-
+      // region support is part of the planned race-follow refactor.
+      final prefs = context.read<PreferencesCubit>().state;
+      final region = prefs.preferredRegions.isNotEmpty
+          ? prefs.preferredRegions.first
+          : null;
+      final discipline = prefs.preferredDisciplines.isNotEmpty
+          ? prefs.preferredDisciplines.first
+          : null;
+      if (region != null || discipline != null) {
+        context.read<FeedBloc>().add(FeedFilterChanged(
+              region: region,
+              discipline: discipline,
+            ));
+      } else {
+        context.read<FeedBloc>().add(const FeedRequested());
+      }
       _maybeOpenDeepLinkedArticle();
     });
   }
@@ -233,11 +252,24 @@ class _FeedPageState extends State<FeedPage> {
                 onTap: (tab) {
                   switch (tab) {
                     case BnrTab.feed:
-                      _scrollController.animateTo(
-                        0,
-                        duration: BnrMotion.m3,
-                        curve: BnrMotion.ease,
-                      );
+                      // Guard with hasClients — when the feed renders
+                      // _ErrorState or _EmptyState there's no ListView
+                      // attached to this controller, and animateTo()
+                      // throws "_positions.isNotEmpty" on tap.
+                      if (_scrollController.hasClients) {
+                        _scrollController.animateTo(
+                          0,
+                          duration: BnrMotion.m3,
+                          curve: BnrMotion.ease,
+                        );
+                      } else {
+                        // No list mounted → just trigger a refresh so the
+                        // user gets feedback (the error state's "retry"
+                        // path) even if the controller can't scroll.
+                        context
+                            .read<FeedBloc>()
+                            .add(const FeedRefreshRequested());
+                      }
                     case BnrTab.search:
                       _openSearch();
                     case BnrTab.bookmarks:
@@ -712,8 +744,12 @@ class _ErrorState extends StatelessWidget {
   Widget build(BuildContext context) {
     final ext = context.bnr;
     final l = AppLocalizations.of(context);
+    // Wrap in SingleChildScrollView so long localised messages
+    // ("Nie można połączyć się z News Roomem", etc.) can't overflow the
+    // viewport on narrow phones — the body shrinks-to-fit and scrolls if
+    // needed, instead of throwing a RenderFlex overflow.
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(BnrSpacing.s8),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -722,6 +758,7 @@ class _ErrorState extends StatelessWidget {
             const SizedBox(height: BnrSpacing.s4),
             Text(
               l.couldNotReachNewsRoom,
+              textAlign: TextAlign.center,
               style: AppTheme.serif(size: 24, color: ext.fg0),
             ),
             const SizedBox(height: 8),

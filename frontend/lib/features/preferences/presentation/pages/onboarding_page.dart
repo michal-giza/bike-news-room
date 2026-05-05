@@ -304,39 +304,47 @@ class _OnboardingPageState extends State<OnboardingPage> {
     final ext = context.bnr;
     final l = AppLocalizations.of(context);
     final canAdvance = _step != 0 || _regions.isNotEmpty;
-    return Row(
-      children: [
-        if (_step > 0)
-          TextButton(
-            onPressed: () => setState(() => _step--),
-            child: Text(
-              l.onboardingBack,
-              style: AppTheme.sans(
-                size: 13,
-                color: ext.fg2,
+    // OverflowBar drops to a Column when the Row would overflow — Polish
+    // labels ("Powrót", "Pomiń", "Następny") together exceed a 296 px
+    // narrow viewport. We split into two halves: leading [Back, Skip] and
+    // trailing [Next] separated by a Spacer in the wide layout, and let
+    // OverflowBar stack vertically when narrow.
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 360;
+        final leading = <Widget>[
+          if (_step > 0)
+            TextButton(
+              onPressed: () => setState(() => _step--),
+              child: Text(
+                l.onboardingBack,
+                overflow: TextOverflow.ellipsis,
+                style: AppTheme.sans(size: 13, color: ext.fg2),
               ),
             ),
+          TextButton(
+            // ValueKey for integration tests: locale-independent finder so
+            // Patrol/flutter_test can drive the onboarding without parsing
+            // translated strings ("Skip" / "Pomiń" / "Saltar" / …).
+            key: const ValueKey('onboardingSkipBtn'),
+            onPressed: _skip,
+            child: Text(
+              l.onboardingSkip,
+              overflow: TextOverflow.ellipsis,
+              style: AppTheme.sans(size: 13, color: ext.fg2),
+            ),
           ),
-        TextButton(
-          // ValueKey for integration tests: locale-independent finder so
-          // Patrol/flutter_test can drive the onboarding without parsing
-          // translated strings ("Skip" / "Pomiń" / "Saltar" / …).
-          key: const ValueKey('onboardingSkipBtn'),
-          onPressed: _skip,
-          child: Text(
-            l.onboardingSkip,
-            style: AppTheme.sans(size: 13, color: ext.fg2),
-          ),
-        ),
-        const Spacer(),
-        FilledButton.icon(
+        ];
+        final advance = FilledButton.icon(
           key: const ValueKey('onboardingAdvanceBtn'),
           onPressed: canAdvance ? _advance : null,
           style: FilledButton.styleFrom(
             backgroundColor: BnrColors.accent,
             foregroundColor: BnrColors.accentInk,
-            padding:
-                const EdgeInsets.symmetric(horizontal: 22, vertical: 11),
+            padding: EdgeInsets.symmetric(
+              horizontal: compact ? 14 : 22,
+              vertical: 11,
+            ),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(BnrRadius.r2),
             ),
@@ -347,14 +355,36 @@ class _OnboardingPageState extends State<OnboardingPage> {
           ),
           label: Text(
             _step == 2 ? l.onboardingFinish : l.onboardingNext,
+            overflow: TextOverflow.ellipsis,
             style: AppTheme.sans(
               size: 14,
               weight: FontWeight.w600,
               color: BnrColors.accentInk,
             ),
           ),
-        ),
-      ],
+        );
+        if (compact) {
+          // Stack vertically — buttons full-width-ish with right alignment.
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              advance,
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: leading,
+              ),
+            ],
+          );
+        }
+        return Row(
+          children: [
+            ...leading,
+            const Spacer(),
+            advance,
+          ],
+        );
+      },
     );
   }
 

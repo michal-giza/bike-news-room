@@ -50,6 +50,9 @@ class BottomNav extends StatelessWidget {
     final ext = context.bnr;
     final on = tab == active;
     return Expanded(
+      // Locale-independent finder for Patrol — `bottomNavTab_feed`,
+      // `bottomNavTab_search`, etc.
+      key: ValueKey('bottomNavTab_${tab.name}'),
       child: InkWell(
         onTap: () => onTap(tab),
         child: Padding(

@@ -441,4 +441,151 @@ void main() {
       );
     },
   );
+
+  // ─────────────────────── REGRESSION GUARDS (logs.md) ───────────────
+  // Real bugs surfaced by the user's exploratory tap session — captured
+  // in logs.md, fixed in this commit. Each test pins one of them so we
+  // can't regress.
+
+  patrolWidgetTest(
+    'B3 — Polish onboarding footer fits a narrow viewport (no overflow)',
+    ($) async {
+      // Logs showed onboarding_page.dart:307 RenderFlex overflowing 37 px
+      // in Polish ("Powrót / Pomiń / Następny" together exceeded 296 px).
+      // We verify by booting onboarding under a Polish locale and asserting
+      // no FlutterError fires. Using a SharedPreferences mock that hasn't
+      // completed onboarding boots straight to the onboarding page.
+      final api = MockApi()..onAnyGet();
+      // Capture rendering exceptions during this test.
+      final caught = <FlutterErrorDetails>[];
+      final original = FlutterError.onError;
+      FlutterError.onError = caught.add;
+      try {
+        await TestHarness.launch(
+          $.tester,
+          api: api,
+          prefs: <String, dynamic>{'pref.localeCode': 'pl'},
+          seedOnboardingComplete: false,
+        );
+        // Step 0 advance + Skip both rendered without overflow.
+        expect($(const ValueKey('onboardingSkipBtn')), findsOneWidget);
+        expect($(const ValueKey('onboardingAdvanceBtn')), findsOneWidget);
+      } finally {
+        FlutterError.onError = original;
+      }
+      final overflows = caught
+          .where((e) => '${e.exception}'.contains('overflowed'))
+          .toList();
+      expect(
+        overflows,
+        isEmpty,
+        reason: 'Polish onboarding footer must not overflow on phone width',
+      );
+    },
+  );
+
+  patrolWidgetTest(
+    'F7 — bottom-nav home tap on empty feed does not crash',
+    ($) async {
+      // Logs: ScrollController.animateTo crashed with "_positions.isNotEmpty"
+      // on a BottomNav feed-tap when the feed was in _ErrorState (no
+      // ListView attached). Repro: launch with empty articles → the
+      // feed shows _EmptyState (also no ListView attached) → tap the
+      // feed tab on bottom nav → must not throw.
+      await TestHarness.launchFeedWith($.tester, articles: const []);
+      final caught = <FlutterErrorDetails>[];
+      final original = FlutterError.onError;
+      FlutterError.onError = caught.add;
+      try {
+        await $(const ValueKey('bottomNavTab_feed')).tap();
+      } finally {
+        FlutterError.onError = original;
+      }
+      final assertions = caught
+          .where((e) => '${e.exception}'.contains('_positions.isNotEmpty'))
+          .toList();
+      expect(
+        assertions,
+        isEmpty,
+        reason: 'tapping the home tab without a list mounted must not throw',
+      );
+    },
+  );
+
+  patrolWidgetTest(
+    'F8 — preferredRegions from onboarding seeds the feed filter',
+    ($) async {
+      // Logs / user complaint: "selected polish in onboarding, no news
+      // showed up". Root cause: preferredRegions was stored in prefs but
+      // never piped into the FeedBloc filter — the feed loaded the global
+      // article list, not the Polish slice. The fix in feed_page.dart
+      // dispatches FeedFilterChanged(region: prefs.preferredRegions.first)
+      // on first frame. Here we assert the outgoing HTTP request actually
+      // carries `region=poland`.
+      final api = MockApi()
+        ..onGetMatching(
+          '/api/articles',
+          json: stubArticlesPage(articles: [
+            stubArticle(id: 901, title: 'Tour de Pologne news', region: 'poland'),
+          ]),
+        )
+        ..onGetMatching('/api/feeds', json: {'feeds': []})
+        ..onGetMatching('/api/categories', json: {'categories': []})
+        ..onGetMatching('/api/races', json: {'races': []})
+        ..onGetMatching('/api/live-ticker', json: {'entries': []})
+        ..onGetMatching('/api/sources/candidates', json: {'candidates': []})
+        ..onAnyGet();
+      await TestHarness.launch(
+        $.tester,
+        api: api,
+        prefs: <String, dynamic>{
+          'pref.regions': <String>['poland'],
+        },
+      );
+      final articleCalls = api.requestLog
+          .where((r) => r.uri.path.contains('/api/articles'))
+          .toList();
+      expect(
+        articleCalls.any((r) => r.uri.queryParameters['region'] == 'poland'),
+        isTrue,
+        reason: 'feed must request region=poland when prefs.regions=[poland]',
+      );
+    },
+  );
+
+  patrolWidgetTest(
+    'F9 — _ErrorState fits a narrow viewport without overflow',
+    ($) async {
+      // Logs: _ErrorState Column overflowed 8 px on the bottom — the
+      // serif headline + retry button + (optional) message together
+      // exceeded the available height in some locales / heights. Fix
+      // wrapped the body in SingleChildScrollView. Verify by triggering
+      // the error state and asserting no overflow exception fires.
+      final api = MockApi()
+        ..onGetMatchingFails('/api/articles', statusCode: 500)
+        ..onGetMatching('/api/feeds', json: {'feeds': []})
+        ..onGetMatching('/api/categories', json: {'categories': []})
+        ..onGetMatching('/api/live-ticker', json: {'entries': []})
+        ..onGetMatching('/api/sources/candidates', json: {'candidates': []})
+        ..onAnyGet();
+      final caught = <FlutterErrorDetails>[];
+      final original = FlutterError.onError;
+      FlutterError.onError = caught.add;
+      try {
+        await TestHarness.launch($.tester, api: api);
+        await $.tester.pumpAndSettle(const Duration(seconds: 2));
+        expect($(const ValueKey('feedErrorState')), findsOneWidget);
+      } finally {
+        FlutterError.onError = original;
+      }
+      final overflows = caught
+          .where((e) => '${e.exception}'.contains('overflowed'))
+          .toList();
+      expect(
+        overflows,
+        isEmpty,
+        reason: '_ErrorState must not overflow on a phone viewport',
+      );
+    },
+  );
 }

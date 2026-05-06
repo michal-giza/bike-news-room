@@ -203,6 +203,11 @@ class _FeedPageState extends State<FeedPage> {
         child: Scaffold(
           key: _scaffoldKey,
           appBar: TopBar(
+            // Pass the system status-bar inset so TopBar's preferredSize
+            // includes it — Scaffold reads preferredSize before the
+            // widget builds, so a build-time MediaQuery lookup alone
+            // isn't enough.
+            topInset: MediaQuery.of(context).padding.top,
             onSearchTap: _openSearch,
             onSettingsTap: () => SettingsPage.show(context),
             // The bookmarks icon was previously a dead button — its
@@ -739,13 +744,22 @@ class _NewSincePill extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                Text(
-                  label,
-                  style: AppTheme.mono(
-                    size: 11,
-                    color: BnrColors.accentInk,
-                    letterSpacing: 0.14,
-                    weight: FontWeight.w600,
+                // Flexible+ellipsis so the "X new articles" pill stays
+                // inside its parent Align even when text scale > 1.0.
+                // Without this it overflows the centerLeft Align by
+                // ~14 px at 1.3x.
+                Flexible(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    softWrap: false,
+                    style: AppTheme.mono(
+                      size: 11,
+                      color: BnrColors.accentInk,
+                      letterSpacing: 0.14,
+                      weight: FontWeight.w600,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 6),

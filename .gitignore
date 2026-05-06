@@ -43,3 +43,7 @@ _flutter/
 
 ## Claude Code session-local state (not project content)
 .claude/
+
+# Local debugging artifacts (Flutter/adb capture sessions)
+logs.md
+*.logcat

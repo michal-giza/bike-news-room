@@ -62,12 +62,23 @@ class BottomNav extends StatelessWidget {
             children: [
               Icon(icon, size: 22, color: on ? BnrColors.accent : ext.fg2),
               const SizedBox(height: 3),
-              Text(
-                label,
-                style: AppTheme.mono(
-                  size: 10,
-                  color: on ? ext.fg0 : ext.fg2,
-                  letterSpacing: 0.06,
+              // FittedBox(scaleDown) keeps the label visible at any text
+              // scale by shrinking it instead of overflowing the 1/5-of-
+              // screen tab slot. Long localised labels ("BOOKMARKS",
+              // "ULUBIONE", "FAVORITOS") combined with the user's OS
+              // text-scale slider used to push the Row off-screen.
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.fade,
+                  softWrap: false,
+                  style: AppTheme.mono(
+                    size: 10,
+                    color: on ? ext.fg0 : ext.fg2,
+                    letterSpacing: 0.06,
+                  ),
                 ),
               ),
             ],

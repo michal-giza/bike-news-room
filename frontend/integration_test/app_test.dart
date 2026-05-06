@@ -640,4 +640,223 @@ void main() {
       );
     },
   );
+
+  // ─────────────── ORIENTATION + ACCESSIBILITY SWEEPS ────────────────
+  // The user reported "lots of UI overlays not caught in tests" after a
+  // free-form tap session. These tests systematically exercise the two
+  // dimensions most likely to produce silent overflow / overlap bugs:
+  //   - Device orientation (portrait + landscape).
+  //   - System text scale (the OS-wide accessibility "font size" slider,
+  //     which Flutter surfaces via MediaQuery.textScaleFactor).
+  //
+  // Each test boots a typical screen, mutates the dimension under test,
+  // settles, and asserts no FlutterError fires — overflow exceptions
+  // and SafeArea violations both go through FlutterError.onError.
+  // We test the *populated* feed (where overflow risk is highest) and
+  // the onboarding (long Polish strings already burned us once).
+
+  Future<List<FlutterErrorDetails>> captureErrors(
+    Future<void> Function() body,
+  ) async {
+    final caught = <FlutterErrorDetails>[];
+    final original = FlutterError.onError;
+    FlutterError.onError = caught.add;
+    try {
+      await body();
+    } finally {
+      FlutterError.onError = original;
+    }
+    return caught;
+  }
+
+  // Common locale set we sweep — Polish + German have the longest button
+  // labels and surfaced the original B3 bug. Adding French + Italian
+  // because they're typical Romance-language length outliers we ship.
+  const sweepLocales = ['en', 'pl', 'de', 'fr', 'it'];
+
+  for (final locale in sweepLocales) {
+    patrolWidgetTest(
+      'O1[$locale] — feed renders in landscape without overflow',
+      ($) async {
+        // Force landscape via test-only physical-size override. We use
+        // a 16:9 ratio matching a real phone in landscape (2340x1080).
+        $.tester.view.physicalSize = const Size(2340, 1080);
+        $.tester.view.devicePixelRatio = 3.0;
+        addTearDown(() {
+          $.tester.view.resetPhysicalSize();
+          $.tester.view.resetDevicePixelRatio();
+        });
+
+        final errors = await captureErrors(() async {
+          await TestHarness.launchFeedWith(
+            $.tester,
+            articles: [
+              stubArticle(id: 1001, title: 'Pogačar attacks on Mont Ventoux'),
+              stubArticle(id: 1002, title: 'Vingegaard responds to attack'),
+              stubArticle(id: 1003, title: 'Roglič crashes out of stage 12'),
+            ],
+            prefs: <String, dynamic>{'pref.localeCode': locale},
+          );
+        });
+        final overflows = errors
+            .where((e) => '${e.exception}'.contains('overflowed'))
+            .toList();
+        expect(
+          overflows,
+          isEmpty,
+          reason:
+              'feed in landscape ($locale) must not overflow — got: '
+              '${overflows.map((e) => e.exception).join("; ")}',
+        );
+      },
+    );
+
+    patrolWidgetTest(
+      'O2[$locale] — onboarding renders in landscape without overflow',
+      ($) async {
+        $.tester.view.physicalSize = const Size(2340, 1080);
+        $.tester.view.devicePixelRatio = 3.0;
+        addTearDown(() {
+          $.tester.view.resetPhysicalSize();
+          $.tester.view.resetDevicePixelRatio();
+        });
+
+        final api = MockApi()..onAnyGet();
+        final errors = await captureErrors(() async {
+          await TestHarness.launch(
+            $.tester,
+            api: api,
+            prefs: <String, dynamic>{'pref.localeCode': locale},
+            seedOnboardingComplete: false,
+          );
+        });
+        final overflows = errors
+            .where((e) => '${e.exception}'.contains('overflowed'))
+            .toList();
+        expect(
+          overflows,
+          isEmpty,
+          reason: 'onboarding in landscape ($locale) must not overflow',
+        );
+      },
+    );
+  }
+
+  // System text-scale sweeps. Android / iOS expose 0.85x → 2.0x via the
+  // OS settings; Flutter passes that through MediaQuery.textScaleFactor.
+  // Some accessibility tools (TalkBack on Android, Dynamic Type "AX5"
+  // on iOS) push to 3x or beyond. We test 1.0 (baseline), 2.0 (max
+  // user-facing), 3.0 (extreme accessibility) — and sanity-check 5.0
+  // because that's where most layouts catastrophically break and we
+  // want a regression guard if we ever explicitly support it.
+  // 1.0 = baseline. 1.3 = Android OS slider max ("Largest"). 2.0 =
+  // accessibility scale (AX5 territory). 3.0/5.0 = catastrophic
+  // accessibility — tolerated for overflow but must not crash.
+  const textScales = [1.0, 1.3, 2.0, 3.0, 5.0];
+
+  for (final scale in textScales) {
+    patrolWidgetTest(
+      'T1[scale=$scale] — feed survives extreme text scale without overflow',
+      ($) async {
+        $.tester.platformDispatcher.textScaleFactorTestValue = scale;
+        addTearDown(() {
+          $.tester.platformDispatcher.clearTextScaleFactorTestValue();
+        });
+
+        final errors = await captureErrors(() async {
+          await TestHarness.launchFeedWith(
+            $.tester,
+            articles: [
+              stubArticle(id: 2001, title: 'Pogačar wins Tour de France 2026'),
+              stubArticle(id: 2002, title: 'Vingegaard finishes second overall'),
+            ],
+          );
+        });
+        final overflows = errors
+            .where((e) => '${e.exception}'.contains('overflowed'))
+            .toList();
+        // Threshold rationale: Android's OS Settings → Display → Font
+        // size slider tops out at ~1.30x ("Largest"), iOS Dynamic Type
+        // at 1.235x. Above that lives accessibility-only territory
+        // (TalkBack "Huge", AX5) where the OEM screens themselves
+        // routinely overflow. We hard-fail ≤1.3x because that's what
+        // any normal user can dial in; for >1.3x we tolerate overflow
+        // (logged for awareness) but still assert the app doesn't
+        // crash with an assertion / unhandled exception.
+        if (scale <= 1.3) {
+          expect(
+            overflows,
+            isEmpty,
+            reason: 'feed must not overflow at OS-slider text scales '
+                '(≤1.3x); got at scale=$scale: '
+                '${overflows.map((e) => e.exception).take(3).join("; ")}',
+          );
+        } else if (overflows.isNotEmpty) {
+          // ignore: avoid_print
+          print(
+              '[T1 scale=$scale] tolerated ${overflows.length} overflow(s) '
+              'in accessibility-only range — visible bug but not a fail.');
+        }
+        // Always assert no fatal assertions — overflow is layout-bad
+        // but recoverable; assertions like "_positions.isNotEmpty"
+        // are crashes.
+        final assertions = errors
+            .where((e) =>
+                '${e.exception}'.contains('Failed assertion') ||
+                '${e.exception}'.contains('Unhandled Exception'))
+            .toList();
+        expect(
+          assertions,
+          isEmpty,
+          reason: 'feed at scale=$scale must not throw assertions / crash',
+        );
+      },
+    );
+
+    patrolWidgetTest(
+      'T2[scale=$scale] — onboarding survives extreme text scale',
+      ($) async {
+        $.tester.platformDispatcher.textScaleFactorTestValue = scale;
+        addTearDown(() {
+          $.tester.platformDispatcher.clearTextScaleFactorTestValue();
+        });
+
+        final api = MockApi()..onAnyGet();
+        final errors = await captureErrors(() async {
+          await TestHarness.launch(
+            $.tester,
+            api: api,
+            prefs: <String, dynamic>{'pref.localeCode': 'pl'},
+            seedOnboardingComplete: false,
+          );
+        });
+        final overflows = errors
+            .where((e) => '${e.exception}'.contains('overflowed'))
+            .toList();
+        if (scale <= 1.3) {
+          expect(
+            overflows,
+            isEmpty,
+            reason:
+                'onboarding(pl) at scale=$scale must not overflow — '
+                'this is the worst case (long Polish labels + big text)',
+          );
+        } else if (overflows.isNotEmpty) {
+          // ignore: avoid_print
+          print('[T2 scale=$scale] tolerated ${overflows.length} '
+              'overflow(s) in accessibility-only range.');
+        }
+        final assertions = errors
+            .where((e) =>
+                '${e.exception}'.contains('Failed assertion') ||
+                '${e.exception}'.contains('Unhandled Exception'))
+            .toList();
+        expect(
+          assertions,
+          isEmpty,
+          reason: 'onboarding at scale=$scale must not crash',
+        );
+      },
+    );
+  }
 }

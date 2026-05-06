@@ -14,7 +14,7 @@
 set -euo pipefail
 
 FLUTTER_VERSION="${FLUTTER_VERSION:-3.41.7}"
-API_BASE_URL="${API_BASE_URL:-http://localhost:7860}"
+API_BASE_URL="${API_BASE_URL:-https://michal-giza-bike-news-room.hf.space}"
 
 echo "▶ Installing Flutter ${FLUTTER_VERSION}"
 if [ ! -d "_flutter" ]; then

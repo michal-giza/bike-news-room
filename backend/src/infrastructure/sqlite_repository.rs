@@ -276,8 +276,9 @@ impl ArticleRepository for SqliteRepository {
         // clause dynamically with bound `?` placeholders so SQLite can
         // still use its column indices and so it's safe against SQLi.
         if !q.disciplines.is_empty() {
-            let placeholders =
-                std::iter::repeat("?").take(q.disciplines.len()).collect::<Vec<_>>().join(",");
+            let placeholders = std::iter::repeat_n("?", q.disciplines.len())
+                .collect::<Vec<_>>()
+                .join(",");
             where_clauses.push(Box::leak(
                 format!("a.discipline IN ({placeholders})").into_boxed_str(),
             ));
@@ -289,8 +290,9 @@ impl ArticleRepository for SqliteRepository {
             binds.push(discipline.clone());
         }
         if !q.regions.is_empty() {
-            let placeholders =
-                std::iter::repeat("?").take(q.regions.len()).collect::<Vec<_>>().join(",");
+            let placeholders = std::iter::repeat_n("?", q.regions.len())
+                .collect::<Vec<_>>()
+                .join(",");
             where_clauses.push(Box::leak(
                 format!("a.region IN ({placeholders})").into_boxed_str(),
             ));

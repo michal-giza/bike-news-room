@@ -161,6 +161,29 @@ class BikeNewsRoomApp extends StatelessWidget {
                 : Locale(prefs.localeCode!),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
+            // Clamp the OS text-scale slider at the app boundary —
+            // anything above ~1.3× starts breaking real-world layouts
+            // (article cards, bottom-nav labels, settings rows). We
+            // already expose an in-app sizing system (PersonaScale →
+            // TypeScale) for users who genuinely need bigger text;
+            // that one is uncapped and integrates with our spacing,
+            // unlike the OS multiplier which scales font size only.
+            //
+            // Lower-bound at 1.0 protects against users who set scale
+            // *below* 1.0 (rare but possible) and end up with text
+            // that's smaller than the design intent.
+            builder: (context, child) {
+              final mq = MediaQuery.of(context);
+              return MediaQuery(
+                data: mq.copyWith(
+                  textScaler: mq.textScaler.clamp(
+                    minScaleFactor: 1.0,
+                    maxScaleFactor: 1.3,
+                  ),
+                ),
+                child: child ?? const SizedBox.shrink(),
+              );
+            },
             home: MultiBlocProvider(
               providers: [
                 BlocProvider<FeedBloc>(

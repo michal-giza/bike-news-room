@@ -759,13 +759,17 @@ void main() {
   // System text-scale sweeps. Android / iOS expose 0.85x → 2.0x via the
   // OS settings; Flutter passes that through MediaQuery.textScaleFactor.
   // Some accessibility tools (TalkBack on Android, Dynamic Type "AX5"
-  // on iOS) push to 3x or beyond. We test 1.0 (baseline), 2.0 (max
-  // user-facing), 3.0 (extreme accessibility) — and sanity-check 5.0
-  // because that's where most layouts catastrophically break and we
-  // want a regression guard if we ever explicitly support it.
-  // 1.0 = baseline. 1.3 = Android OS slider max ("Largest"). 2.0 =
-  // accessibility scale (AX5 territory). 3.0/5.0 = catastrophic
-  // accessibility — tolerated for overflow but must not crash.
+  // on iOS) push to 3x or beyond. The app **clamps** the OS scale at
+  // 1.3x via MediaQuery.withClampedTextScaling at MaterialApp root —
+  // users who genuinely need bigger text use the in-app PersonaScale
+  // system, which integrates with our spacing tokens. The OS multiplier
+  // would scale font size only and leave button-padding / chip-height /
+  // bottom-nav-slot widths untouched, which is what was breaking the
+  // layout at 2.0+ scales pre-clamp.
+  //
+  // Test scales are unchanged so the suite still proves the clamp
+  // works: even with the OS asking for 5.0×, the app sees ≤1.3× and
+  // must not overflow at any scale.
   const textScales = [1.0, 1.3, 2.0, 3.0, 5.0];
 
   for (final scale in textScales) {
@@ -789,31 +793,18 @@ void main() {
         final overflows = errors
             .where((e) => '${e.exception}'.contains('overflowed'))
             .toList();
-        // Threshold rationale: Android's OS Settings → Display → Font
-        // size slider tops out at ~1.30x ("Largest"), iOS Dynamic Type
-        // at 1.235x. Above that lives accessibility-only territory
-        // (TalkBack "Huge", AX5) where the OEM screens themselves
-        // routinely overflow. We hard-fail ≤1.3x because that's what
-        // any normal user can dial in; for >1.3x we tolerate overflow
-        // (logged for awareness) but still assert the app doesn't
-        // crash with an assertion / unhandled exception.
-        if (scale <= 1.3) {
-          expect(
-            overflows,
-            isEmpty,
-            reason: 'feed must not overflow at OS-slider text scales '
-                '(≤1.3x); got at scale=$scale: '
-                '${overflows.map((e) => e.exception).take(3).join("; ")}',
-          );
-        } else if (overflows.isNotEmpty) {
-          // ignore: avoid_print
-          print(
-              '[T1 scale=$scale] tolerated ${overflows.length} overflow(s) '
-              'in accessibility-only range — visible bug but not a fail.');
-        }
-        // Always assert no fatal assertions — overflow is layout-bad
-        // but recoverable; assertions like "_positions.isNotEmpty"
-        // are crashes.
+        // Hard fail at every scale. The app clamps OS text scale to
+        // 1.3× at MaterialApp root, so even when the test asks for
+        // 5.0× the layout sees 1.3×. Any overflow that fires here is
+        // a real layout bug — either the clamp regressed or a new
+        // widget is missing its responsive treatment.
+        expect(
+          overflows,
+          isEmpty,
+          reason: 'feed must not overflow even when the OS asks for '
+              'scale=$scale — the app clamps to ≤1.3x at root. Got: '
+              '${overflows.map((e) => e.exception).take(3).join("; ")}',
+        );
         final assertions = errors
             .where((e) =>
                 '${e.exception}'.contains('Failed assertion') ||
@@ -847,19 +838,15 @@ void main() {
         final overflows = errors
             .where((e) => '${e.exception}'.contains('overflowed'))
             .toList();
-        if (scale <= 1.3) {
-          expect(
-            overflows,
-            isEmpty,
-            reason:
-                'onboarding(pl) at scale=$scale must not overflow — '
-                'this is the worst case (long Polish labels + big text)',
-          );
-        } else if (overflows.isNotEmpty) {
-          // ignore: avoid_print
-          print('[T2 scale=$scale] tolerated ${overflows.length} '
-              'overflow(s) in accessibility-only range.');
-        }
+        // Same contract as T1 — the app clamps so this must hold at
+        // every scale, including the long-Polish-labels worst case.
+        expect(
+          overflows,
+          isEmpty,
+          reason:
+              'onboarding(pl) must not overflow even when OS asks for '
+              'scale=$scale — clamp at root protects against this.',
+        );
         final assertions = errors
             .where((e) =>
                 '${e.exception}'.contains('Failed assertion') ||

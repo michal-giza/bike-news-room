@@ -69,10 +69,11 @@ class LocalNotificationsProvider implements NotificationsProvider {
         ),
       ),
     );
-    await _wm.initialize(
-      notificationsCallbackDispatcher,
-      isInDebugMode: kDebugMode,
-    );
+    // workmanager 0.9 deprecated `isInDebugMode` (it is now a no-op);
+    // pass nothing and let the platform plugin pick up debug from the
+    // build mode. Keeping this as a one-arg call until the upstream
+    // adds the new `WorkmanagerDebug` handlers we'd switch to.
+    await _wm.initialize(notificationsCallbackDispatcher);
     _initialized = true;
   }
 
@@ -225,9 +226,9 @@ const int _kSeenIdsCap = 500;
 ///      bail out cheap.
 ///   3. Pull the digest mode + hour. In digest mode, only fire once
 ///      per day (at the user-set hour); silently return otherwise.
-///   4. Fetch /api/articles?since=<lastFetchAt>&disciplines=<csv> for
-///      the active region(s). Dedupe against the persisted seen-ids
-///      list and the user's hide-keyword list.
+///   4. Fetch `/api/articles?since=…&disciplines=…` for the active
+///      region(s). Dedupe against the persisted seen-ids list and
+///      the user's hide-keyword list.
 ///   5. Surface up to [_kPerFireNotificationCap] notifications via
 ///      flutter_local_notifications. Persist the new seen ids +
 ///      lastFetchAt for the next fire.

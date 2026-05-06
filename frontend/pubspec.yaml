@@ -1,7 +1,7 @@
 name: bike_news_room
 description: "Bike News Room — cycling news aggregator (web frontend)."
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.2.0+3
 
 environment:
   sdk: ^3.11.5
@@ -21,6 +21,10 @@ dependencies:
   shared_preferences: ^2.3.3
   url_launcher: ^6.3.1
   share_plus: ^11.1.0
+  # Used by the .ics calendar-export action on RaceCard — we need a
+  # tmp-dir path to drop the generated file in, then hand it to
+  # share_plus.shareXFiles. Used nowhere else; tiny dep.
+  path_provider: ^2.1.5
   intl: ^0.20.1
   cupertino_icons: ^1.0.8
   # ── Mobile-only: ads + consent + tracking permission ──

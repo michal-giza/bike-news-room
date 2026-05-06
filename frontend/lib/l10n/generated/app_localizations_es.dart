@@ -151,6 +151,32 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsNotificationsTopicsLabel => 'DISCIPLINAS';
 
   @override
+  String get settingsNotificationsDeliveryLabel => 'ENTREGA';
+
+  @override
+  String get settingsNotificationsDeliveryInstant => 'Instantáneo';
+
+  @override
+  String get settingsNotificationsDeliveryDaily => 'Resumen diario';
+
+  @override
+  String get settingsHiddenKeywordsLabel => 'OCULTAR PALABRAS';
+
+  @override
+  String get settingsHiddenKeywordsDesc =>
+      'Las noticias cuyo título o descripción contengan alguna de estas palabras se ocultarán del feed y de las notificaciones.';
+
+  @override
+  String get settingsHiddenKeywordsHint => 'Añadir palabra a ocultar…';
+
+  @override
+  String get raceCardAddToCalendar => 'Añadir al calendario';
+
+  @override
+  String get raceCardCalendarExportFailed =>
+      'No se pudo exportar al calendario.';
+
+  @override
   String get settingsYourData => 'Tus datos';
 
   @override

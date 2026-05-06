@@ -21,6 +21,13 @@ class PreferencesRepository {
   static const _kLocale = 'pref.localeCode';
   static const _kNotifEnabled = 'pref.notifications.enabled';
   static const _kNotifDisciplines = 'pref.notifications.disciplines';
+  // Notification digest + hidden-keywords prefs are read by both the
+  // foreground app and the workmanager background isolate. Keep these
+  // keys in sync with the duplicated constants in
+  // lib/core/notifications/providers/local_notifications_provider.dart.
+  static const _kNotifDigestMode = 'pref.notifications.digestMode';
+  static const _kNotifDigestHour = 'pref.notifications.digestHour';
+  static const _kHiddenKeywords = 'pref.notifications.hideKeywords';
 
   UserPreferences load() {
     return UserPreferences(
@@ -54,6 +61,11 @@ class PreferencesRepository {
       notificationsEnabled: prefs.getBool(_kNotifEnabled) ?? false,
       notificationDisciplines:
           (prefs.getStringList(_kNotifDisciplines) ?? const []).toSet(),
+      notificationsDigestMode:
+          prefs.getString(_kNotifDigestMode) ?? 'instant',
+      notificationsDigestHour: prefs.getInt(_kNotifDigestHour) ?? 8,
+      hiddenKeywords:
+          (prefs.getStringList(_kHiddenKeywords) ?? const []).toSet(),
     );
   }
 
@@ -85,6 +97,12 @@ class PreferencesRepository {
     await prefs.setStringList(
       _kNotifDisciplines,
       p.notificationDisciplines.toList(),
+    );
+    await prefs.setString(_kNotifDigestMode, p.notificationsDigestMode);
+    await prefs.setInt(_kNotifDigestHour, p.notificationsDigestHour);
+    await prefs.setStringList(
+      _kHiddenKeywords,
+      p.hiddenKeywords.toList(),
     );
   }
 }

@@ -122,7 +122,20 @@ class SettingsPage extends StatelessWidget {
                         cubit.toggleNotificationDiscipline(id),
                   ),
                 ),
+                const SizedBox(height: BnrSpacing.s4),
+                _DigestModePicker(
+                  mode: prefs.notificationsDigestMode,
+                  hour: prefs.notificationsDigestHour,
+                  onModeChanged: cubit.setNotificationsDigestMode,
+                  onHourChanged: cubit.setNotificationsDigestHour,
+                ),
               ],
+              const SizedBox(height: BnrSpacing.s4),
+              _HiddenKeywordsEditor(
+                keywords: prefs.hiddenKeywords,
+                onAdd: cubit.addHiddenKeyword,
+                onRemove: cubit.removeHiddenKeyword,
+              ),
               const Divider(height: BnrSpacing.s8),
               _SectionHeader(l.settingsYourData),
               _ActionTile(
@@ -371,6 +384,252 @@ class _DisciplineToggle extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Digest-vs-instant mode picker. The cycling-news cadence (~5 stories
+/// at peak race weekends) means the default 15-min "instant" mode can
+/// feel spammy; daily-digest collapses everything into one summary at
+/// a user-set hour.
+class _DigestModePicker extends StatelessWidget {
+  final String mode;
+  final int hour;
+  final ValueChanged<String> onModeChanged;
+  final ValueChanged<int> onHourChanged;
+
+  const _DigestModePicker({
+    required this.mode,
+    required this.hour,
+    required this.onModeChanged,
+    required this.onHourChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final ext = context.bnr;
+    final l = AppLocalizations.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l.settingsNotificationsDeliveryLabel,
+          style: AppTheme.mono(
+            size: 11,
+            color: ext.fg2,
+            letterSpacing: 0.06,
+          ),
+        ),
+        const SizedBox(height: BnrSpacing.s2),
+        Row(
+          children: [
+            Expanded(
+              child: _SegmentedTile(
+                label: l.settingsNotificationsDeliveryInstant,
+                selected: mode == 'instant',
+                onTap: () => onModeChanged('instant'),
+              ),
+            ),
+            const SizedBox(width: BnrSpacing.s2),
+            Expanded(
+              child: _SegmentedTile(
+                label: l.settingsNotificationsDeliveryDaily,
+                selected: mode == 'daily',
+                onTap: () => onModeChanged('daily'),
+              ),
+            ),
+          ],
+        ),
+        if (mode == 'daily') ...[
+          const SizedBox(height: BnrSpacing.s2),
+          // 0–23 picker via a horizontally-scrollable row of hour
+          // chips. Compact and locale-independent (numbers + a colon).
+          SizedBox(
+            height: 38,
+            child: ListView.separated(
+              key: const ValueKey('settingsDigestHourPicker'),
+              scrollDirection: Axis.horizontal,
+              itemCount: 24,
+              separatorBuilder: (_, __) =>
+                  const SizedBox(width: BnrSpacing.s1),
+              itemBuilder: (_, h) {
+                final selected = h == hour;
+                return GestureDetector(
+                  onTap: () => onHourChanged(h),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: selected ? BnrColors.accent : ext.bg1,
+                      border: Border.all(
+                        color: selected ? BnrColors.accent : ext.line,
+                      ),
+                      borderRadius: BorderRadius.circular(BnrRadius.r2),
+                    ),
+                    child: Text(
+                      '${h.toString().padLeft(2, '0')}:00',
+                      style: AppTheme.mono(
+                        size: 12,
+                        color: selected
+                            ? BnrColors.accentInk
+                            : ext.fg1,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _SegmentedTile extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _SegmentedTile({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final ext = context.bnr;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: BnrSpacing.s3,
+          vertical: BnrSpacing.s3,
+        ),
+        decoration: BoxDecoration(
+          color: selected ? BnrColors.accent : ext.bg1,
+          border: Border.all(color: selected ? BnrColors.accent : ext.line),
+          borderRadius: BorderRadius.circular(BnrRadius.r2),
+        ),
+        child: Center(
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppTheme.sans(
+              size: 13,
+              weight: FontWeight.w600,
+              color: selected ? BnrColors.accentInk : ext.fg1,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Local-only keyword blocklist. Substrings are matched case-
+/// insensitively against title + description on both the foreground
+/// feed and the bg notification fetcher. Pairs with a mini-input that
+/// adds on submit + a row of dismissible chips.
+class _HiddenKeywordsEditor extends StatefulWidget {
+  final Set<String> keywords;
+  final ValueChanged<String> onAdd;
+  final ValueChanged<String> onRemove;
+
+  const _HiddenKeywordsEditor({
+    required this.keywords,
+    required this.onAdd,
+    required this.onRemove,
+  });
+
+  @override
+  State<_HiddenKeywordsEditor> createState() =>
+      _HiddenKeywordsEditorState();
+}
+
+class _HiddenKeywordsEditorState extends State<_HiddenKeywordsEditor> {
+  final TextEditingController _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _submit(String value) {
+    final clean = value.trim();
+    if (clean.isEmpty) return;
+    widget.onAdd(clean);
+    _controller.clear();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ext = context.bnr;
+    final l = AppLocalizations.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l.settingsHiddenKeywordsLabel,
+          style: AppTheme.mono(
+            size: 11,
+            color: ext.fg2,
+            letterSpacing: 0.06,
+          ),
+        ),
+        const SizedBox(height: BnrSpacing.s1),
+        Text(
+          l.settingsHiddenKeywordsDesc,
+          style: AppTheme.sans(size: 12, color: ext.fg2),
+        ),
+        const SizedBox(height: BnrSpacing.s2),
+        TextField(
+          key: const ValueKey('settingsHideKeywordInput'),
+          controller: _controller,
+          textInputAction: TextInputAction.done,
+          onSubmitted: _submit,
+          decoration: InputDecoration(
+            hintText: l.settingsHiddenKeywordsHint,
+            hintStyle: AppTheme.sans(size: 13, color: ext.fg3),
+            isDense: true,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(BnrRadius.r2),
+              borderSide: BorderSide(color: ext.line),
+            ),
+            suffixIcon: IconButton(
+              icon: const Icon(Icons.add, size: 18),
+              onPressed: () => _submit(_controller.text),
+            ),
+          ),
+        ),
+        if (widget.keywords.isNotEmpty) ...[
+          const SizedBox(height: BnrSpacing.s2),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: widget.keywords
+                .map(
+                  (k) => InputChip(
+                    key: ValueKey('settingsHideKw_$k'),
+                    label: Text(
+                      k,
+                      style: AppTheme.sans(size: 12, color: ext.fg0),
+                    ),
+                    onDeleted: () => widget.onRemove(k),
+                    backgroundColor: ext.bg1,
+                    side: BorderSide(color: ext.line),
+                    deleteIcon: const Icon(Icons.close, size: 14),
+                  ),
+                )
+                .toList(),
+          ),
+        ],
+      ],
     );
   }
 }

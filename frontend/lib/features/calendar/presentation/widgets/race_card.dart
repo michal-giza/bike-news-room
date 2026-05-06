@@ -1,10 +1,16 @@
+import 'dart:io' show File;
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/theme/tokens.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../domain/entities/race.dart';
+import '../../domain/usecases/race_to_ics.dart';
 
 /// Single row in the race calendar — date strip + name + meta.
 class RaceCard extends StatefulWidget {
@@ -71,11 +77,52 @@ class _RaceCardState extends State<RaceCard> {
                   ],
                 ),
               ),
+              // Calendar export — emits an .ics file via the OS share
+              // sheet so the user can drop the race into Apple/Google
+              // Calendar in one tap. Pure local; no Google Calendar
+              // API, no costs. Hidden on web (share_plus on web has no
+              // file-sharing support at the time of writing).
+              if (!kIsWeb)
+                IconButton(
+                  key: ValueKey('raceCardCalendarExport_${widget.race.id}'),
+                  icon: Icon(
+                    Icons.event_outlined,
+                    size: 18,
+                    color: ext.fg2,
+                  ),
+                  tooltip: AppLocalizations.of(context).raceCardAddToCalendar,
+                  onPressed: () => _exportToCalendar(context),
+                ),
             ],
           ),
         ),
       ),
     );
+  }
+
+  Future<void> _exportToCalendar(BuildContext context) async {
+    try {
+      final ics = raceToIcs(widget.race);
+      final dir = await getTemporaryDirectory();
+      final file = File('${dir.path}/${suggestedIcsFilename(widget.race)}');
+      await file.writeAsString(ics);
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(file.path, mimeType: 'text/calendar')],
+          subject: widget.race.name,
+        ),
+      );
+    } catch (e) {
+      if (kDebugMode) debugPrint('RaceCard: ics export failed: $e');
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context).raceCardCalendarExportFailed,
+          ),
+        ),
+      );
+    }
   }
 
   Widget _dateStrip(

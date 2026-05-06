@@ -152,4 +152,32 @@ class PreferencesCubit extends Cubit<UserPreferences> {
     await _update(state.copyWith(notificationDisciplines: next));
     await notifications?.setTopics(next.map(topicForDiscipline).toSet());
   }
+
+  /// Switch between `'instant'` (default — every workmanager fire,
+  /// up to 3 articles) and `'daily'` (one summary at the user-set
+  /// hour). The bg isolate reads the mode on every fire, so changes
+  /// take effect immediately without re-scheduling.
+  Future<void> setNotificationsDigestMode(String mode) =>
+      _update(state.copyWith(notificationsDigestMode: mode));
+
+  /// 0–23, local time. Only used in `'daily'` digest mode.
+  Future<void> setNotificationsDigestHour(int hour) =>
+      _update(state.copyWith(
+        notificationsDigestHour: hour.clamp(0, 23),
+      ));
+
+  /// Add a substring to the hide-keyword list. Articles whose title or
+  /// description contain it (case-insensitive) get suppressed in the
+  /// foreground feed AND the bg notification fetcher.
+  Future<void> addHiddenKeyword(String keyword) async {
+    final clean = keyword.trim();
+    if (clean.isEmpty) return;
+    final next = {...state.hiddenKeywords, clean};
+    await _update(state.copyWith(hiddenKeywords: next));
+  }
+
+  Future<void> removeHiddenKeyword(String keyword) async {
+    final next = Set<String>.from(state.hiddenKeywords)..remove(keyword);
+    await _update(state.copyWith(hiddenKeywords: next));
+  }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../domain/entities/article.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/theme/tokens.dart';
@@ -31,6 +32,35 @@ import '../../../preferences/presentation/pages/settings_page.dart';
 import '../bookmark_action.dart';
 import 'article_detail_modal.dart';
 import 'bookmarks_page.dart';
+
+/// Drop articles whose title or description (case-insensitive)
+/// contains any substring in [keywords]. Pure helper, exposed at the
+/// library top level for testability. The bg notification fetcher
+/// applies the same logic via `filterArticlesForNotification` in
+/// `local_notifications_provider.dart` so foreground + bg behave
+/// identically — silent drift would be a UX bug.
+List<Article> filterArticlesByHiddenKeywords(
+  Iterable<Article> articles,
+  Set<String> keywords,
+) {
+  if (keywords.isEmpty) return articles.toList();
+  final lowered = keywords
+      .map((k) => k.trim().toLowerCase())
+      .where((k) => k.isNotEmpty)
+      .toList();
+  if (lowered.isEmpty) return articles.toList();
+  return articles.where((a) {
+    final hay =
+        '${a.title.toLowerCase()} ${(a.description ?? '').toLowerCase()}';
+    return !lowered.any(hay.contains);
+  }).toList();
+}
+
+List<Article> _filterByHiddenKeywords(
+  Iterable<Article> articles,
+  Set<String> keywords,
+) =>
+    filterArticlesByHiddenKeywords(articles, keywords);
 
 /// Three-pane shell: sidebar / feed / (preview rail collapsed for now).
 /// Adapts to mobile by hiding the sidebar at < 900px.
@@ -512,11 +542,19 @@ class _FeedPageState extends State<FeedPage> {
   Widget _list(BuildContext context, FeedState state, UserPreferences prefs) {
     final sources = context.watch<SourcesCubit>().state;
     final watchlist = context.watch<WatchlistCubit>().state;
-    final breaking = BreakingPanel.selectBreaking(state.articles);
+    // Apply the user's hidden-keyword blocklist BEFORE breaking selection
+    // so a hidden keyword can also suppress a hot story (otherwise the
+    // breaking panel would still surface it). Pure client-side; the bg
+    // notification fetcher honours the same list server-roundtrip-side.
+    final visibleArticles = _filterByHiddenKeywords(
+      state.articles,
+      prefs.hiddenKeywords,
+    );
+    final breaking = BreakingPanel.selectBreaking(visibleArticles);
     final breakingIds = breaking.map((a) => a.id).toSet();
     // Hide the breaking-panel articles from the regular feed list to avoid duplication.
     final feedArticles =
-        state.articles.where((a) => !breakingIds.contains(a.id)).toList();
+        visibleArticles.where((a) => !breakingIds.contains(a.id)).toList();
     final hasBreaking = breaking.isNotEmpty;
     final breakingOffset = hasBreaking ? 1 : 0;
     final itemCount = feedArticles.length + breakingOffset + 1; // +1 footer

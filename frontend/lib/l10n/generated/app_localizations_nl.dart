@@ -150,6 +150,32 @@ class AppLocalizationsNl extends AppLocalizations {
   String get settingsNotificationsTopicsLabel => 'DISCIPLINES';
 
   @override
+  String get settingsNotificationsDeliveryLabel => 'BEZORGING';
+
+  @override
+  String get settingsNotificationsDeliveryInstant => 'Direct';
+
+  @override
+  String get settingsNotificationsDeliveryDaily => 'Dagelijks overzicht';
+
+  @override
+  String get settingsHiddenKeywordsLabel => 'WOORDEN VERBERGEN';
+
+  @override
+  String get settingsHiddenKeywordsDesc =>
+      'Artikelen waarvan de titel of beschrijving een van deze woorden bevat, worden verborgen in de feed en meldingen.';
+
+  @override
+  String get settingsHiddenKeywordsHint =>
+      'Voeg een woord toe om te verbergen…';
+
+  @override
+  String get raceCardAddToCalendar => 'Toevoegen aan agenda';
+
+  @override
+  String get raceCardCalendarExportFailed => 'Exporteren naar agenda mislukt.';
+
+  @override
   String get settingsYourData => 'Jouw gegevens';
 
   @override

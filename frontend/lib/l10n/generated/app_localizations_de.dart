@@ -151,6 +151,32 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsNotificationsTopicsLabel => 'DISZIPLINEN';
 
   @override
+  String get settingsNotificationsDeliveryLabel => 'ZUSTELLUNG';
+
+  @override
+  String get settingsNotificationsDeliveryInstant => 'Sofort';
+
+  @override
+  String get settingsNotificationsDeliveryDaily => 'Tageszusammenfassung';
+
+  @override
+  String get settingsHiddenKeywordsLabel => 'WÖRTER AUSBLENDEN';
+
+  @override
+  String get settingsHiddenKeywordsDesc =>
+      'Artikel, deren Titel oder Beschreibung eines dieser Wörter enthalten, werden im Feed und in Benachrichtigungen ausgeblendet.';
+
+  @override
+  String get settingsHiddenKeywordsHint => 'Wort zum Ausblenden hinzufügen…';
+
+  @override
+  String get raceCardAddToCalendar => 'Zum Kalender hinzufügen';
+
+  @override
+  String get raceCardCalendarExportFailed =>
+      'Export zum Kalender fehlgeschlagen.';
+
+  @override
   String get settingsYourData => 'Deine Daten';
 
   @override

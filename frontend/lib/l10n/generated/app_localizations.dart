@@ -364,6 +364,54 @@ abstract class AppLocalizations {
   /// **'DISCIPLINES'**
   String get settingsNotificationsTopicsLabel;
 
+  /// No description provided for @settingsNotificationsDeliveryLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'DELIVERY'**
+  String get settingsNotificationsDeliveryLabel;
+
+  /// No description provided for @settingsNotificationsDeliveryInstant.
+  ///
+  /// In en, this message translates to:
+  /// **'Instant'**
+  String get settingsNotificationsDeliveryInstant;
+
+  /// No description provided for @settingsNotificationsDeliveryDaily.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily digest'**
+  String get settingsNotificationsDeliveryDaily;
+
+  /// No description provided for @settingsHiddenKeywordsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'HIDE KEYWORDS'**
+  String get settingsHiddenKeywordsLabel;
+
+  /// No description provided for @settingsHiddenKeywordsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Stories whose title or description contain any of these words are hidden from the feed and notifications.'**
+  String get settingsHiddenKeywordsDesc;
+
+  /// No description provided for @settingsHiddenKeywordsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a word to hide…'**
+  String get settingsHiddenKeywordsHint;
+
+  /// No description provided for @raceCardAddToCalendar.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to calendar'**
+  String get raceCardAddToCalendar;
+
+  /// No description provided for @raceCardCalendarExportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not export to calendar.'**
+  String get raceCardCalendarExportFailed;
+
   /// No description provided for @settingsYourData.
   ///
   /// In en, this message translates to:

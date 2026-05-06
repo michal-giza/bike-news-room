@@ -29,15 +29,35 @@ class UserPreferences extends Equatable {
   /// "follow the device locale" — the standard Flutter behaviour.
   final String? localeCode;
 
-  /// Master switch for push notifications. Default `false` so the user
-  /// must explicitly opt in via Settings — Play's Data Safety form
-  /// requires opt-in for any data sent to a third-party SDK.
+  /// Master switch for news alerts. Default `false` so the user must
+  /// explicitly opt in via Settings — Play's Data Safety form requires
+  /// opt-in for any post-install behaviour that touches network or
+  /// platform notification surfaces.
   final bool notificationsEnabled;
 
   /// Discipline ids the user wants to receive notifications for. Empty
-  /// when the master switch is off. The FcmService reconciles this set
-  /// with the live FCM topic subscriptions on every change.
+  /// when the master switch is off. The NotificationsService reconciles
+  /// this set with the live transport (local-only / FCM / etc.) on
+  /// every change via the abstract `setTopics` contract.
   final Set<String> notificationDisciplines;
+
+  /// `'instant'` — surface up to 3 fresh articles every workmanager
+  /// fire (~every 15 min Android). `'daily'` — collapse the day's
+  /// articles into a single digest fired once per day at
+  /// [notificationsDigestHour]. Default `'instant'` matches the v1.1
+  /// behaviour; users who opt into digest get it via Settings.
+  final String notificationsDigestMode;
+
+  /// Local hour (0-23) when the daily digest fires. Only consulted when
+  /// `notificationsDigestMode == 'daily'`. Default 8 — most cycling
+  /// news lands in the evening EU time, so 8am the next morning makes
+  /// sense for the typical "what did I miss overnight" use case.
+  final int notificationsDigestHour;
+
+  /// Substrings that suppress an article from the foreground feed AND
+  /// the bg notification fetcher. Case-insensitive; matched against
+  /// title + description. Stored locally only.
+  final Set<String> hiddenKeywords;
 
   const UserPreferences({
     this.themeMode = AppThemeMode.dark,
@@ -53,6 +73,9 @@ class UserPreferences extends Equatable {
     this.localeCode,
     this.notificationsEnabled = false,
     this.notificationDisciplines = const {},
+    this.notificationsDigestMode = 'instant',
+    this.notificationsDigestHour = 8,
+    this.hiddenKeywords = const {},
   });
 
   UserPreferences copyWith({
@@ -69,6 +92,9 @@ class UserPreferences extends Equatable {
     Object? localeCode = _sentinel,
     bool? notificationsEnabled,
     Set<String>? notificationDisciplines,
+    String? notificationsDigestMode,
+    int? notificationsDigestHour,
+    Set<String>? hiddenKeywords,
   }) =>
       UserPreferences(
         themeMode: themeMode ?? this.themeMode,
@@ -91,6 +117,11 @@ class UserPreferences extends Equatable {
             notificationsEnabled ?? this.notificationsEnabled,
         notificationDisciplines:
             notificationDisciplines ?? this.notificationDisciplines,
+        notificationsDigestMode:
+            notificationsDigestMode ?? this.notificationsDigestMode,
+        notificationsDigestHour:
+            notificationsDigestHour ?? this.notificationsDigestHour,
+        hiddenKeywords: hiddenKeywords ?? this.hiddenKeywords,
       );
 
   @override
@@ -108,5 +139,8 @@ class UserPreferences extends Equatable {
         localeCode,
         notificationsEnabled,
         notificationDisciplines,
+        notificationsDigestMode,
+        notificationsDigestHour,
+        hiddenKeywords,
       ];
 }

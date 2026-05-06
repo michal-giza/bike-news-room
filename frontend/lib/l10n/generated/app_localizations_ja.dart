@@ -148,6 +148,31 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsNotificationsTopicsLabel => 'ディシプリン';
 
   @override
+  String get settingsNotificationsDeliveryLabel => '配信';
+
+  @override
+  String get settingsNotificationsDeliveryInstant => '即時';
+
+  @override
+  String get settingsNotificationsDeliveryDaily => '1日のまとめ';
+
+  @override
+  String get settingsHiddenKeywordsLabel => '非表示キーワード';
+
+  @override
+  String get settingsHiddenKeywordsDesc =>
+      'タイトルまたは説明にこれらの語のいずれかを含む記事は、フィードと通知から非表示になります。';
+
+  @override
+  String get settingsHiddenKeywordsHint => '非表示にする語を追加…';
+
+  @override
+  String get raceCardAddToCalendar => 'カレンダーに追加';
+
+  @override
+  String get raceCardCalendarExportFailed => 'カレンダーへのエクスポートに失敗しました。';
+
+  @override
   String get settingsYourData => 'あなたのデータ';
 
   @override

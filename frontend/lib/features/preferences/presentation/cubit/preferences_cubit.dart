@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/notifications/notifications_service.dart';
 import '../../../../core/theme/tokens.dart';
 import '../../data/preferences_repository.dart';
 import '../../domain/entities/user_preferences.dart';
@@ -8,7 +9,15 @@ import '../../domain/entities/user_preferences.dart';
 class PreferencesCubit extends Cubit<UserPreferences> {
   final PreferencesRepository repository;
 
-  PreferencesCubit(this.repository) : super(repository.load());
+  /// Optional — when wired, the cubit reconciles topic subscriptions
+  /// with the latest [UserPreferences.notificationDisciplines] on
+  /// every notifications mutation. Tests typically pass
+  /// [NoopNotificationsService] (or nothing) so they don't touch real
+  /// platform plugins.
+  final INotificationsService? notifications;
+
+  PreferencesCubit(this.repository, {this.notifications})
+      : super(repository.load());
 
   Future<void> _update(UserPreferences updated) async {
     emit(updated);
@@ -100,4 +109,47 @@ class PreferencesCubit extends Cubit<UserPreferences> {
         density: density,
         onboardingComplete: true,
       ));
+
+  /// Master switch for news alerts. Off → bg task is cancelled, every
+  /// topic unsubscribed. On → the device subscribes to every discipline
+  /// in [state.notificationDisciplines] (or the user's onboarded
+  /// disciplines as a sensible default if the set is empty).
+  Future<void> setNotificationsEnabled(bool enabled) async {
+    if (enabled) {
+      // If the user has never picked notification disciplines, default
+      // to whatever they chose during onboarding so they don't have to
+      // reconfigure the same thing twice.
+      final defaults = state.notificationDisciplines.isEmpty
+          ? state.preferredDisciplines
+          : state.notificationDisciplines;
+      await _update(state.copyWith(
+        notificationsEnabled: true,
+        notificationDisciplines: defaults,
+      ));
+      await notifications?.init(consentGranted: true);
+      await notifications?.setTopics(
+        defaults.map(topicForDiscipline).toSet(),
+      );
+    } else {
+      await _update(state.copyWith(
+        notificationsEnabled: false,
+        notificationDisciplines: const {},
+      ));
+      await notifications?.revokeConsent();
+    }
+  }
+
+  /// Toggle a single discipline subscription. The master switch must be
+  /// on; if off this method is a no-op (UI guards this anyway).
+  Future<void> toggleNotificationDiscipline(String discipline) async {
+    if (!state.notificationsEnabled) return;
+    final next = Set<String>.from(state.notificationDisciplines);
+    if (next.contains(discipline)) {
+      next.remove(discipline);
+    } else {
+      next.add(discipline);
+    }
+    await _update(state.copyWith(notificationDisciplines: next));
+    await notifications?.setTopics(next.map(topicForDiscipline).toSet());
+  }
 }

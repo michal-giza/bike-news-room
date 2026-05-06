@@ -28,6 +28,19 @@ dependencies:
   # on web via per-platform guards in the service layer.
   google_mobile_ads: ^5.3.1
   app_tracking_transparency: ^2.0.6+1
+  # ── News alerts (v1.1) ──
+  # Local notifications + background fetcher. Deliberately NOT FCM:
+  #   - no Firebase project to maintain, no APNs key drama on iOS,
+  #   - no per-message billing concern as the user base scales,
+  #   - zero third-party data flow → simpler Play Data Safety form.
+  # The background task hits our own /api/articles?since=… endpoint on
+  # the OS's schedule (workmanager: 15min cadence on Android, opportunistic
+  # on iOS via BGTaskScheduler) and surfaces new articles as local
+  # notifications via flutter_local_notifications. `permission_handler`
+  # covers the Android 13+ POST_NOTIFICATIONS runtime grant.
+  flutter_local_notifications: ^17.2.3
+  workmanager: ^0.9.0+3
+  permission_handler: ^11.3.1
 
 dev_dependencies:
   flutter_test:

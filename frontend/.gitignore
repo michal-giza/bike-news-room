@@ -46,6 +46,14 @@ android/app/upload-keystore.jks
 android/app/*.jks
 android/app/*.keystore
 
+# Firebase config — see docs/firebase-setup.md. The .json + .plist hold
+# project ids and API keys; while Firebase API keys are not strictly
+# secrets, we keep them out of the public repo so the listed app id is
+# tied to a single Firebase project we control.
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+**/firebase-adminsdk*.json
+
 # Android Studio will place build artifacts here
 /android/app/debug
 /android/app/profile

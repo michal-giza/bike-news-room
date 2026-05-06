@@ -137,6 +137,19 @@ class AppLocalizationsNl extends AppLocalizations {
   String get settingsLanguageSystem => 'Systeem';
 
   @override
+  String get settingsNotifications => 'Meldingen';
+
+  @override
+  String get settingsNotificationsTitle => 'Nieuwsmeldingen';
+
+  @override
+  String get settingsNotificationsDesc =>
+      'Stille on-device meldingen bij nieuwe artikelen uit gevolgde disciplines. Geen account, geen data verlaat je toestel.';
+
+  @override
+  String get settingsNotificationsTopicsLabel => 'DISCIPLINES';
+
+  @override
   String get settingsYourData => 'Jouw gegevens';
 
   @override

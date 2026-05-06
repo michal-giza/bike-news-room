@@ -445,17 +445,14 @@ class _OnboardingPageState extends State<OnboardingPage> {
     } catch (e) {
       debugPrint('Onboarding: ad service init failed: $e');
     }
-    // When Firebase is added later, re-enable Analytics + Crashlytics here:
-    //   await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(true);
-    //   await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
-    //   final attGranted = !Platform.isIOS ||
-    //       (await getIt<ConsentService>().isAttGranted());
-    //   await FirebaseAnalytics.instance.setConsent(
-    //     analyticsStorageConsentGranted: true,
-    //     adStorageConsentGranted: attGranted,
-    //     adUserDataConsentGranted: attGranted,
-    //     adPersonalizationSignalsConsentGranted: attGranted,
-    //   );
+    // FCM is intentionally NOT initialized here. Push notifications
+    // have their own opt-in toggle in Settings, gated by the same
+    // four-layer consent pattern but separate from the ad consent —
+    // a user who declined ad personalisation may still want race-day
+    // push notifications, and vice versa. The FCM init runs at app
+    // boot via main.dart::_initPostConsentServices, reading the
+    // notificationsEnabled pref. The Settings toggle drives mutation
+    // through PreferencesCubit, which calls FcmService directly.
   }
 }
 

@@ -136,6 +136,19 @@ class AppLocalizationsPl extends AppLocalizations {
   String get settingsLanguageSystem => 'Systemowy';
 
   @override
+  String get settingsNotifications => 'Powiadomienia';
+
+  @override
+  String get settingsNotificationsTitle => 'Alerty informacyjne';
+
+  @override
+  String get settingsNotificationsDesc =>
+      'Ciche powiadomienia z urządzenia, gdy pojawią się nowe artykuły z obserwowanych dyscyplin. Bez konta, bez wysyłania danych.';
+
+  @override
+  String get settingsNotificationsTopicsLabel => 'DYSCYPLINY';
+
+  @override
   String get settingsYourData => 'Twoje dane';
 
   @override

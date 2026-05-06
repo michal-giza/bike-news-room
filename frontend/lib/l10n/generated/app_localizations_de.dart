@@ -138,6 +138,19 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsLanguageSystem => 'System';
 
   @override
+  String get settingsNotifications => 'Benachrichtigungen';
+
+  @override
+  String get settingsNotificationsTitle => 'Newsalarme';
+
+  @override
+  String get settingsNotificationsDesc =>
+      'Stille Geräte-Benachrichtigungen, sobald neue Artikel aus deinen Disziplinen eintreffen. Kein Konto, keine Daten verlassen dein Telefon.';
+
+  @override
+  String get settingsNotificationsTopicsLabel => 'DISZIPLINEN';
+
+  @override
   String get settingsYourData => 'Deine Daten';
 
   @override

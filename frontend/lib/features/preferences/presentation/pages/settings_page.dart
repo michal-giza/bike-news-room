@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/notifications/notifications_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/theme/tokens.dart';
@@ -85,6 +86,43 @@ class SettingsPage extends StatelessWidget {
                 activeThumbColor: BnrColors.accent,
                 onChanged: cubit.setReducedMotion,
               ),
+              const Divider(height: BnrSpacing.s8),
+              _SectionHeader(l.settingsNotifications),
+              SwitchListTile(
+                key: const ValueKey('settingsNotificationsToggle'),
+                contentPadding: EdgeInsets.zero,
+                title: Text(
+                  l.settingsNotificationsTitle,
+                  style: AppTheme.sans(size: 15, color: ext.fg0),
+                ),
+                subtitle: Text(
+                  l.settingsNotificationsDesc,
+                  style: AppTheme.sans(size: 13, color: ext.fg2),
+                ),
+                value: prefs.notificationsEnabled,
+                activeThumbColor: BnrColors.accent,
+                onChanged: cubit.setNotificationsEnabled,
+              ),
+              if (prefs.notificationsEnabled) ...[
+                const SizedBox(height: BnrSpacing.s2),
+                Text(
+                  l.settingsNotificationsTopicsLabel,
+                  style: AppTheme.mono(
+                    size: 11,
+                    color: ext.fg2,
+                    letterSpacing: 0.06,
+                  ),
+                ),
+                const SizedBox(height: BnrSpacing.s2),
+                ...kSupportedNotificationDisciplines.map(
+                  (id) => _DisciplineToggle(
+                    discipline: id,
+                    enabled: prefs.notificationDisciplines.contains(id),
+                    onTap: () =>
+                        cubit.toggleNotificationDiscipline(id),
+                  ),
+                ),
+              ],
               const Divider(height: BnrSpacing.s8),
               _SectionHeader(l.settingsYourData),
               _ActionTile(
@@ -270,6 +308,69 @@ class _ActionTile extends StatelessWidget {
             ),
       trailing: Icon(Icons.chevron_right, color: ext.fg2),
       onTap: onTap,
+    );
+  }
+}
+
+/// Tap-to-toggle row for a single notification topic. The colour swatch
+/// reuses the discipline-color palette from [BnrColors] so the row reads
+/// like a chip in the feed sidebar — same visual language across screens.
+class _DisciplineToggle extends StatelessWidget {
+  final String discipline;
+  final bool enabled;
+  final VoidCallback onTap;
+
+  const _DisciplineToggle({
+    required this.discipline,
+    required this.enabled,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final ext = context.bnr;
+    final color = BnrColors.disciplineColor(discipline);
+    final label = AppLocalizations.of(context);
+    final displayLabel = switch (discipline) {
+      'road' => label.disciplineRoad,
+      'mtb' => label.disciplineMtb,
+      'gravel' => label.disciplineGravel,
+      'track' => label.disciplineTrack,
+      'cx' => label.disciplineCx,
+      'bmx' => label.disciplineBmx,
+      _ => discipline,
+    };
+    return InkWell(
+      key: ValueKey('settingsNotifDiscipline_$discipline'),
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Row(
+          children: [
+            Container(
+              width: 12,
+              height: 12,
+              decoration: BoxDecoration(
+                color: color,
+                shape: BoxShape.rectangle,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(width: BnrSpacing.s3),
+            Expanded(
+              child: Text(
+                displayLabel,
+                style: AppTheme.sans(size: 14, color: ext.fg0),
+              ),
+            ),
+            Icon(
+              enabled ? Icons.check_circle : Icons.radio_button_unchecked,
+              color: enabled ? color : ext.fg3,
+              size: 22,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

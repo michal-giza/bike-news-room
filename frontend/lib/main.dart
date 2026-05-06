@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'core/ads/ad_service.dart';
 import 'core/di/injection.dart';
+import 'core/notifications/notifications_service.dart';
 import 'l10n/generated/app_localizations.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_extensions.dart';
@@ -73,7 +74,28 @@ Future<void> _initPostConsentServices() async {
   } catch (e) {
     if (kDebugMode) debugPrint('Post-consent ad init failed: $e');
   }
-  // When Firebase is added, re-enable Analytics + Crashlytics here too:
+  // News alerts are gated by a SEPARATE opt-in in Settings, independent
+  // of UMP consent. We surface the toggle to the user; until they flip
+  // it on, this call schedules nothing. The flag lives in
+  // shared_preferences so it persists across reboots; the bg poller
+  // re-registers on every cold launch.
+  try {
+    final prefs = getIt<PreferencesRepository>().load();
+    await getIt<INotificationsService>().init(
+      consentGranted: prefs.notificationsEnabled,
+    );
+    if (prefs.notificationsEnabled) {
+      await getIt<INotificationsService>().setTopics(
+        prefs.notificationDisciplines.map(topicForDiscipline).toSet(),
+      );
+    }
+  } catch (e) {
+    if (kDebugMode) {
+      debugPrint('Post-consent notifications init failed: $e');
+    }
+  }
+  // When Firebase Analytics + Crashlytics get wired (separate PR), the
+  // consent block from the original four-layer skill goes here:
   //   await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(true);
   //   await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
   //   final attGranted = !Platform.isIOS || await getIt<ConsentService>().isAttGranted();
@@ -95,7 +117,10 @@ class BikeNewsRoomApp extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider<PreferencesCubit>(
-          create: (_) => PreferencesCubit(getIt<PreferencesRepository>()),
+          create: (_) => PreferencesCubit(
+            getIt<PreferencesRepository>(),
+            notifications: getIt<INotificationsService>(),
+          ),
         ),
         BlocProvider<WatchlistCubit>(
           create: (_) => WatchlistCubit(getIt<WatchlistRepository>())..load(),

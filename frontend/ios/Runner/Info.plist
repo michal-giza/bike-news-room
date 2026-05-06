@@ -332,5 +332,24 @@
 		</array>
 		<key>UIStatusBarHidden</key>
 		<false/>
+		<!-- News alerts (v1.1) — workmanager schedules a periodic fetch
+		     via BGTaskScheduler. iOS requires every task identifier to
+		     be declared up-front in this list AND the matching
+		     UIBackgroundModes flags below. Identifier matches
+		     `kArticlePollerTaskName` in lib/core/notifications/. -->
+		<key>BGTaskSchedulerPermittedIdentifiers</key>
+		<array>
+			<string>bnr.notifications.articlePoller</string>
+			<!-- The workmanager plugin's own bookkeeping identifiers
+			     must also be added here when iOS ships. The exact
+			     strings depend on the plugin version installed; see
+			     pub.dev/packages/workmanager_apple for the matching
+			     list and add them as part of the iOS launch checklist. -->
+		</array>
+		<key>UIBackgroundModes</key>
+		<array>
+			<string>fetch</string>
+			<string>processing</string>
+		</array>
 	</dict>
 </plist>

@@ -19,6 +19,8 @@ class PreferencesRepository {
   static const _kOnboarding = 'pref.onboardingComplete';
   static const _kLastSeen = 'pref.lastSeenArticleId';
   static const _kLocale = 'pref.localeCode';
+  static const _kNotifEnabled = 'pref.notifications.enabled';
+  static const _kNotifDisciplines = 'pref.notifications.disciplines';
 
   UserPreferences load() {
     return UserPreferences(
@@ -49,6 +51,9 @@ class PreferencesRepository {
       onboardingComplete: prefs.getBool(_kOnboarding) ?? false,
       lastSeenArticleId: prefs.getInt(_kLastSeen),
       localeCode: prefs.getString(_kLocale),
+      notificationsEnabled: prefs.getBool(_kNotifEnabled) ?? false,
+      notificationDisciplines:
+          (prefs.getStringList(_kNotifDisciplines) ?? const []).toSet(),
     );
   }
 
@@ -76,5 +81,10 @@ class PreferencesRepository {
     } else {
       await prefs.setString(_kLocale, loc);
     }
+    await prefs.setBool(_kNotifEnabled, p.notificationsEnabled);
+    await prefs.setStringList(
+      _kNotifDisciplines,
+      p.notificationDisciplines.toList(),
+    );
   }
 }

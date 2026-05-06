@@ -136,6 +136,19 @@ class AppLocalizationsIt extends AppLocalizations {
   String get settingsLanguageSystem => 'Sistema';
 
   @override
+  String get settingsNotifications => 'Notifiche';
+
+  @override
+  String get settingsNotificationsTitle => 'Avvisi notizie';
+
+  @override
+  String get settingsNotificationsDesc =>
+      'Notifiche locali discrete quando arrivano nuovi articoli sulle discipline che segui. Niente account, niente dati trasmessi.';
+
+  @override
+  String get settingsNotificationsTopicsLabel => 'DISCIPLINE';
+
+  @override
   String get settingsYourData => 'I tuoi dati';
 
   @override

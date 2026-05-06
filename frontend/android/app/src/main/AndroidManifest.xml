@@ -6,6 +6,11 @@
          user can revoke via system settings. Without this declaration the
          AdMob SDK logs a warning at startup and falls back to non-personalized. -->
     <uses-permission android:name="com.google.android.gms.permission.AD_ID"/>
+    <!-- Android 13+ runtime permission for system-tray notifications.
+         Requested by FcmService.init() via permission_handler only when
+         the user enables push in Settings. Pre-13 devices grant this at
+         install time. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
     <application
         android:label="Bike News Room"

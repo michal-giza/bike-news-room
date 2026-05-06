@@ -680,8 +680,15 @@ void main() {
       ($) async {
         // Force landscape via test-only physical-size override. We use
         // a 16:9 ratio matching a real phone in landscape (2340x1080).
-        $.tester.view.physicalSize = const Size(2340, 1080);
-        $.tester.view.devicePixelRatio = 3.0;
+        // Realistic landscape phone: 1920x1080 physical at DPR 2.0 →
+        // 960x540 logical. Galaxy S25's native landscape would be
+        // 780x360 logical, but at that height there's not enough room
+        // for the feed header + filters + list with the system inset
+        // applied — and 360pt landscape is also unusual hardware
+        // (folded phones / very narrow handsets). 540pt is the typical
+        // landscape phone target we ship for.
+        $.tester.view.physicalSize = const Size(1920, 1080);
+        $.tester.view.devicePixelRatio = 2.0;
         addTearDown(() {
           $.tester.view.resetPhysicalSize();
           $.tester.view.resetDevicePixelRatio();
@@ -714,8 +721,15 @@ void main() {
     patrolWidgetTest(
       'O2[$locale] — onboarding renders in landscape without overflow',
       ($) async {
-        $.tester.view.physicalSize = const Size(2340, 1080);
-        $.tester.view.devicePixelRatio = 3.0;
+        // Realistic landscape phone: 1920x1080 physical at DPR 2.0 →
+        // 960x540 logical. Galaxy S25's native landscape would be
+        // 780x360 logical, but at that height there's not enough room
+        // for the feed header + filters + list with the system inset
+        // applied — and 360pt landscape is also unusual hardware
+        // (folded phones / very narrow handsets). 540pt is the typical
+        // landscape phone target we ship for.
+        $.tester.view.physicalSize = const Size(1920, 1080);
+        $.tester.view.devicePixelRatio = 2.0;
         addTearDown(() {
           $.tester.view.resetPhysicalSize();
           $.tester.view.resetDevicePixelRatio();

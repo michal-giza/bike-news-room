@@ -33,6 +33,10 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        // Core library desugaring — required by flutter_local_notifications
+        // (it uses java.time on minSdk < 26). The desugar lib is added
+        // as a dependency below; see notifications.md for the wiring.
+        isCoreLibraryDesugaringEnabled = true
     }
 
     kotlinOptions {
@@ -89,6 +93,10 @@ android {
 
 dependencies {
     androidTestUtil("androidx.test:orchestrator:1.5.1")
+    // Backports java.time + a chunk of java.util for our minSdk window
+    // so flutter_local_notifications can target API 21+. Required when
+    // `isCoreLibraryDesugaringEnabled = true`.
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }
 
 flutter {

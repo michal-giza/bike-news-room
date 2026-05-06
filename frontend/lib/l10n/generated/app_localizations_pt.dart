@@ -136,6 +136,19 @@ class AppLocalizationsPt extends AppLocalizations {
   String get settingsLanguageSystem => 'Sistema';
 
   @override
+  String get settingsNotifications => 'Notificações';
+
+  @override
+  String get settingsNotificationsTitle => 'Alertas de notícias';
+
+  @override
+  String get settingsNotificationsDesc =>
+      'Notificações discretas no dispositivo quando há novos artigos das disciplinas que segues. Sem conta, sem dados enviados.';
+
+  @override
+  String get settingsNotificationsTopicsLabel => 'DISCIPLINAS';
+
+  @override
   String get settingsYourData => 'Os seus dados';
 
   @override

@@ -135,6 +135,19 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsLanguageSystem => 'システム';
 
   @override
+  String get settingsNotifications => '通知';
+
+  @override
+  String get settingsNotificationsTitle => 'ニュースアラート';
+
+  @override
+  String get settingsNotificationsDesc =>
+      'フォロー中のディシプリンに新着記事が入ると、端末内で静かにお知らせします。アカウント不要、データ送信なし。';
+
+  @override
+  String get settingsNotificationsTopicsLabel => 'ディシプリン';
+
+  @override
   String get settingsYourData => 'あなたのデータ';
 
   @override

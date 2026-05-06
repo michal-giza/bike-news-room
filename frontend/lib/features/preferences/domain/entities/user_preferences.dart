@@ -29,6 +29,16 @@ class UserPreferences extends Equatable {
   /// "follow the device locale" — the standard Flutter behaviour.
   final String? localeCode;
 
+  /// Master switch for push notifications. Default `false` so the user
+  /// must explicitly opt in via Settings — Play's Data Safety form
+  /// requires opt-in for any data sent to a third-party SDK.
+  final bool notificationsEnabled;
+
+  /// Discipline ids the user wants to receive notifications for. Empty
+  /// when the master switch is off. The FcmService reconciles this set
+  /// with the live FCM topic subscriptions on every change.
+  final Set<String> notificationDisciplines;
+
   const UserPreferences({
     this.themeMode = AppThemeMode.dark,
     this.persona = PersonaScale.younger,
@@ -41,6 +51,8 @@ class UserPreferences extends Equatable {
     this.onboardingComplete = false,
     this.lastSeenArticleId,
     this.localeCode,
+    this.notificationsEnabled = false,
+    this.notificationDisciplines = const {},
   });
 
   UserPreferences copyWith({
@@ -55,6 +67,8 @@ class UserPreferences extends Equatable {
     bool? onboardingComplete,
     Object? lastSeenArticleId = _sentinel,
     Object? localeCode = _sentinel,
+    bool? notificationsEnabled,
+    Set<String>? notificationDisciplines,
   }) =>
       UserPreferences(
         themeMode: themeMode ?? this.themeMode,
@@ -73,6 +87,10 @@ class UserPreferences extends Equatable {
         localeCode: identical(localeCode, _sentinel)
             ? this.localeCode
             : localeCode as String?,
+        notificationsEnabled:
+            notificationsEnabled ?? this.notificationsEnabled,
+        notificationDisciplines:
+            notificationDisciplines ?? this.notificationDisciplines,
       );
 
   @override
@@ -88,5 +106,7 @@ class UserPreferences extends Equatable {
         onboardingComplete,
         lastSeenArticleId,
         localeCode,
+        notificationsEnabled,
+        notificationDisciplines,
       ];
 }

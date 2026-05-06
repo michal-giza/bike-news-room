@@ -340,6 +340,30 @@ abstract class AppLocalizations {
   /// **'System'**
   String get settingsLanguageSystem;
 
+  /// No description provided for @settingsNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get settingsNotifications;
+
+  /// No description provided for @settingsNotificationsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'News alerts'**
+  String get settingsNotificationsTitle;
+
+  /// No description provided for @settingsNotificationsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Quiet on-device notifications when new stories land for the disciplines you follow. No account, no data leaves your phone.'**
+  String get settingsNotificationsDesc;
+
+  /// No description provided for @settingsNotificationsTopicsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'DISCIPLINES'**
+  String get settingsNotificationsTopicsLabel;
+
   /// No description provided for @settingsYourData.
   ///
   /// In en, this message translates to:

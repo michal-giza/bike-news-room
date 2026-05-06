@@ -1,9 +1,15 @@
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:flutter/foundation.dart';
+
 import '../../features/feed/data/datasources/article_snapshot_store.dart';
 import '../ads/ad_service.dart';
 import '../ads/consent_service.dart';
+import '../notifications/notifications_service.dart';
+import '../notifications/providers/local_notifications_provider.dart';
+import '../notifications/providers/noop_notifications_provider.dart';
+import '../notifications/providers/notifications_provider.dart';
 
 import '../../features/calendar/data/datasources/calendar_remote_data_source.dart';
 import '../../features/calendar/data/repositories/calendar_repository_impl.dart';
@@ -138,5 +144,34 @@ Future<void> configureDependencies() async {
   }
   if (!getIt.isRegistered<ConsentService>()) {
     getIt.registerSingleton<ConsentService>(ConsentService());
+  }
+
+  // ── News alerts (local-notifications + bg fetcher) ──────────────
+  // Two-layer registration:
+  //   1. NotificationsProvider — the swappable transport. Defaults to
+  //      LocalNotificationsProvider on mobile; NoopNotificationsProvider
+  //      everywhere else (web/desktop/tests).
+  //   2. INotificationsService — composes the provider, owns consent
+  //      gating + topic state. Always the same `NotificationsService`
+  //      class regardless of transport, so call-sites + tests don't
+  //      change when we swap providers.
+  //
+  // To wire FCM later: implement `FcmNotificationsProvider` against the
+  // same NotificationsProvider interface and register it here under
+  // the same DI line. Nothing else in the app needs to know.
+  if (!getIt.isRegistered<NotificationsProvider>()) {
+    final isMobile = !kIsWeb &&
+        (defaultTargetPlatform == TargetPlatform.android ||
+            defaultTargetPlatform == TargetPlatform.iOS);
+    getIt.registerSingleton<NotificationsProvider>(
+      isMobile
+          ? LocalNotificationsProvider()
+          : NoopNotificationsProvider(),
+    );
+  }
+  if (!getIt.isRegistered<INotificationsService>()) {
+    getIt.registerSingleton<INotificationsService>(
+      NotificationsService(getIt<NotificationsProvider>()),
+    );
   }
 }

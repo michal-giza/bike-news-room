@@ -270,13 +270,36 @@ impl ArticleRepository for SqliteRepository {
         let mut where_clauses: Vec<&'static str> = vec!["a.is_duplicate = 0"];
         let mut binds: Vec<String> = Vec::new();
 
-        if let Some(ref region) = q.region {
-            where_clauses.push("a.region = ?");
-            binds.push(region.clone());
-        }
-        if let Some(ref discipline) = q.discipline {
+        // Multi-value filters take precedence over their single-value
+        // siblings — the bg-poller uses `disciplines=` to fetch all of
+        // a user's subscribed disciplines in one call. We build the IN
+        // clause dynamically with bound `?` placeholders so SQLite can
+        // still use its column indices and so it's safe against SQLi.
+        if !q.disciplines.is_empty() {
+            let placeholders =
+                std::iter::repeat("?").take(q.disciplines.len()).collect::<Vec<_>>().join(",");
+            where_clauses.push(Box::leak(
+                format!("a.discipline IN ({placeholders})").into_boxed_str(),
+            ));
+            for d in &q.disciplines {
+                binds.push(d.clone());
+            }
+        } else if let Some(ref discipline) = q.discipline {
             where_clauses.push("a.discipline = ?");
             binds.push(discipline.clone());
+        }
+        if !q.regions.is_empty() {
+            let placeholders =
+                std::iter::repeat("?").take(q.regions.len()).collect::<Vec<_>>().join(",");
+            where_clauses.push(Box::leak(
+                format!("a.region IN ({placeholders})").into_boxed_str(),
+            ));
+            for r in &q.regions {
+                binds.push(r.clone());
+            }
+        } else if let Some(ref region) = q.region {
+            where_clauses.push("a.region = ?");
+            binds.push(region.clone());
         }
         if let Some(ref category) = q.category {
             where_clauses.push("a.category = ?");

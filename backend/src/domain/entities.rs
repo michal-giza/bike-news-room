@@ -208,6 +208,15 @@ pub struct ArticleQuery {
     /// for that race slug. Drives the "all articles linked to Tour de
     /// France" view in the Following tab.
     pub race_slug: Option<String>,
+    /// Multi-discipline filter — when non-empty, articles match if any
+    /// of the listed disciplines match. Drives the bg-poller's single
+    /// fetch for all the user's subscribed disciplines (we want one
+    /// request per OS-fire on iOS, where firings are precious).
+    /// Single-value `discipline` is the legacy field; if both are set
+    /// `disciplines` wins.
+    pub disciplines: Vec<String>,
+    /// Multi-region filter. Same rationale as `disciplines`.
+    pub regions: Vec<String>,
 }
 
 #[cfg(test)]

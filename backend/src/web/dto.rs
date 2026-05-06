@@ -86,6 +86,13 @@ pub struct ArticleQueryParams {
     /// `race_articles` link table so only articles tagged for that race
     /// are returned.
     pub race_slug: Option<String>,
+    /// Comma-separated discipline list. The bg-poller subscribes to N
+    /// disciplines and needs to fetch them in one call (cap on iOS is
+    /// "a few" requests per OS-decided fire). Single `discipline=` still
+    /// works for backwards compat; if both are set `disciplines` wins.
+    pub disciplines: Option<String>,
+    /// Comma-separated region list. Same rationale as `disciplines`.
+    pub regions: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]

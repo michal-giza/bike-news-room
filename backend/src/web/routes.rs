@@ -102,6 +102,23 @@ async fn list_articles(
         .map(|s| s.chars().take(100).collect::<String>())
         .filter(|s| !s.trim().is_empty());
 
+    // Parse comma-separated multi-value filters. Cap the list length
+    // (16 is plenty: 6 disciplines + 4 regions in the catalogue) so a
+    // hostile caller can't inflate the IN-clause to thousands of entries.
+    fn parse_csv(input: Option<String>, max: usize) -> Vec<String> {
+        input
+            .map(|s| {
+                s.split(',')
+                    .map(|t| t.trim().to_string())
+                    .filter(|t| !t.is_empty() && t.len() <= 32)
+                    .take(max)
+                    .collect()
+            })
+            .unwrap_or_default()
+    }
+    let disciplines = parse_csv(params.disciplines, 16);
+    let regions = parse_csv(params.regions, 16);
+
     let query = ArticleQuery {
         page,
         limit,
@@ -115,6 +132,8 @@ async fn list_articles(
             .race_slug
             .map(|s| s.chars().take(64).collect::<String>())
             .filter(|s| !s.trim().is_empty()),
+        disciplines,
+        regions,
     };
 
     let (articles, total) = state.queries.list_articles(&query).await?;

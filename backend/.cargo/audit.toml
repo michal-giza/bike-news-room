@@ -1,0 +1,25 @@
+# cargo-audit allow-list. Each entry must explain WHY the advisory is
+# safe to ignore — never blanket-allow.
+# Re-audit on every dep bump:  cargo install cargo-audit && cargo audit
+
+[advisories]
+ignore = [
+    # rsa 0.9.10 — Marvin timing sidechannel via MySQL handshake.
+    # We use sqlx with the `sqlite` feature only, never MySQL. The vuln
+    # ships transitively because sqlx-macros pulls every backend's
+    # macro at compile time, but the runtime path that exploits the
+    # timing channel (PKCS#1 v1.5 decryption during MySQL TLS handshake)
+    # is never invoked from our binary. No upstream fix exists; sqlx
+    # 0.9 is expected to address the macro-bloat issue.
+    # https://rustsec.org/advisories/RUSTSEC-2023-0071
+    "RUSTSEC-2023-0071",
+
+    # fxhash 0.2.1 — unmaintained warning (no CVE). Pulled in by
+    # `scraper` via `selectors`. We use scraper for the HTML extractor
+    # in src/infrastructure/html_crawler.rs; fxhash is the hashing
+    # backend for an internal HashMap, with zero security implications.
+    # Tracked: replace scraper with html5ever-direct if a maintained
+    # alternative emerges.
+    # https://rustsec.org/advisories/RUSTSEC-2025-0057
+    "RUSTSEC-2025-0057",
+]

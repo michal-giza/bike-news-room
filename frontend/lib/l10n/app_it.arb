@@ -144,8 +144,8 @@
   "aboutB2": "Ogni 30 minuti il backend recupera le fonti configurate, deduplica le notizie quasi identiche, le classifica per regione e disciplina e le inserisce nel feed che stai leggendo. Chiunque può aggiungere una fonte tramite il modulo \"Aggiungi una fonte\", e mostriamo automaticamente i domini citati spesso negli articoli per la revisione.",
   "aboutH3": "Niente paywall, niente giochetti d'algoritmo",
   "aboutB3": "Non ordiniamo per engagement, non ti tracciamo tra i siti e non vendiamo nulla. L'ordine è cronologico inverso, con i filtri per regione e disciplina che controlli tu. Se una notizia è qui, è perché una testata ciclistica l'ha effettivamente pubblicata.",
-  "aboutH4": "Open source",
-  "aboutB4": "Tutto il codice sorgente (backend Rust + frontend Flutter Web) è su GitHub. Trovato un bug, vuoi aggiungere una fonte o fare il fork per un altro sport? Le pull request sono benvenute.",
+  "aboutH4": "Progetto indipendente",
+  "aboutB4": "Bike News Room è sviluppato in modo indipendente. Niente accordi editoriali — ogni articolo arriva da feed RSS pubblici che aggreghiamo in modo trasparente.",
 
   "privacyTitle": "Informativa sulla privacy",
   "privacyH1": "Cosa raccogliamo",
@@ -161,7 +161,7 @@
 
   "termsTitle": "Termini di servizio",
   "termsH1": "Uso del servizio",
-  "termsB1": "Bike News Room è un aggregatore di notizie gratuito e pubblico. Puoi usarlo per la lettura personale e non commerciale. Non provare a fare scraping ad alta frequenza dell'API — c'è un rate limit per IP e ti restituiremo un 429 con piacere. Se hai bisogno di accesso massivo, il codice è aperto; gestisci la tua istanza.",
+  "termsB1": "Bike News Room è un aggregatore di notizie gratuito per uso personale. Non provare a fare scraping dell'API ad alto volume — c'è un rate-limit per IP e risponderemo con 429. L'uso massivo o commerciale dell'API richiede autorizzazione scritta.",
   "termsH2": "Contenuto degli articoli",
   "termsB2": "Titoli, estratti e link mostrati nel feed provengono da feed RSS pubblici e pagine di testate ciclistiche. Il traffico dei clic va all'editore originale. Non riproduciamo articoli interi — leggi sempre sul sito di origine per supportare chi fa il giornalismo.",
   "termsH3": "Nessuna garanzia",

@@ -167,8 +167,8 @@
   "aboutB2": "Every 30 minutes our backend pulls from the configured sources, deduplicates near-identical stories, classifies by region and discipline, and pushes them into the feed you're reading. Sources can be added by anyone via the \"Add a source\" form, and we automatically surface candidate domains we see being cited often in articles for review.",
   "aboutH3": "No paywall, no algorithm games",
   "aboutB3": "We don't rank by engagement, we don't track you between sites, and we don't sell anything. The order is reverse-chronological with regional and discipline filters you control. If a story is here, it's because a cycling publication actually published it.",
-  "aboutH4": "Open source",
-  "aboutB4": "The full source code (Rust backend + Flutter Web frontend) is on GitHub. Found a bug, want a new source added, or want to fork it for another sport? Pull requests welcome.",
+  "aboutH4": "Independent project",
+  "aboutB4": "Bike News Room is built independently. No publisher partnerships, no editorial deals — every article comes from public RSS feeds we aggregate transparently.",
 
   "privacyTitle": "Privacy Policy",
   "privacyH1": "What we collect",
@@ -184,7 +184,7 @@
 
   "termsTitle": "Terms of Service",
   "termsH1": "Use of the service",
-  "termsB1": "Bike News Room is a free, public news aggregator. You may use it for personal, non-commercial reading. Don't try to scrape the API at high volume — there's a per-IP rate limit and we'll happily 429 you. If you need bulk access, the source code is open; run your own instance.",
+  "termsB1": "Bike News Room is a free news aggregator for personal reading. Don't try to scrape the API at high volume — there's a per-IP rate limit and we'll happily 429 you. Bulk or commercial use of the API requires written permission.",
   "termsH2": "Article content",
   "termsB2": "Headlines, snippets, and links displayed in the feed are sourced from publicly available RSS feeds and pages of cycling publications. Click-through traffic is sent to the original publisher. We don't reproduce full articles — always read on the source site to support the people doing the reporting.",
   "termsH3": "No warranty",

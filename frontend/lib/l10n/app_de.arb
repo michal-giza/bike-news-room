@@ -144,8 +144,8 @@
   "aboutB2": "Alle 30 Minuten zieht unser Backend von den konfigurierten Quellen, dedupliziert nahezu identische Geschichten, klassifiziert nach Region und Disziplin und schiebt sie in den Feed, den du gerade liest. Quellen kann jeder über das Formular „Quelle hinzufügen“ einreichen, und wir zeigen automatisch Domains an, die häufig in Artikeln zitiert werden.",
   "aboutH3": "Keine Paywall, keine Algorithmus-Spielchen",
   "aboutB3": "Wir sortieren nicht nach Engagement, tracken dich nicht zwischen Seiten und verkaufen nichts. Die Reihenfolge ist umgekehrt chronologisch, mit Region- und Disziplin-Filtern, die du steuerst. Wenn eine Geschichte hier auftaucht, dann weil eine Radsport-Publikation sie tatsächlich veröffentlicht hat.",
-  "aboutH4": "Open Source",
-  "aboutB4": "Der gesamte Quellcode (Rust-Backend + Flutter-Web-Frontend) ist auf GitHub. Bug gefunden, neue Quelle hinzuzufügen oder Fork für einen anderen Sport? Pull Requests willkommen.",
+  "aboutH4": "Unabhängiges Projekt",
+  "aboutB4": "Bike News Room entsteht unabhängig. Keine Verlagsdeals, keine redaktionellen Absprachen — jeder Artikel stammt aus öffentlichen RSS-Feeds, die wir transparent aggregieren.",
 
   "privacyTitle": "Datenschutzerklärung",
   "privacyH1": "Was wir erfassen",
@@ -161,7 +161,7 @@
 
   "termsTitle": "Nutzungsbedingungen",
   "termsH1": "Nutzung des Dienstes",
-  "termsB1": "Bike News Room ist ein kostenloser, öffentlicher News-Aggregator. Du darfst ihn für persönliche, nicht-kommerzielle Lektüre nutzen. Versuche nicht, die API mit hohem Volumen zu scrapen — es gibt ein Rate-Limit pro IP, und wir antworten gern mit 429. Bei Bedarf an Massenzugriff: der Code ist offen; betreibe deine eigene Instanz.",
+  "termsB1": "Bike News Room ist ein kostenloser Newsaggregator für den persönlichen Gebrauch. Versuche bitte nicht, die API in großen Mengen zu scrapen — es gibt ein Pro-IP-Rate-Limit und wir antworten gerne mit 429. Massen- oder kommerzielle Nutzung der API erfordert schriftliche Genehmigung.",
   "termsH2": "Artikelinhalte",
   "termsB2": "Schlagzeilen, Auszüge und Links im Feed stammen aus öffentlich zugänglichen RSS-Feeds und Seiten von Radsport-Publikationen. Der Klick-Traffic geht an den ursprünglichen Verlag. Wir reproduzieren keine vollständigen Artikel — lies immer auf der Quellseite, um die Menschen zu unterstützen, die berichten.",
   "termsH3": "Keine Garantie",

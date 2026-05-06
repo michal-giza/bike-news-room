@@ -144,8 +144,8 @@
   "aboutB2": "Elke 30 minuten haalt onze backend de geconfigureerde bronnen binnen, ontdubbelt bijna identieke verhalen, classificeert ze per regio en discipline en stopt ze in de feed die je leest. Iedereen kan via het formulier \"Bron toevoegen\" een bron indienen, en we tonen automatisch domeinen die we vaak in artikelen geciteerd zien voor beoordeling.",
   "aboutH3": "Geen betaalmuur, geen algoritme-spelletjes",
   "aboutB3": "We rangschikken niet op engagement, volgen je niet tussen sites en verkopen niets. De volgorde is omgekeerd chronologisch, met regio- en disciplinefilters die jij beheert. Als een verhaal hier staat, is dat omdat een wielerpublicatie het daadwerkelijk heeft gepubliceerd.",
-  "aboutH4": "Open source",
-  "aboutB4": "De volledige broncode (Rust-backend + Flutter-Web-frontend) staat op GitHub. Bug gevonden, een bron toevoegen of forken voor een andere sport? Pull requests welkom.",
+  "aboutH4": "Onafhankelijk project",
+  "aboutB4": "Bike News Room wordt onafhankelijk gebouwd. Geen uitgeversdeals, geen redactionele afspraken — elk artikel komt uit publieke RSS-feeds die we transparant aggregeren.",
 
   "privacyTitle": "Privacybeleid",
   "privacyH1": "Wat we verzamelen",
@@ -161,7 +161,7 @@
 
   "termsTitle": "Servicevoorwaarden",
   "termsH1": "Gebruik van de dienst",
-  "termsB1": "Bike News Room is een gratis, openbare nieuwsaggregator. Je mag hem gebruiken voor persoonlijk, niet-commercieel lezen. Probeer niet de API in hoge frequentie te scrapen — er is een rate-limit per IP en we sturen je vrolijk een 429 terug. Heb je bulk toegang nodig: de code is open; draai je eigen instantie.",
+  "termsB1": "Bike News Room is een gratis nieuwsaggregator voor persoonlijk gebruik. Scrape de API niet in grote volumes — er is een limiet per IP en we sturen graag een 429. Bulk- of commercieel gebruik van de API vereist schriftelijke toestemming.",
   "termsH2": "Inhoud van artikelen",
   "termsB2": "Koppen, fragmenten en links in de feed komen uit openbaar beschikbare RSS-feeds en pagina's van wielerpublicaties. Klikverkeer gaat naar de oorspronkelijke uitgever. We reproduceren geen volledige artikelen — lees altijd op de bron om de mensen achter de berichtgeving te steunen.",
   "termsH3": "Geen garantie",

@@ -166,7 +166,7 @@ ranking boosts in their category. Template responses for the four
 common patterns:
 
 - **5★ no comment** → "Thanks for the install + rating. Anything you'd want us to add? msquaregiza@gmail.com."
-- **4★ minor gripe** → name the gripe, say when it's fixed, link the GitHub issue.
+- **4★ minor gripe** → name the gripe, say when it's fixed in the next release.
 - **3★ confused** → ask for the screen + Android version, offer to debug via email.
 - **1★ broken** → never argue. Acknowledge, ask for crash details, fix it, reply when shipped. If it's an unreasonable review, flag it via Play (rarely succeeds).
 
@@ -238,7 +238,7 @@ In priority order:
 1. **r/cycling AMA** when v1.1 push lands. Free, single highest
    organic-install spike for a cycling app. Title: "I built a free
    ad-supported cycling news aggregator with Polish + Spanish
-   coverage; AMA". Be honest about the AdMob, share the open-source
+   coverage; AMA". Be honest about the AdMob, share the install
    link.
 2. **Cyclingnews / Bikeradar / Cycling Weekly forum threads**.
    Old-school, but cyclists who read forums also install apps. One

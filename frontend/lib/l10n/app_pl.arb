@@ -144,8 +144,8 @@
   "aboutB2": "Co 30 minut nasz backend pobiera dane ze skonfigurowanych źródeł, usuwa duplikaty, klasyfikuje po regionie i dyscyplinie i wprowadza je do kanału, który czytasz. Każdy może dodać źródło przez formularz „Dodaj źródło”, a my automatycznie pokazujemy domeny często cytowane w artykułach do akceptacji.",
   "aboutH3": "Bez paywalla, bez algorytmu",
   "aboutB3": "Nie sortujemy po zaangażowaniu, nie śledzimy Cię między stronami i niczego nie sprzedajemy. Kolejność jest chronologiczna od najnowszych, z filtrami regionu i dyscypliny, które kontrolujesz Ty. Jeśli artykuł tu jest, to dlatego, że jakaś redakcja kolarska go opublikowała.",
-  "aboutH4": "Open source",
-  "aboutB4": "Cały kod źródłowy (backend w Rust + frontend Flutter Web) jest na GitHubie. Znalazłeś błąd, chcesz dodać nowe źródło albo zforkować projekt na inny sport? Pull requesty mile widziane.",
+  "aboutH4": "Projekt niezależny",
+  "aboutB4": "Bike News Room powstaje niezależnie. Bez umów z wydawcami, bez ustawek redakcyjnych — każdy artykuł pochodzi z publicznych kanałów RSS, które agregujemy w sposób przejrzysty.",
 
   "privacyTitle": "Polityka prywatności",
   "privacyH1": "Co zbieramy",
@@ -161,7 +161,7 @@
 
   "termsTitle": "Regulamin",
   "termsH1": "Korzystanie z usługi",
-  "termsB1": "Bike News Room to bezpłatny, publiczny agregator wiadomości. Możesz używać go do osobistego, niekomercyjnego czytania. Nie próbuj zbierać danych z API w dużym tempie — mamy limity per-IP i chętnie odpowiemy kodem 429. Jeśli potrzebujesz dostępu hurtowego, kod jest otwarty; uruchom własną instancję.",
+  "termsB1": "Bike News Room to darmowy agregator wiadomości do osobistego użytku. Nie próbuj scrapować API w dużych ilościach — obowiązuje limit zapytań na IP i zwrócimy 429. Użytkowanie hurtowe lub komercyjne wymaga pisemnej zgody.",
   "termsH2": "Treść artykułów",
   "termsB2": "Nagłówki, fragmenty i linki wyświetlane w kanale pochodzą z publicznych kanałów RSS i stron wydawnictw kolarskich. Ruch z kliknięć trafia do oryginalnego wydawcy. Nie reprodukujemy pełnych artykułów — czytaj zawsze na stronie źródłowej, aby wesprzeć ludzi, którzy je tworzą.",
   "termsH3": "Brak gwarancji",

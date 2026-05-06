@@ -144,8 +144,8 @@
   "aboutB2": "Toutes les 30 minutes, notre backend récupère les sources configurées, déduplique les articles quasi-identiques, les classe par région et discipline, puis les pousse dans le fil que vous lisez. N'importe qui peut ajouter une source via le formulaire « Ajouter une source », et nous remontons automatiquement les domaines fréquemment cités dans les articles pour examen.",
   "aboutH3": "Pas de paywall, pas de jeu d'algorithme",
   "aboutB3": "Nous ne classons pas par engagement, ne vous suivons pas entre les sites et ne vendons rien. L'ordre est anti-chronologique, avec des filtres région et discipline que vous contrôlez. Si un article est ici, c'est qu'une publication cycliste l'a réellement publié.",
-  "aboutH4": "Open source",
-  "aboutB4": "L'ensemble du code source (backend Rust + frontend Flutter Web) est sur GitHub. Bug trouvé, source à ajouter, fork pour un autre sport ? Les pull requests sont bienvenues.",
+  "aboutH4": "Projet indépendant",
+  "aboutB4": "Bike News Room est développé en toute indépendance. Aucun partenariat éditorial — chaque article vient de flux RSS publics que nous agrégeons de façon transparente.",
 
   "privacyTitle": "Politique de confidentialité",
   "privacyH1": "Ce que nous collectons",
@@ -161,7 +161,7 @@
 
   "termsTitle": "Conditions d'utilisation",
   "termsH1": "Utilisation du service",
-  "termsB1": "Bike News Room est un agrégateur d'actualités gratuit et public. Vous pouvez l'utiliser pour une lecture personnelle et non commerciale. N'essayez pas de scraper l'API à haute fréquence — il y a une limite par IP et nous renverrons volontiers un 429. Pour un accès massif, le code est ouvert ; déployez votre propre instance.",
+  "termsB1": "Bike News Room est un agrégateur d'actualités gratuit pour un usage personnel. Ne tentez pas de scraper l'API en masse — une limite par IP est en place et renverra 429. Tout usage en volume ou commercial de l'API requiert une autorisation écrite.",
   "termsH2": "Contenu des articles",
   "termsB2": "Les titres, extraits et liens affichés dans le fil proviennent de flux RSS publics et de pages de publications cyclistes. Le trafic des clics est envoyé à l'éditeur original. Nous ne reproduisons pas les articles entiers — lisez toujours sur le site source pour soutenir celles et ceux qui les rédigent.",
   "termsH3": "Aucune garantie",

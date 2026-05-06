@@ -144,8 +144,8 @@
   "aboutB2": "Cada 30 minutos nuestro backend extrae datos de las fuentes configuradas, deduplica historias casi idénticas, las clasifica por región y disciplina y las añade al feed que estás leyendo. Cualquiera puede añadir una fuente mediante el formulario «Añadir una fuente», y mostramos automáticamente los dominios que vemos citados con frecuencia para revisión.",
   "aboutH3": "Sin muros de pago, sin trampas algorítmicas",
   "aboutB3": "No ordenamos por engagement, no te seguimos entre sitios y no vendemos nada. El orden es cronológico inverso, con filtros por región y disciplina que tú controlas. Si una historia está aquí es porque una publicación ciclista la ha publicado.",
-  "aboutH4": "Código abierto",
-  "aboutB4": "Todo el código fuente (backend en Rust + frontend Flutter Web) está en GitHub. ¿Has encontrado un error, quieres añadir una fuente o forkearlo para otro deporte? Pull requests bienvenidos.",
+  "aboutH4": "Proyecto independiente",
+  "aboutB4": "Bike News Room se desarrolla de forma independiente. Sin acuerdos con editoriales, sin pactos editoriales — cada artículo proviene de fuentes RSS públicas que agregamos con transparencia.",
 
   "privacyTitle": "Política de privacidad",
   "privacyH1": "Qué recopilamos",
@@ -161,7 +161,7 @@
 
   "termsTitle": "Términos del servicio",
   "termsH1": "Uso del servicio",
-  "termsB1": "Bike News Room es un agregador de noticias gratuito y público. Puedes usarlo para lectura personal y no comercial. No intentes scrapear la API a alta frecuencia — hay límite de tasa por IP y te devolveremos un 429 sin dudarlo. Si necesitas acceso masivo, el código es abierto; despliega tu propia instancia.",
+  "termsB1": "Bike News Room es un agregador de noticias gratuito para uso personal. No intentes scrapear la API a gran volumen — hay un límite por IP y devolveremos 429. El uso masivo o comercial de la API requiere permiso por escrito.",
   "termsH2": "Contenido de los artículos",
   "termsB2": "Titulares, fragmentos y enlaces mostrados en el feed proceden de feeds RSS públicos y páginas de publicaciones ciclistas. El tráfico de clics va al editor original. No reproducimos artículos completos — léelos siempre en la web de origen para apoyar a quienes los reportan.",
   "termsH3": "Sin garantía",

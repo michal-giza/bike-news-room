@@ -1,7 +1,7 @@
 name: bike_news_room
 description: "Bike News Room — cycling news aggregator (web frontend)."
 publish_to: 'none'
-version: 0.1.0+1
+version: 1.0.0+1
 
 environment:
   sdk: ^3.11.5

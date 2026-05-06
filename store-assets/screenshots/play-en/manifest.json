@@ -1,0 +1,37 @@
+[
+  {
+    "src": "06_feed_english.png",
+    "dst": "01-feed.png",
+    "size_kb": 497,
+    "caption": "One feed for every team, every race.",
+    "locale": "en-US"
+  },
+  {
+    "src": "07_article_modal_en.png",
+    "dst": "02-article.png",
+    "size_kb": 681,
+    "caption": "Tap any story for the full read.",
+    "locale": "en-US"
+  },
+  {
+    "src": "12_feed_with_filters.png",
+    "dst": "03-filters.png",
+    "size_kb": 427,
+    "caption": "Filter by region + discipline. Save filters as defaults.",
+    "locale": "en-US"
+  },
+  {
+    "src": "11_filter_drawer.png",
+    "dst": "04-filter-drawer.png",
+    "size_kb": 126,
+    "caption": "Six disciplines. Four regions. Six categories.",
+    "locale": "en-US"
+  },
+  {
+    "src": "10_settings_en.png",
+    "dst": "05-settings.png",
+    "size_kb": 196,
+    "caption": "Dark + light themes. Nine languages. No login.",
+    "locale": "en-US"
+  }
+]

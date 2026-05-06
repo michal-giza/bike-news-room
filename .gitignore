@@ -47,3 +47,11 @@ _flutter/
 # Local debugging artifacts (Flutter/adb capture sessions)
 logs.md
 *.logcat
+
+# Android release-signing — NEVER commit. The keystore + password
+# unlock Play Console uploads for this app id; treat as a secret.
+key.properties
+local.properties
+upload-keystore.jks
+*.jks
+*.keystore

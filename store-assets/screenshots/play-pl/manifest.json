@@ -1,0 +1,23 @@
+[
+  {
+    "src": "05_feed_polish.png",
+    "dst": "01-feed.png",
+    "size_kb": 515,
+    "caption": "Wszystkie wiadomo\u015bci kolarskie w jednym miejscu.",
+    "locale": "pl"
+  },
+  {
+    "src": "01_onboarding_step1.png",
+    "dst": "02-onboarding.png",
+    "size_kb": 239,
+    "caption": "Wybierz regiony i dyscypliny \u2014 gotowe w 30 sekund.",
+    "locale": "pl"
+  },
+  {
+    "src": "03_onboarding_disciplines.png",
+    "dst": "03-disciplines.png",
+    "size_kb": 162,
+    "caption": "Szosa, MTB, gravel, tor, prze\u0142aj, BMX.",
+    "locale": "pl"
+  }
+]

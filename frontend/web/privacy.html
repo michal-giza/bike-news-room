@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bike News Room — Privacy policy</title>
+  <meta name="description" content="Privacy policy for the Bike News Room cycling news aggregator. We collect no personal data. We use ads only after you opt in.">
+  <meta name="robots" content="index,follow">
+  <style>
+    :root {
+      --bg: #0E0F11;
+      --fg: #E8E8E8;
+      --fg-dim: #A8A8A8;
+      --accent: #E8C54A;
+      --line: #2A2A2A;
+    }
+    body { background: var(--bg); color: var(--fg); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 720px; margin: 0 auto; padding: 48px 24px; line-height: 1.6; }
+    h1 { font-family: Georgia, serif; font-size: 32px; margin-bottom: 8px; }
+    h2 { font-family: Georgia, serif; font-size: 22px; margin-top: 36px; border-bottom: 1px solid var(--line); padding-bottom: 6px; }
+    p, li { color: var(--fg); }
+    .meta { color: var(--fg-dim); font-size: 14px; margin-bottom: 32px; }
+    a { color: var(--accent); }
+    code { background: #1c1c1e; padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
+    .updated { color: var(--fg-dim); font-style: italic; }
+  </style>
+</head>
+<body>
+  <h1>Bike News Room — Privacy policy</h1>
+  <p class="meta">Effective: 2026-05-06 · Maintainer: Michał Giża, msquaregiza@gmail.com</p>
+
+  <h2>The short version</h2>
+  <p>We do not collect a name, email, phone number, or location. We do not require an account. We do not sell anything. The only third-party data flow is Google AdMob, and that flow is gated behind an explicit consent prompt on first launch — if you decline, the app continues to work and AdMob is never initialized.</p>
+
+  <h2>What stays on your device only</h2>
+  <ul>
+    <li><strong>Bookmarks</strong> — the article ids you save. Stored in <code>SharedPreferences</code> on Android / <code>NSUserDefaults</code> on iOS / <code>localStorage</code> on web. Never transmitted.</li>
+    <li><strong>Following list</strong> — riders, teams, and races you follow. Same local-only storage as bookmarks.</li>
+    <li><strong>Preferences</strong> — theme, density, language, region/discipline filters. Local only.</li>
+    <li><strong>Hidden sources</strong> — feed ids you've muted. Local only.</li>
+  </ul>
+
+  <h2>What we send to our backend</h2>
+  <p>The app talks to our backend at <code>https://michal-giza-bike-news-room.hf.space</code> over HTTPS. The only data that leaves your device in those requests is:</p>
+  <ul>
+    <li>The article filter you have active (region / discipline / category / search query).</li>
+    <li>Your IP address, sent automatically by your operating system (we do not log it).</li>
+  </ul>
+  <p>Our backend does not run analytics on these requests, does not log them to disk beyond rotating Hugging Face Spaces system logs, and does not associate them with any user identity (because we have none).</p>
+
+  <h2>Advertising — Google AdMob</h2>
+  <p>This app shows ads to keep itself free. We use Google AdMob, which sets its own privacy policy at <a href="https://policies.google.com/privacy">policies.google.com/privacy</a>.</p>
+  <p>On first launch we show Google's User Messaging Platform (UMP) consent form. On iOS, we additionally show the App Tracking Transparency prompt. Both are skippable — if you do not consent, AdMob is not initialized, no advertising id is collected, and no personalization signals are sent. You will see lower-quality non-personalized ads instead.</p>
+  <p>If you consent, AdMob may collect: your advertising id (resettable in your OS settings), approximate IP-derived location, ad-interaction events. AdMob does not receive your bookmarks, your follows, your reading history, or any other in-app behavior.</p>
+
+  <h2>Crash reports + analytics</h2>
+  <p>None at the moment. We do not currently use Firebase Analytics, Crashlytics, or any third-party analytics SDK. If we add one in the future, it will be gated behind the same consent flow as AdMob, and this policy will be updated before the SDK is enabled.</p>
+
+  <h2>Children</h2>
+  <p>This app is not designed for children. The Play Store target audience is 18+. We do not knowingly collect data from children. If you believe a child has installed and used the app, there is no data to delete (we hold none); for AdMob's process, see Google's policy linked above.</p>
+
+  <h2>Your rights</h2>
+  <p>Because we hold no personal data, "delete my data" requests resolve to: uninstall the app. Local storage is removed by your OS on uninstall. For AdMob-collected data, contact Google directly via the link above.</p>
+  <p>You can revoke consent at any time:</p>
+  <ul>
+    <li><strong>Android</strong>: Settings → Apps → Bike News Room → Permissions, then re-launch the app and decline UMP.</li>
+    <li><strong>iOS</strong>: Settings → Privacy & Security → Tracking, toggle off; or Settings → Bike News Room → "Reset advertising id".</li>
+    <li><strong>In-app</strong>: tap the reset link in Settings → Privacy (planned for v1.1) to re-show the consent prompt.</li>
+  </ul>
+
+  <h2>Open source</h2>
+  <p>The app is open source at <a href="https://github.com/michal-giza/bike-news-room">github.com/michal-giza/bike-news-room</a>. You can audit exactly what data is sent and where. If you find something this policy got wrong, file an issue or email <a href="mailto:msquaregiza@gmail.com">msquaregiza@gmail.com</a> and we'll fix the policy or the code.</p>
+
+  <h2>Updates to this policy</h2>
+  <p>We will not silently change what data we collect. If a future version of the app adds a new data flow (analytics SDK, server-side bookmarks, push notifications), we will:</p>
+  <ol>
+    <li>Update this page with the new section.</li>
+    <li>Bump the "Effective" date at the top.</li>
+    <li>Show an in-app modal at the next launch summarising what changed.</li>
+  </ol>
+
+  <p class="updated">Last updated 2026-05-06.</p>
+</body>
+</html>

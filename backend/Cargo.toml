@@ -23,7 +23,7 @@ tower-http = { version = "0.6", features = ["cors", "set-header", "limit"] }
 url = "2"
 strsim = "0.11"
 anyhow = "1"
-scraper = "0.22"
+scraper = "0.26"
 thiserror = "2"
 async-trait = "0.1"
 tower_governor = "0.7"

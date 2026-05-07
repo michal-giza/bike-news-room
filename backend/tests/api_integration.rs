@@ -59,6 +59,15 @@ async fn setup_app_with_seed() -> (axum::Router, Arc<SqliteRepository>) {
     let add_source = Arc::new(AddUserSourceUseCase::new(repo.clone()));
     let candidates: Arc<dyn SourceCandidateRepository> = repo.clone();
     let subscribers: Arc<dyn SubscriberRepository> = repo.clone();
+    let trending = Arc::new(bike_news_room::application::TrendingUseCase::new(
+        repo.clone(),
+    ));
+    let reader = Arc::new(bike_news_room::application::ReaderUseCase::new(
+        repo.clone(),
+    ));
+    let wiki = Arc::new(bike_news_room::application::WikiContextUseCase::new(
+        pool.clone(),
+    ));
     (
         create_router(
             queries,
@@ -71,6 +80,9 @@ async fn setup_app_with_seed() -> (axum::Router, Arc<SqliteRepository>) {
                 repo.clone(),
                 pool.clone(),
             )),
+            trending,
+            reader,
+            wiki,
             pool,
         ),
         repo,
@@ -240,7 +252,26 @@ async fn empty_db_returns_empty_array() {
         repo.clone(),
         pool.clone(),
     ));
-    let app = create_router(queries, add_source, candidates, subscribers, backfill, pool);
+    let trending = Arc::new(bike_news_room::application::TrendingUseCase::new(
+        repo.clone(),
+    ));
+    let reader = Arc::new(bike_news_room::application::ReaderUseCase::new(
+        repo.clone(),
+    ));
+    let wiki = Arc::new(bike_news_room::application::WikiContextUseCase::new(
+        pool.clone(),
+    ));
+    let app = create_router(
+        queries,
+        add_source,
+        candidates,
+        subscribers,
+        backfill,
+        trending,
+        reader,
+        wiki,
+        pool,
+    );
 
     let (status, body) = json_response(app, "/api/articles").await;
     assert_eq!(status, StatusCode::OK);

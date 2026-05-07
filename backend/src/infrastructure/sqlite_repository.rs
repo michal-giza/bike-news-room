@@ -51,6 +51,14 @@ pub async fn init_schema(pool: &SqlitePool) -> DomainResult<()> {
         .await
         .ok();
 
+    // v1.3 — in-app reader cache. Articles' scraped body is stored on
+    // first read so subsequent readers don't re-fetch the publisher
+    // every time. NULL until the user opens the article in reader mode.
+    sqlx::query("ALTER TABLE articles ADD COLUMN full_text TEXT")
+        .execute(pool)
+        .await
+        .ok();
+
     sqlx::query(
         "CREATE TABLE IF NOT EXISTS articles (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -144,6 +152,20 @@ pub async fn init_schema(pool: &SqlitePool) -> DomainResult<()> {
             matched_at TEXT NOT NULL DEFAULT (datetime('now')),
             matched_alias TEXT,
             PRIMARY KEY (tracked_race_id, article_id)
+        )",
+    )
+    .execute(pool)
+    .await?;
+
+    sqlx::query(
+        "CREATE TABLE IF NOT EXISTS wiki_context (
+            cache_key TEXT PRIMARY KEY,
+            title TEXT NOT NULL,
+            extract TEXT NOT NULL,
+            source_url TEXT NOT NULL,
+            thumbnail_url TEXT,
+            lang TEXT NOT NULL,
+            fetched_at TEXT NOT NULL
         )",
     )
     .execute(pool)
@@ -418,6 +440,38 @@ impl ArticleRepository for SqliteRepository {
             .into_iter()
             .map(|(category, count)| CategoryCount { category, count })
             .collect())
+    }
+
+    async fn titles_in_window(&self, since: &str, before: &str) -> DomainResult<Vec<String>> {
+        let rows = sqlx::query_scalar::<_, String>(
+            "SELECT title FROM articles
+             WHERE is_duplicate = 0
+               AND published_at >= ?
+               AND published_at < ?",
+        )
+        .bind(since)
+        .bind(before)
+        .fetch_all(&self.pool)
+        .await?;
+        Ok(rows)
+    }
+
+    async fn full_text(&self, id: i64) -> DomainResult<Option<String>> {
+        let opt =
+            sqlx::query_scalar::<_, Option<String>>("SELECT full_text FROM articles WHERE id = ?")
+                .bind(id)
+                .fetch_optional(&self.pool)
+                .await?;
+        Ok(opt.flatten())
+    }
+
+    async fn set_full_text(&self, id: i64, full_text: &str) -> DomainResult<()> {
+        sqlx::query("UPDATE articles SET full_text = ? WHERE id = ?")
+            .bind(full_text)
+            .bind(id)
+            .execute(&self.pool)
+            .await?;
+        Ok(())
     }
 }
 

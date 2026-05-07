@@ -115,3 +115,40 @@ pub struct AddSourceResponseDto {
     pub url: String,
     pub sample_count: usize,
 }
+
+#[derive(Debug, Serialize)]
+pub struct TrendingTermDto {
+    pub term: String,
+    pub recent_count: u32,
+    pub baseline_count: u32,
+    pub score: f64,
+}
+
+#[derive(Debug, Serialize)]
+pub struct TrendingResponse {
+    pub terms: Vec<TrendingTermDto>,
+}
+
+impl From<crate::application::TrendingTerm> for TrendingTermDto {
+    fn from(t: crate::application::TrendingTerm) -> Self {
+        TrendingTermDto {
+            term: t.term,
+            recent_count: t.recent_count,
+            baseline_count: t.baseline_count,
+            score: t.score,
+        }
+    }
+}
+
+#[derive(Debug, Serialize)]
+pub struct ReaderResponseDto {
+    pub article_id: i64,
+    /// Original publisher URL — the modal still links the user out
+    /// here for full layout / images / publisher-supporting click.
+    pub source_url: String,
+    /// Plain-text body, paragraph-broken with `\n\n`. Capped server-side.
+    pub full_text: String,
+    /// `true` when served from `articles.full_text`; `false` when we
+    /// just scraped + cached it.
+    pub from_cache: bool,
+}

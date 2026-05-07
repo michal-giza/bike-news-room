@@ -35,4 +35,19 @@ pub trait ArticleRepository: Send + Sync {
     /// All duplicate articles that point to `canonical_id`. Used to build
     /// the "+N sources covering this" indicator on cards.
     async fn cluster_for(&self, canonical_id: i64) -> DomainResult<Vec<Article>>;
+
+    /// Pull every non-duplicate title from a time window. The trending
+    /// use-case takes two windows (recent / baseline) and computes
+    /// term-frequency lift between them in pure Rust — keeping the SQL
+    /// dumb makes it easy to test.
+    async fn titles_in_window(&self, since: &str, before: &str) -> DomainResult<Vec<String>>;
+
+    /// Read the cached scraped body of an article, or `None` if we've
+    /// never scraped it. The in-app reader populates this on first
+    /// open and cached forever after — publishers' HTML rarely changes
+    /// once published, and the bandwidth saving is significant.
+    async fn full_text(&self, id: i64) -> DomainResult<Option<String>>;
+
+    /// Persist the scraped body. Idempotent — overwrites if already set.
+    async fn set_full_text(&self, id: i64, full_text: &str) -> DomainResult<()>;
 }

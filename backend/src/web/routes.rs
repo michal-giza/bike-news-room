@@ -29,16 +29,23 @@ pub struct AppState {
     pub candidates: Arc<dyn SourceCandidateRepository>,
     pub subscribers: Arc<dyn SubscriberRepository>,
     pub backfill: Arc<BackfillArchiveUseCase>,
+    pub trending: Arc<crate::application::TrendingUseCase>,
+    pub reader: Arc<crate::application::ReaderUseCase>,
+    pub wiki: Arc<crate::application::WikiContextUseCase>,
     pub pool: SqlitePool,
     pub started_at: Instant,
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn create_router(
     queries: QueryUseCases,
     add_source: Arc<AddUserSourceUseCase>,
     candidates: Arc<dyn SourceCandidateRepository>,
     subscribers: Arc<dyn SubscriberRepository>,
     backfill: Arc<BackfillArchiveUseCase>,
+    trending: Arc<crate::application::TrendingUseCase>,
+    reader: Arc<crate::application::ReaderUseCase>,
+    wiki: Arc<crate::application::WikiContextUseCase>,
     pool: SqlitePool,
 ) -> Router {
     let state = AppState {
@@ -47,6 +54,9 @@ pub fn create_router(
         candidates,
         subscribers,
         backfill,
+        trending,
+        reader,
+        wiki,
         pool,
         started_at: Instant::now(),
     };
@@ -55,6 +65,9 @@ pub fn create_router(
         .route("/api/articles", get(list_articles))
         .route("/api/articles/{id}", get(get_article))
         .route("/api/articles/{id}/cluster", get(get_cluster))
+        .route("/api/articles/{id}/reader", get(get_article_reader))
+        .route("/api/trending", get(get_trending))
+        .route("/api/wiki/{title}", get(get_wiki_context))
         .route("/api/feeds", get(list_feeds))
         .route("/api/categories", get(list_categories))
         .route("/api/races", get(list_races))
@@ -164,6 +177,66 @@ async fn get_cluster(
 ) -> Result<Json<Vec<Article>>, ApiError> {
     let articles = state.queries.cluster_for(id).await?;
     Ok(Json(articles))
+}
+
+#[derive(serde::Deserialize)]
+struct TrendingQueryParams {
+    limit: Option<usize>,
+}
+
+async fn get_trending(
+    State(state): State<AppState>,
+    Query(params): Query<TrendingQueryParams>,
+) -> Result<Json<TrendingResponse>, ApiError> {
+    let limit = params.limit.unwrap_or(10).clamp(1, 50);
+    let terms = state.trending.execute(limit).await?;
+    Ok(Json(TrendingResponse {
+        terms: terms.into_iter().map(Into::into).collect(),
+    }))
+}
+
+async fn get_article_reader(
+    State(state): State<AppState>,
+    Path(id): Path<i64>,
+) -> Result<Json<ReaderResponseDto>, StatusCode> {
+    match state.reader.execute(id).await {
+        Ok(Some(r)) => Ok(Json(ReaderResponseDto {
+            article_id: r.article_id,
+            source_url: r.source_url,
+            full_text: r.full_text,
+            from_cache: r.from_cache,
+        })),
+        Ok(None) => Err(StatusCode::NOT_FOUND),
+        Err(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
+    }
+}
+
+#[derive(serde::Deserialize)]
+struct WikiQueryParams {
+    /// Locale to ask Wikipedia for. Falls back to `en` if the locale
+    /// has no article. The frontend sends the user's pref; default
+    /// `en` keeps unauthenticated curl probes useful for testing.
+    lang: Option<String>,
+}
+
+async fn get_wiki_context(
+    State(state): State<AppState>,
+    Path(title): Path<String>,
+    Query(params): Query<WikiQueryParams>,
+) -> Result<Json<crate::application::WikiContext>, StatusCode> {
+    // Title length cap protects against pathological URLs / abuse.
+    if title.is_empty() || title.len() > 200 {
+        return Err(StatusCode::BAD_REQUEST);
+    }
+    let lang = params.lang.unwrap_or_else(|| "en".to_string());
+    if lang.len() > 8 {
+        return Err(StatusCode::BAD_REQUEST);
+    }
+    match state.wiki.execute(&title, &lang).await {
+        Ok(Some(ctx)) => Ok(Json(ctx)),
+        Ok(None) => Err(StatusCode::NOT_FOUND),
+        Err(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
+    }
 }
 
 async fn list_feeds(State(state): State<AppState>) -> Result<Json<FeedsResponse>, ApiError> {

@@ -143,6 +143,15 @@ async fn main() -> anyhow::Result<()> {
         race_link_repo.clone(),
         pool.clone(),
     ));
+    let trending_uc = Arc::new(bike_news_room::application::TrendingUseCase::new(
+        article_repo.clone(),
+    ));
+    let reader_uc = Arc::new(bike_news_room::application::ReaderUseCase::new(
+        article_repo.clone(),
+    ));
+    let wiki_uc = Arc::new(bike_news_room::application::WikiContextUseCase::new(
+        pool.clone(),
+    ));
     let query_uc = QueryUseCases::new(article_repo, feed_repo, race_repo);
 
     // ── Initial fetch on startup ────────────────────────────────────────
@@ -287,6 +296,9 @@ async fn main() -> anyhow::Result<()> {
         candidate_repo.clone(),
         subscriber_repo.clone(),
         backfill_uc.clone(),
+        trending_uc.clone(),
+        reader_uc.clone(),
+        wiki_uc.clone(),
         pool.clone(),
     )
     .layer(cors)

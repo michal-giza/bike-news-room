@@ -114,6 +114,27 @@ impl ArticleRepository for MockArticleRepo {
             .cloned()
             .collect())
     }
+
+    async fn titles_in_window(&self, _since: &str, _before: &str) -> DomainResult<Vec<String>> {
+        // Mock — tests don't exercise the trending pipeline through
+        // this fake repo (the trending use case is unit-tested with
+        // its pure scoring helper).
+        Ok(self
+            .articles
+            .lock()
+            .unwrap()
+            .iter()
+            .map(|a| a.title.clone())
+            .collect())
+    }
+
+    async fn full_text(&self, _id: i64) -> DomainResult<Option<String>> {
+        Ok(None)
+    }
+
+    async fn set_full_text(&self, _id: i64, _full_text: &str) -> DomainResult<()> {
+        Ok(())
+    }
 }
 
 #[derive(Default)]

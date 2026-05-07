@@ -170,6 +170,25 @@ class AppLocalizationsNl extends AppLocalizations {
       'Voeg een woord toe om te verbergen…';
 
   @override
+  String get trendingHeader => 'NU TRENDING';
+
+  @override
+  String get readerModeRead => 'Lees in de app';
+
+  @override
+  String get readerModeHide => 'Lezer verbergen';
+
+  @override
+  String get readerModeUnavailable =>
+      'Lezermodus niet beschikbaar voor dit artikel (de uitgever staat dit niet toe).';
+
+  @override
+  String get readerModeError => 'Kon artikel niet laden.';
+
+  @override
+  String get wikiSourceLink => 'Meer op Wikipedia';
+
+  @override
   String get raceCardAddToCalendar => 'Toevoegen aan agenda';
 
   @override
@@ -457,11 +476,11 @@ class AppLocalizationsNl extends AppLocalizations {
       'We rangschikken niet op engagement, volgen je niet tussen sites en verkopen niets. De volgorde is omgekeerd chronologisch, met regio- en disciplinefilters die jij beheert. Als een verhaal hier staat, is dat omdat een wielerpublicatie het daadwerkelijk heeft gepubliceerd.';
 
   @override
-  String get aboutH4 => 'Open source';
+  String get aboutH4 => 'Onafhankelijk project';
 
   @override
   String get aboutB4 =>
-      'De volledige broncode (Rust-backend + Flutter-Web-frontend) staat op GitHub. Bug gevonden, een bron toevoegen of forken voor een andere sport? Pull requests welkom.';
+      'Bike News Room wordt onafhankelijk gebouwd. Geen uitgeversdeals, geen redactionele afspraken — elk artikel komt uit publieke RSS-feeds die we transparant aggregeren.';
 
   @override
   String get privacyTitle => 'Privacybeleid';
@@ -509,7 +528,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get termsB1 =>
-      'Bike News Room is een gratis, openbare nieuwsaggregator. Je mag hem gebruiken voor persoonlijk, niet-commercieel lezen. Probeer niet de API in hoge frequentie te scrapen — er is een rate-limit per IP en we sturen je vrolijk een 429 terug. Heb je bulk toegang nodig: de code is open; draai je eigen instantie.';
+      'Bike News Room is een gratis nieuwsaggregator voor persoonlijk gebruik. Scrape de API niet in grote volumes — er is een limiet per IP en we sturen graag een 429. Bulk- of commercieel gebruik van de API vereist schriftelijke toestemming.';
 
   @override
   String get termsH2 => 'Inhoud van artikelen';

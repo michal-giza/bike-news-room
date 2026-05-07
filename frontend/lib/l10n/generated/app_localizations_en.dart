@@ -168,6 +168,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsHiddenKeywordsHint => 'Add a word to hide…';
 
   @override
+  String get trendingHeader => 'TRENDING NOW';
+
+  @override
+  String get readerModeRead => 'Read in app';
+
+  @override
+  String get readerModeHide => 'Hide reader';
+
+  @override
+  String get readerModeUnavailable =>
+      'Reader mode unavailable for this article (publisher opted out).';
+
+  @override
+  String get readerModeError => 'Couldn\'t load the article.';
+
+  @override
+  String get wikiSourceLink => 'Read more on Wikipedia';
+
+  @override
   String get raceCardAddToCalendar => 'Add to calendar';
 
   @override
@@ -454,11 +473,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'We don\'t rank by engagement, we don\'t track you between sites, and we don\'t sell anything. The order is reverse-chronological with regional and discipline filters you control. If a story is here, it\'s because a cycling publication actually published it.';
 
   @override
-  String get aboutH4 => 'Open source';
+  String get aboutH4 => 'Independent project';
 
   @override
   String get aboutB4 =>
-      'The full source code (Rust backend + Flutter Web frontend) is on GitHub. Found a bug, want a new source added, or want to fork it for another sport? Pull requests welcome.';
+      'Bike News Room is built independently. No publisher partnerships, no editorial deals — every article comes from public RSS feeds we aggregate transparently.';
 
   @override
   String get privacyTitle => 'Privacy Policy';
@@ -506,7 +525,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get termsB1 =>
-      'Bike News Room is a free, public news aggregator. You may use it for personal, non-commercial reading. Don\'t try to scrape the API at high volume — there\'s a per-IP rate limit and we\'ll happily 429 you. If you need bulk access, the source code is open; run your own instance.';
+      'Bike News Room is a free news aggregator for personal reading. Don\'t try to scrape the API at high volume — there\'s a per-IP rate limit and we\'ll happily 429 you. Bulk or commercial use of the API requires written permission.';
 
   @override
   String get termsH2 => 'Article content';

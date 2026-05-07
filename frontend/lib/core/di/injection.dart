@@ -4,6 +4,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../features/feed/data/datasources/article_snapshot_store.dart';
+import '../../features/feed/data/datasources/reader_remote_data_source.dart';
+import '../../features/feed/data/datasources/trending_remote_data_source.dart';
+import '../../features/watchlist/data/datasources/wiki_context_remote_data_source.dart';
 import '../ads/ad_service.dart';
 import '../ads/consent_service.dart';
 import '../notifications/notifications_service.dart';
@@ -169,6 +172,23 @@ Future<void> configureDependencies() async {
           : NoopNotificationsProvider(),
     );
   }
+  // ── v1.3 free-enhancement data sources ────────────────────────
+  if (!getIt.isRegistered<TrendingRemoteDataSource>()) {
+    getIt.registerLazySingleton<TrendingRemoteDataSource>(
+      () => TrendingRemoteDataSourceImpl(getIt<ApiClient>().dio),
+    );
+  }
+  if (!getIt.isRegistered<ReaderRemoteDataSource>()) {
+    getIt.registerLazySingleton<ReaderRemoteDataSource>(
+      () => ReaderRemoteDataSourceImpl(getIt<ApiClient>().dio),
+    );
+  }
+  if (!getIt.isRegistered<WikiContextRemoteDataSource>()) {
+    getIt.registerLazySingleton<WikiContextRemoteDataSource>(
+      () => WikiContextRemoteDataSourceImpl(getIt<ApiClient>().dio),
+    );
+  }
+
   if (!getIt.isRegistered<INotificationsService>()) {
     getIt.registerSingleton<INotificationsService>(
       NotificationsService(getIt<NotificationsProvider>()),

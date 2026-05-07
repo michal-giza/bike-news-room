@@ -400,6 +400,42 @@ abstract class AppLocalizations {
   /// **'Add a word to hide…'**
   String get settingsHiddenKeywordsHint;
 
+  /// No description provided for @trendingHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'TRENDING NOW'**
+  String get trendingHeader;
+
+  /// No description provided for @readerModeRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Read in app'**
+  String get readerModeRead;
+
+  /// No description provided for @readerModeHide.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide reader'**
+  String get readerModeHide;
+
+  /// No description provided for @readerModeUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Reader mode unavailable for this article (publisher opted out).'**
+  String get readerModeUnavailable;
+
+  /// No description provided for @readerModeError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load the article.'**
+  String get readerModeError;
+
+  /// No description provided for @wikiSourceLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Read more on Wikipedia'**
+  String get wikiSourceLink;
+
   /// No description provided for @raceCardAddToCalendar.
   ///
   /// In en, this message translates to:
@@ -925,13 +961,13 @@ abstract class AppLocalizations {
   /// No description provided for @aboutH4.
   ///
   /// In en, this message translates to:
-  /// **'Open source'**
+  /// **'Independent project'**
   String get aboutH4;
 
   /// No description provided for @aboutB4.
   ///
   /// In en, this message translates to:
-  /// **'The full source code (Rust backend + Flutter Web frontend) is on GitHub. Found a bug, want a new source added, or want to fork it for another sport? Pull requests welcome.'**
+  /// **'Bike News Room is built independently. No publisher partnerships, no editorial deals — every article comes from public RSS feeds we aggregate transparently.'**
   String get aboutB4;
 
   /// No description provided for @privacyTitle.
@@ -1015,7 +1051,7 @@ abstract class AppLocalizations {
   /// No description provided for @termsB1.
   ///
   /// In en, this message translates to:
-  /// **'Bike News Room is a free, public news aggregator. You may use it for personal, non-commercial reading. Don\'t try to scrape the API at high volume — there\'s a per-IP rate limit and we\'ll happily 429 you. If you need bulk access, the source code is open; run your own instance.'**
+  /// **'Bike News Room is a free news aggregator for personal reading. Don\'t try to scrape the API at high volume — there\'s a per-IP rate limit and we\'ll happily 429 you. Bulk or commercial use of the API requires written permission.'**
   String get termsB1;
 
   /// No description provided for @termsH2.

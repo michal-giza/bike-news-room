@@ -10,6 +10,7 @@ import '../../../preferences/domain/entities/user_preferences.dart';
 import '../../../preferences/presentation/cubit/preferences_cubit.dart';
 import '../../../preferences/presentation/pages/onboarding_page.dart';
 import '../bloc/feed_bloc.dart';
+import '../widgets/trending_strip.dart';
 import '../cubit/sources_cubit.dart';
 import '../widgets/active_filter_chips.dart';
 import '../widgets/article_card.dart';
@@ -512,6 +513,18 @@ class _FeedPageState extends State<FeedPage> {
             },
           ),
         ],
+        // v1.3 — trending strip self-hides when /api/trending returns
+        // an empty list (slow news days), so no padding is wasted.
+        TrendingStrip(
+          onTermTap: (term) {
+            context.read<FeedBloc>().add(FeedFilterChanged(search: term));
+            _scrollController.animateTo(
+              0,
+              duration: BnrMotion.m3,
+              curve: BnrMotion.ease,
+            );
+          },
+        ),
         const SizedBox(height: BnrSpacing.s6),
         ActiveFilterChips(
           filter: state.filter,

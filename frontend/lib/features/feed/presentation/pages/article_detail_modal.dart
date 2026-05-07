@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/theme/tokens.dart';
 import '../../../../core/url/safe_url.dart';
 import '../../../../l10n/generated/app_localizations.dart';
+import '../../data/datasources/reader_remote_data_source.dart';
+import '../cubit/reader_cubit.dart';
 import '../widgets/related_stories.dart';
 import '../widgets/share_row.dart';
 import '../../domain/entities/article.dart';
@@ -41,11 +45,16 @@ class ArticleDetailModal extends StatelessWidget {
       barrierDismissible: true,
       barrierLabel: 'close',
       transitionDuration: BnrMotion.m3,
-      pageBuilder: (_, __, ___) => ArticleDetailModal(
-        article: article,
-        sourceName: sourceName,
-        bookmarked: bookmarked,
-        onBookmark: onBookmark,
+      pageBuilder: (_, __, ___) => BlocProvider<ReaderCubit>(
+        // One ReaderCubit per modal open — see cubit comment for why
+        // we don't share across modals (typical flow is open→read→close).
+        create: (_) => ReaderCubit(remote: getIt<ReaderRemoteDataSource>()),
+        child: ArticleDetailModal(
+          article: article,
+          sourceName: sourceName,
+          bookmarked: bookmarked,
+          onBookmark: onBookmark,
+        ),
       ),
       transitionBuilder: (context, anim, _, child) {
         final tween = Tween(begin: 1.0, end: 0.0).chain(
@@ -202,6 +211,13 @@ class ArticleDetailModal extends StatelessWidget {
           // adds substantial extra content, which after HTML stripping it
           // rarely does for RSS feeds. Skip the duplicate.)
           const SizedBox(height: BnrSpacing.s6),
+          // v1.3 — in-app reader expand/collapse. Tapping fetches the
+          // body once (cached server-side), expands the panel, and
+          // shows the publisher's content inline. The "Read on source"
+          // button stays so users who prefer the publisher's layout
+          // (images / formatting) still have one tap to click out.
+          _ReaderToggleBlock(article: article),
+          const SizedBox(height: BnrSpacing.s2),
           _readOnSourceButton(context),
           ShareRow(article: article),
           RelatedStories(article: article),
@@ -327,5 +343,140 @@ class ArticleDetailModal extends StatelessWidget {
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
+  }
+}
+
+/// Expand/collapse panel for the in-app reader. First tap fires a
+/// fetch + reveals the body in a SelectableText scroller; subsequent
+/// taps toggle visibility of the already-loaded body. Failure / opt-out
+/// states render explanatory copy rather than disappearing silently.
+class _ReaderToggleBlock extends StatefulWidget {
+  final Article article;
+  const _ReaderToggleBlock({required this.article});
+
+  @override
+  State<_ReaderToggleBlock> createState() => _ReaderToggleBlockState();
+}
+
+class _ReaderToggleBlockState extends State<_ReaderToggleBlock> {
+  bool _expanded = false;
+
+  void _onToggle(BuildContext context, ReaderState state) {
+    setState(() => _expanded = !_expanded);
+    if (_expanded && state.status == ReaderStatus.initial) {
+      context.read<ReaderCubit>().load(widget.article.id);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ext = context.bnr;
+    final l = AppLocalizations.of(context);
+    return BlocBuilder<ReaderCubit, ReaderState>(
+      builder: (context, state) {
+        return Container(
+          decoration: BoxDecoration(
+            color: ext.bg2,
+            borderRadius: BorderRadius.circular(BnrRadius.r2),
+            border: Border.all(color: ext.lineSoft),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              InkWell(
+                key: const ValueKey('readerModeToggle'),
+                borderRadius: BorderRadius.circular(BnrRadius.r2),
+                onTap: () => _onToggle(context, state),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: BnrSpacing.s4,
+                    vertical: BnrSpacing.s3,
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.menu_book_outlined,
+                          size: 18, color: ext.fg1),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _expanded
+                              ? l.readerModeHide
+                              : l.readerModeRead,
+                          style: AppTheme.sans(
+                            size: 14,
+                            weight: FontWeight.w600,
+                            color: ext.fg0,
+                          ),
+                        ),
+                      ),
+                      Icon(
+                        _expanded ? Icons.expand_less : Icons.expand_more,
+                        color: ext.fg2,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              if (_expanded)
+                _ReaderBody(state: state),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _ReaderBody extends StatelessWidget {
+  final ReaderState state;
+  const _ReaderBody({required this.state});
+
+  @override
+  Widget build(BuildContext context) {
+    final ext = context.bnr;
+    final l = AppLocalizations.of(context);
+    final inner = switch (state.status) {
+      ReaderStatus.initial || ReaderStatus.loading => Padding(
+          padding: const EdgeInsets.symmetric(vertical: BnrSpacing.s4),
+          child: Center(
+            child: SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: ext.fg2,
+              ),
+            ),
+          ),
+        ),
+      ReaderStatus.unavailable => Padding(
+          padding: const EdgeInsets.all(BnrSpacing.s4),
+          child: Text(
+            l.readerModeUnavailable,
+            style: AppTheme.sans(size: 13, color: ext.fg2),
+          ),
+        ),
+      ReaderStatus.error => Padding(
+          padding: const EdgeInsets.all(BnrSpacing.s4),
+          child: Text(
+            l.readerModeError,
+            style: AppTheme.sans(size: 13, color: ext.fg2),
+          ),
+        ),
+      ReaderStatus.loaded => Padding(
+          padding: const EdgeInsets.all(BnrSpacing.s4),
+          child: SelectableText(
+            state.result?.fullText ?? '',
+            style: AppTheme.serif(size: 15, color: ext.fg0, height: 1.55),
+          ),
+        ),
+    };
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: ext.lineSoft)),
+      ),
+      child: inner,
+    );
   }
 }

@@ -1,0 +1,42 @@
+[package]
+name = "bnr-crawler"
+version = "0.1.0"
+edition = "2021"
+description = "Light source-candidate validator for Bike News Room — runs on a separate HF Space so crawl bursts don't tie up the main API's CPU budget."
+
+[dependencies]
+# Async runtime + HTTP client. Both are already in the main backend so
+# the bnr-crawler dep tree is intentionally a strict subset — easier to
+# audit + slimmer container.
+tokio = { version = "1", features = ["full"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+# RSS / Atom parser — same one the main backend uses for ingest.
+feed-rs = "2"
+# Minimal HTML parsing for sitemap-vs-RSS heuristics. We don't try to
+# match the main backend's selector pipeline — the crawler's job is
+# strictly "is this URL a real cycling source?", not "extract content".
+scraper = "0.22"
+# Logging via the same crate as the main backend so log lines look
+# identical when both Spaces stream into HF's log viewer.
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+# Tiny axum surface: a /health endpoint so HF's "is this Space alive?"
+# check passes, plus a /run endpoint for manual / scheduled triggers.
+axum = "0.8"
+tower = "0.5"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+# Cron scheduling — fires the periodic candidate-check sweep.
+tokio-cron-scheduler = "0.13"
+# Light error-context crate for cleaner `?` chains in the sweep
+# pipeline. ~30 KB; acceptable.
+anyhow = "1"
+
+[profile.release]
+# Slim the container. We don't need any of the unwinding machinery for
+# a service this small; abort on panic + LTO + strip = ~6 MB binary.
+panic = "abort"
+strip = true
+lto = "fat"
+opt-level = 3
+codegen-units = 1

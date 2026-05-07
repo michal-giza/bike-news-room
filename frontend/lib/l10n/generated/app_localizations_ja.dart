@@ -167,6 +167,24 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsHiddenKeywordsHint => '非表示にする語を追加…';
 
   @override
+  String get trendingHeader => 'トレンド';
+
+  @override
+  String get readerModeRead => 'アプリで読む';
+
+  @override
+  String get readerModeHide => 'リーダーを隠す';
+
+  @override
+  String get readerModeUnavailable => 'この記事はリーダーモードに対応していません（出版社の設定）。';
+
+  @override
+  String get readerModeError => '記事を読み込めませんでした。';
+
+  @override
+  String get wikiSourceLink => 'Wikipedia でもっと読む';
+
+  @override
   String get raceCardAddToCalendar => 'カレンダーに追加';
 
   @override
@@ -449,11 +467,11 @@ class AppLocalizationsJa extends AppLocalizations {
       'エンゲージメントで並べ替えることも、サイト間で追跡することも、何かを売ることもしません。並びは時系列の逆順で、地域と種目のフィルターはあなたが操作します。ここに記事があるのは、自転車メディアが実際に公開したからです。';
 
   @override
-  String get aboutH4 => 'オープンソース';
+  String get aboutH4 => '独立プロジェクト';
 
   @override
   String get aboutB4 =>
-      'ソースコード（Rustバックエンド + Flutter Web フロントエンド）は GitHub に公開されています。バグの報告、ソースの追加要望、別スポーツへのフォーク歓迎です。プルリクエストもお待ちしています。';
+      'Bike News Room は独立して開発されています。出版社との提携や編集上の取り決めはなく、すべての記事は公開 RSS フィードから透明性のある方法で集約されています。';
 
   @override
   String get privacyTitle => 'プライバシーポリシー';
@@ -501,7 +519,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get termsB1 =>
-      'Bike News Room は無料・公開のニュースアグリゲーターです。個人の非営利的な閲覧にご利用ください。APIを高頻度でスクレイピングしないでください — IPあたりのレート制限があり、容赦なく429を返します。大量アクセスが必要な場合はコードを公開していますので、ご自身のインスタンスを運用してください。';
+      'Bike News Room は個人利用向けの無料ニュースアグリゲーターです。API を大量にスクレイピングしようとしないでください — IP ごとのレート制限があり、429 を返します。API の大量利用または商用利用には書面による許可が必要です。';
 
   @override
   String get termsH2 => '記事のコンテンツ';

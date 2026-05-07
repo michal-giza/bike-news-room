@@ -171,6 +171,25 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsHiddenKeywordsHint => 'Ajouter un mot à masquer…';
 
   @override
+  String get trendingHeader => 'TENDANCES';
+
+  @override
+  String get readerModeRead => 'Lire dans l\'app';
+
+  @override
+  String get readerModeHide => 'Masquer la lecture';
+
+  @override
+  String get readerModeUnavailable =>
+      'Mode lecture indisponible pour cet article (l\'éditeur l\'interdit).';
+
+  @override
+  String get readerModeError => 'Impossible de charger l\'article.';
+
+  @override
+  String get wikiSourceLink => 'Plus sur Wikipédia';
+
+  @override
   String get raceCardAddToCalendar => 'Ajouter au calendrier';
 
   @override
@@ -460,11 +479,11 @@ class AppLocalizationsFr extends AppLocalizations {
       'Nous ne classons pas par engagement, ne vous suivons pas entre les sites et ne vendons rien. L\'ordre est anti-chronologique, avec des filtres région et discipline que vous contrôlez. Si un article est ici, c\'est qu\'une publication cycliste l\'a réellement publié.';
 
   @override
-  String get aboutH4 => 'Open source';
+  String get aboutH4 => 'Projet indépendant';
 
   @override
   String get aboutB4 =>
-      'L\'ensemble du code source (backend Rust + frontend Flutter Web) est sur GitHub. Bug trouvé, source à ajouter, fork pour un autre sport ? Les pull requests sont bienvenues.';
+      'Bike News Room est développé en toute indépendance. Aucun partenariat éditorial — chaque article vient de flux RSS publics que nous agrégeons de façon transparente.';
 
   @override
   String get privacyTitle => 'Politique de confidentialité';
@@ -512,7 +531,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get termsB1 =>
-      'Bike News Room est un agrégateur d\'actualités gratuit et public. Vous pouvez l\'utiliser pour une lecture personnelle et non commerciale. N\'essayez pas de scraper l\'API à haute fréquence — il y a une limite par IP et nous renverrons volontiers un 429. Pour un accès massif, le code est ouvert ; déployez votre propre instance.';
+      'Bike News Room est un agrégateur d\'actualités gratuit pour un usage personnel. Ne tentez pas de scraper l\'API en masse — une limite par IP est en place et renverra 429. Tout usage en volume ou commercial de l\'API requiert une autorisation écrite.';
 
   @override
   String get termsH2 => 'Contenu des articles';

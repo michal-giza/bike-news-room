@@ -9,12 +9,14 @@ import '../../../calendar/data/datasources/calendar_remote_data_source.dart';
 import '../../../calendar/domain/entities/race.dart';
 import '../../../feed/data/datasources/article_snapshot_store.dart';
 import '../../../feed/domain/entities/article.dart';
+import '../../../preferences/presentation/cubit/preferences_cubit.dart';
+import '../../data/datasources/wiki_context_remote_data_source.dart';
+import '../widgets/wiki_context_block.dart';
 import '../../../feed/domain/usecases/get_articles.dart';
 import '../../../feed/presentation/bookmark_action.dart';
 import '../../../feed/presentation/cubit/sources_cubit.dart';
 import '../../../feed/presentation/pages/article_detail_modal.dart';
 import '../../../feed/presentation/widgets/article_card.dart';
-import '../../../preferences/presentation/cubit/preferences_cubit.dart';
 import '../../domain/entities/watched_entity.dart';
 
 /// Per-race archive view, opened from the Following list when the user
@@ -143,6 +145,13 @@ class _RaceDetailPageState extends State<RaceDetailPage> {
           BnrSpacing.s12,
         ),
         children: [
+          // v1.3 — Wikipedia context block. Self-hides if Wikipedia
+          // has no article for this race in the user's locale OR English.
+          WikiContextBlock(
+            title: widget.race.name,
+            lang: context.read<PreferencesCubit>().state.localeCode,
+            source: getIt<WikiContextRemoteDataSource>(),
+          ),
           _SectionHeader(label: 'NEXT EDITION'),
           FutureBuilder<List<Race>>(
             future: _upcoming,

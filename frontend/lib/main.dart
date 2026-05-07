@@ -5,6 +5,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'core/ads/ad_service.dart';
 import 'core/di/injection.dart';
 import 'core/notifications/notifications_service.dart';
+import 'features/feed/data/datasources/trending_remote_data_source.dart';
+import 'features/feed/presentation/cubit/trending_cubit.dart';
 import 'l10n/generated/app_localizations.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_extensions.dart';
@@ -192,6 +194,11 @@ class BikeNewsRoomApp extends StatelessWidget {
                 BlocProvider<SourcesCubit>(
                   create: (_) => SourcesCubit(
                     getFeedSources: getIt<GetFeedSources>(),
+                  )..load(),
+                ),
+                BlocProvider<TrendingCubit>(
+                  create: (_) => TrendingCubit(
+                    remote: getIt<TrendingRemoteDataSource>(),
                   )..load(),
                 ),
               ],
